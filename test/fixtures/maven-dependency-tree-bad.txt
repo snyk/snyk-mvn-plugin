@@ -1,0 +1,28 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building A Single Maven Module 1.0
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- maven-dependency-plugin:2.1:tree (default-cli) @ single-module-project ---
+[INFO] com.example.maven-samples:single-module-project:jar:1.0
+[INFO] +- javax.servlet:servlet-api:jar:2.5:compile
+[INFO] +- javax.servlet.jsp:jsp-api:jar:2.2:compile
+[INFO] +- axis:axis:jar:1.4:compile
+[INFO] |  +- org.apache.axis:axis-jaxrpc:jar:1.4:compile
+[INFO] |  +- org.apache.axis:axis-saaj:jar:1.4:compile
+[INFO] |  +- axis:axis-wsdl4j:jar:1.5.1:runtime
+[INFO] |  +- commons-logging:commons-logging:jar:1.0.4:runtime
+[INFO] |  \- commons-discovery:commons-discovery:jar:0.2:runtime
+[INFO] +- junit:junit-dep:jar:4.10:test
+[INFO] +- org.hamcrest:hamcrest-core:jar:1.2.1:test
+[INFO] +- org.hamcrest:hamcrest-library:jar:1.2.1:test
+[INFO] \- org.mockito:mockito-core:jar:1.8.5:test
+[INFO]    \- org.objenesis:objenesis:jar:1.0:test
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1.291 s
+[INFO] Finished at: 2017-09-11T10:13:33+03:00
+[INFO] Final Memory: 11M/245M
+[INFO] ------------------------------------------------------------------------
