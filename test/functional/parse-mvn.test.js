@@ -32,3 +32,14 @@ test('test with bad mvn dependency:tree output', function (t) {
   var data = parse(mavenOutput, true);
   t.equal(data.ok, false, 'bad output detected');
 });
+
+test('test with type "test-jar" in mvn dependency', function (t) {
+  t.plan(1);
+  var mavenOutput = fs.readFileSync(path.join(
+    __dirname, '..', 'fixtures',
+    'maven-dependency-tree-with-type.txt'), 'utf8');
+  var result = parse(mavenOutput, true);
+
+  t.equal(result.data.dependencies['com.snyk.tester:tester-queue'].version,
+          '15.0.0');
+});
