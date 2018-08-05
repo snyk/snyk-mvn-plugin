@@ -11,7 +11,7 @@
     "lint": "eslint -c .eslintrc lib test",
     "test": "npm run lint && npm run test-functional && npm run test-system",
     "test-functional": "tap ./test/functional/*.test.js -R spec",
-    "test-system": "tap ./test/system/*.test.js -R spec",
+    "test-system": "tap ./test/system/*.test.js -R spec --timeout=60",
     "semantic-release": "semantic-release"
   },
   "author": "snyk.io",
@@ -19,7 +19,7 @@
   "devDependencies": {
     "eslint": "^4.11.0",
     "semantic-release": "^15",
-    "tap": "^10.3.2",
+    "tap": "^12.0.1",
     "tap-only": "0.0.5"
   }
 }
