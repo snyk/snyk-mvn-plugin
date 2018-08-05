@@ -10,8 +10,8 @@
   "scripts": {
     "lint": "eslint -c .eslintrc lib test",
     "test": "npm run lint && npm run test-functional && npm run test-system",
-    "test-functional": "tap `find ./test/functional -name '*.test.js'`",
-    "test-system": "tap `find ./test/system -name '*.test.js'`",
+    "test-functional": "tap ./test/functional/*.test.js -R spec",
+    "test-system": "tap ./test/system/*.test.js -R spec",
     "semantic-release": "semantic-release"
   },
   "author": "snyk.io",
