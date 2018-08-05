@@ -10,7 +10,6 @@ node_js:
 cache:
   directories:
     - node_modules
-script: npm run test && npm run test-system
 jobs:
   include:
     - stage: npm release

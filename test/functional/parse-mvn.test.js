@@ -41,5 +41,5 @@ test('test with type "test-jar" in mvn dependency', function (t) {
   var result = parse(mavenOutput, true);
 
   t.equal(result.data.dependencies['com.snyk.tester:tester-queue'].version,
-          '15.0.0');
+    '15.0.0');
 });
