@@ -34,8 +34,7 @@ test('run inspect() with a bad dependency plugin', function (t) {
       t.fail('bad dependency plugin - we should not be here');
     })
     .catch(function (error) {
-      t.equal(error, 'Error: Cannot find dependency information. ' +
-    'Please make sure that Apache Maven Dependency Plugin ' +
-    'version 2.2 or above is installed.', 'correct failure message');
+      t.match(error.message, 'Cannot find dependency information.',
+        'proper error message');
     });
 });

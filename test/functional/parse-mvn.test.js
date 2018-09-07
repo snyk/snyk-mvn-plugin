@@ -29,8 +29,26 @@ test('test with bad mvn dependency:tree output', function (t) {
   t.plan(1);
   var mavenOutput = fs.readFileSync(path.join(
     __dirname, '..', 'fixtures', 'maven-dependency-tree-bad.txt'), 'utf8');
-  var data = parse(mavenOutput, true);
-  t.equal(data.ok, false, 'bad output detected');
+  try {
+    parse(mavenOutput, true);
+    t.fail('Should have thrown!');
+  } catch (error) {
+    t.equal(error.message, 'Cannot find dependency information.',
+      'proper error message');
+  }
+});
+
+test('test with error mvn dependency:tree output', function (t) {
+  t.plan(1);
+  var mavenOutput = fs.readFileSync(path.join(
+    __dirname, '..', 'fixtures', 'maven-dependency-tree-error.txt'), 'utf8');
+  try {
+    parse(mavenOutput, true);
+    t.fail('Should have thrown!');
+  } catch (error) {
+    t.equal(error.message, 'Failed to execute an `mvn` command.',
+      'proper error message');
+  }
 });
 
 test('test with type "test-jar" in mvn dependency', function (t) {
