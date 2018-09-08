@@ -38,3 +38,16 @@ test('run inspect() with a bad dependency plugin', function (t) {
         'proper error message');
     });
 });
+
+test('run inspect() with a bad pom.xml', function (t) {
+  t.plan(1);
+  return plugin.inspect('.', path.join(
+    __dirname, '..', 'fixtures', 'bad-pom.xml'), {dev: true})
+    .then(function () {
+      t.fail('bad pom.xml - should have thrown!');
+    })
+    .catch(function (error) {
+      t.match(error.message, 'executes successfully on this project',
+        'proper error message');
+    });
+});
