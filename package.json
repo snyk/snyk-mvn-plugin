@@ -11,7 +11,7 @@
     "lint": "eslint -c .eslintrc lib test",
     "test": "npm run lint && npm run test-functional && npm run test-system",
     "test-functional": "tap ./test/functional/*.test.js -R spec",
-    "test-system": "tap ./test/system/*.test.js -R spec --timeout=60",
+    "test-system": "tap ./test/system/*.test.js -R spec --timeout=180",
     "semantic-release": "semantic-release"
   },
   "author": "snyk.io",
