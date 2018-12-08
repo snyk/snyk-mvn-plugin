@@ -14,6 +14,18 @@ test('run inspect()', function (t) {
     });
 });
 
+test('run inspect() on path with spaces', function (t) {
+  t.plan(2);
+  return plugin.inspect('.', path.join(
+    __dirname, '..', 'fixtures/path with spaces', 'pom.xml'))
+    .then(function (result) {
+      t.equal(result.package.dependencies['axis:axis'].version, '1.4',
+        'correct version found');
+      t.type(result.package.dependencies['junit:junit'], 'undefined',
+        'no test deps');
+    });
+});
+
 test('run inspect() with --dev', function (t) {
   t.plan(2);
   return plugin.inspect('.', path.join(
