@@ -1,24 +1,16 @@
-var parse = require('./parse-mvn');
-var fs = require('fs');
-var path = require('path');
-var subProcess = require('./sub-process');
+import {parseTree} from './parse-mvn';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as subProcess from './sub-process';
 
-module.exports = {
-  inspect: inspect,
-};
-
-module.exports.__tests = {
-  buildArgs: buildArgs,
-};
-
-function inspect(root, targetFile, options) {
+export function inspect(root, targetFile, options) {
   if (!options) {
     options = {dev: false};
   }
-  var mvnArgs = buildArgs(root, targetFile, options.args);
+  const mvnArgs = buildArgs(root, targetFile, options.args);
   return subProcess.execute('mvn', mvnArgs, {cwd: root})
-    .then(function(result) {
-      var parseResult = parse(result, options.dev);
+    .then((result) => {
+      const parseResult = parseTree(result, options.dev);
       return {
         plugin: {
           name: 'bundled:maven',
@@ -27,7 +19,7 @@ function inspect(root, targetFile, options) {
         package: parseResult.data,
       };
     })
-    .catch(function(error) {
+    .catch((error) => {
       error.message = error.message + '\n\n' +
         'Please make sure that Apache Maven Dependency Plugin ' +
         'version 2.2 or above is installed, and that ' +
@@ -39,9 +31,9 @@ function inspect(root, targetFile, options) {
     });
 }
 
-function buildArgs(root, targetFile, mavenArgs) {
+export function buildArgs(root, targetFile, mavenArgs) {
   // Requires Maven >= 2.2
-  var args = ['dependency:tree', '-DoutputType=dot'];
+  let args = ['dependency:tree', '-DoutputType=dot'];
   if (targetFile) {
     if (!fs.existsSync(path.resolve(root, targetFile))) {
       throw new Error('File not found: "' + targetFile + '"');
