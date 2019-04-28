@@ -1,3 +1,6 @@
 /node_modules/
 __pycache__/
 *.pyc
+/dist
+package-lock.json
+npm-debug.log
