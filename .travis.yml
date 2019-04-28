@@ -1,15 +1,44 @@
-dist: trusty
+os:
+  - linux
 sudo: false
 notifications:
   email: false
 language: node_js
+# addons:
+#   apt:
+#     packages:
+#       - openjdk-6-jdk
+jdk:
+  - openjdk8
+  - oraclejdk9
 node_js:
   - "10"
-  - "8"
-  - "6"
+  # - "8"
+  # - "6"
+env:
+  - MAVEN_VERSION=3.6.1 JAVA_VERSION=openjdk8
+  - MAVEN_VERSION=3.6.1 JAVA_VERSION=oraclejdk9
+
+  - MAVEN_VERSION=3.2.5 JAVA_VERSION=oraclejdk9
+  - MAVEN_VERSION=3.2.5 JAVA_VERSION=openjdk8
+
+
+  - MAVEN_VERSION=3.0.5 JAVA_VERSION=oraclejdk9
+  - MAVEN_VERSION=3.0.5 JAVA_VERSION=openjdk8
+
+
+before_install:
+  # sdkman helps to install different gradle versions
+  - curl -s "https://get.sdkman.io" | bash
+  - source "$HOME/.sdkman/bin/sdkman-init.sh"
+  - echo sdkman_auto_answer=true > ~/.sdkman/etc/config
 cache:
   directories:
     - node_modules
+script:
+  - sdk install maven $MAVEN_VERSION
+  - jdk_switcher use $JAVA_VERSION
+  - npm test
 jobs:
   include:
     - stage: npm release
