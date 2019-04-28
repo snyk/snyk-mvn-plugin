@@ -3,7 +3,7 @@ var path = require('path');
 var test = require('tap-only');
 var parse = require('../../lib/parse-mvn');
 
-test('compare full results - without --dev', function (t) {
+test('compare full results - without --dev', function(t) {
   t.plan(1);
   var mavenOutput = fs.readFileSync(path.join(
     __dirname, '..','fixtures', 'maven-dependency-tree-output.txt'), 'utf8');
@@ -14,7 +14,7 @@ test('compare full results - without --dev', function (t) {
   t.same(depTree.data, results);
 });
 
-test('compare full results - with --dev', function (t) {
+test('compare full results - with --dev', function(t) {
   t.plan(1);
   var mavenOutput = fs.readFileSync(path.join(
     __dirname, '..', 'fixtures', 'maven-dependency-tree-output.txt'), 'utf8');
@@ -25,7 +25,7 @@ test('compare full results - with --dev', function (t) {
   t.same(depTree.data, results);
 });
 
-test('test with bad mvn dependency:tree output', function (t) {
+test('test with bad mvn dependency:tree output', function(t) {
   t.plan(1);
   var mavenOutput = fs.readFileSync(path.join(
     __dirname, '..', 'fixtures', 'maven-dependency-tree-bad.txt'), 'utf8');
@@ -38,7 +38,7 @@ test('test with bad mvn dependency:tree output', function (t) {
   }
 });
 
-test('test with error mvn dependency:tree output', function (t) {
+test('test with error mvn dependency:tree output', function(t) {
   t.plan(1);
   var mavenOutput = fs.readFileSync(path.join(
     __dirname, '..', 'fixtures', 'maven-dependency-tree-error.txt'), 'utf8');
@@ -51,7 +51,7 @@ test('test with error mvn dependency:tree output', function (t) {
   }
 });
 
-test('test with type "test-jar" in mvn dependency', function (t) {
+test('test with type "test-jar" in mvn dependency', function(t) {
   t.plan(1);
   var mavenOutput = fs.readFileSync(path.join(
     __dirname, '..', 'fixtures',
