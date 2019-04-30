@@ -3,12 +3,6 @@
   "extends": [
       "tslint:recommended"
   ],
-  "jsRules": {
-    "quotemark": {
-        "options": "single"
-    },
-    "object-literal-sort-keys": false
-  },
   "rules": {
       "interface-name": false,
       "no-var-requires": false,
