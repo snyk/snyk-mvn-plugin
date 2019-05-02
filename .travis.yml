@@ -7,9 +7,28 @@ node_js:
   - "10"
   - "8"
   - "6"
+jdk:
+  - oraclejdk9
+  - openjdk8
+env:
+  - MAVEN_VERSION=3.6.1 JAVA_VERSION=openjdk8
+  - MAVEN_VERSION=3.6.1 JAVA_VERSION=oraclejdk9
+
+  - MAVEN_VERSION=3.3.9 JAVA_VERSION=oraclejdk9
+  - MAVEN_VERSION=3.3.9 JAVA_VERSION=openjdk8
+
+before_install:
+  # sdkman helps to install different gradle versions
+  - curl -s "https://get.sdkman.io" | bash
+  - source "$HOME/.sdkman/bin/sdkman-init.sh"
+  - echo sdkman_auto_answer=true > ~/.sdkman/etc/config
 cache:
   directories:
     - node_modules
+script:
+  - jdk_switcher use $JAVA_VERSION
+  - sdk install maven $MAVEN_VERSION
+  - npm test
 jobs:
   include:
     - stage: npm release
