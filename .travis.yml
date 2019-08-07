@@ -57,6 +57,24 @@ jobs:
         - sdk install maven $MAVEN_VERSION
         - java -version
         - npm test
+    -
+      node_js: 10
+      env: MAVEN_VERSION=3.6.1 JDK=12
+      script:
+        - source install-jdk.sh --feature $JDK
+        - ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts
+        - sdk install maven $MAVEN_VERSION
+        - java -version
+        - npm test
+    -
+      node_js: 10
+      env: MAVEN_VERSION=3.6.1 JDK=13
+      script:
+        - source install-jdk.sh --feature $JDK
+        - ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts
+        - sdk install maven $MAVEN_VERSION
+        - java -version
+        - npm test
     # test MAVEN_VERSION=3.3.9
     - stage: Older Maven version
       env: MAVEN_VERSION=3.3.9 JDK=8
@@ -83,6 +101,22 @@ jobs:
         - npm test
     -
       env: MAVEN_VERSION=3.3.9 JDK=11
+      script:
+        - source install-jdk.sh --feature $JDK
+        - ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts
+        - sdk install maven $MAVEN_VERSION
+        - java -version
+        - npm test
+    -
+      env: MAVEN_VERSION=3.3.9 JDK=12
+      script:
+        - source install-jdk.sh --feature $JDK
+        - ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts
+        - sdk install maven $MAVEN_VERSION
+        - java -version
+        - npm test
+    -
+      env: MAVEN_VERSION=3.3.9 JDK=13
       script:
         - source install-jdk.sh --feature $JDK
         - ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts
