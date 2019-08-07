@@ -21,7 +21,6 @@ before_install:
 
 jobs:
   include:
-    # test MAVEN_VERSION=3.6.1
     - stage: Node versions + actual Maven version
       node_js: 6
       env: MAVEN_VERSION=3.6.1 JDK=8
@@ -75,7 +74,6 @@ jobs:
         - sdk install maven $MAVEN_VERSION
         - java -version
         - npm test
-    # test MAVEN_VERSION=3.3.9
     - stage: Older Maven version
       env: MAVEN_VERSION=3.3.9 JDK=8
       script:
