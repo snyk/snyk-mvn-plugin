@@ -6,4 +6,6 @@ Snyk helps you find, fix and monitor for known vulnerabilities in your dependenc
 
 ## Snyk Maven CLI Plugin
 
-This plugin provides dependency metadata for Maven projects that use `mvn` and have a `pom.xml` file.
+This plugin provides dependency metadata for Maven projects that use mvn and have a pom.xml file. It is an internal component intended for use by our [CLI tool](https://github.com/snyk/snyk).
+
+If you are looking to add tasks to your Maven build process you should use our [Maven Plugin](https://github.com/snyk/snyk-maven-plugin).
