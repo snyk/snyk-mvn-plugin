@@ -1,4 +1,4 @@
-import {legacyCommon} from '@snyk/cli-interface';
+import { legacyCommon } from '@snyk/cli-interface';
 
 const newline = /[\r\n]+/g;
 const logLabel = /^\[\w+\]\s*/gm;
@@ -18,7 +18,7 @@ export function parseTree(text: string, withDev) {
   // extract deps
   const data = getRootProject(text, withDev);
 
-  return {ok: true, data};
+  return { ok: true, data };
 }
 
 function getRootProject(text, withDev) {
@@ -27,7 +27,7 @@ function getRootProject(text, withDev) {
     throw new Error('Cannot find dependency information.');
   }
   const rootProject = getProject(projects[0], withDev);
-  const defaultRoot: legacyCommon.DepTree =  {
+  const defaultRoot: legacyCommon.DepTree = {
     name: 'no-name',
     version: '0.0.0',
     dependencies: {},
@@ -41,7 +41,10 @@ function getRootProject(text, withDev) {
 
   // Add any subsequent projects to the root as dependencies
   for (let i = 1; i < projects.length; i++) {
-    const project: legacyCommon.DepTree | null = getProject(projects[i], withDev);
+    const project: legacyCommon.DepTree | null = getProject(
+      projects[i],
+      withDev,
+    );
     if (project && project.name) {
       root.dependencies = {};
       root.dependencies[project.name] = project;
@@ -65,9 +68,17 @@ function getProject(projectDump, withDev) {
   return assemblePackage(identity, deps, withDev);
 }
 
-function assemblePackage(source, projectDeps, withDev): legacyCommon.DepTree | null {
+function assemblePackage(
+  source,
+  projectDeps,
+  withDev,
+): legacyCommon.DepTree | null {
   const sourcePackage: legacyCommon.DepTree = createPackage(source);
-  if (sourcePackage.labels && sourcePackage.labels.scope === 'test' && !withDev) {
+  if (
+    sourcePackage.labels &&
+    sourcePackage.labels.scope === 'test' &&
+    !withDev
+  ) {
     // skip a test dependency if it's not asked for
     return null;
   }
@@ -76,7 +87,10 @@ function assemblePackage(source, projectDeps, withDev): legacyCommon.DepTree | n
     sourcePackage.dependencies = {};
     for (const dep of sourceDeps) {
       const pkg: legacyCommon.DepTree | null = assemblePackage(
-        dep, projectDeps, withDev);
+        dep,
+        projectDeps,
+        withDev,
+      );
       if (pkg && pkg.name) {
         sourcePackage.dependencies[pkg.name] = pkg;
       }
