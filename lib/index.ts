@@ -3,19 +3,26 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as subProcess from './sub-process';
 import { legacyPlugin } from '@snyk/cli-interface';
+import { isJar, getTempPomPathForJar } from './jar';
 
 export async function inspect(
   root: string,
   targetFile: string,
   options?: legacyPlugin.InspectOptions,
 ): Promise<legacyPlugin.InspectResult> {
+
   if (!options) {
     options = { dev: false };
+  }
+
+  if (isJar(targetFile)) {
+    targetFile = await getTempPomPathForJar(root, targetFile);
   }
 
   const mvnArgs = buildArgs(root, targetFile, options.args);
   try {
     const result = await subProcess.execute('mvn', mvnArgs, { cwd: root });
+
     const parseResult = parseTree(result, options.dev);
     return {
       plugin: {
