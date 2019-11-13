@@ -33,6 +33,7 @@
     "tslint": "5.16.0"
   },
   "dependencies": {
+    "@snyk/cli-interface": "2.2.0",
     "lodash": "^4.17.15",
     "tslib": "1.9.3"
   }
