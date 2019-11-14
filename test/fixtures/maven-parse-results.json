@@ -10,13 +10,17 @@
           "version": "2.0.0.BUILD-SNAPSHOT",
           "name": "org.springframework.boot:spring-boot",
           "dependencies": {},
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         },
         "org.springframework.boot:spring-boot-autoconfigure": {
           "version": "2.0.0.BUILD-SNAPSHOT",
           "name": "org.springframework.boot:spring-boot-autoconfigure",
           "dependencies": {},
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         },
         "org.springframework.boot:spring-boot-starter-logging": {
           "version": "2.0.0.BUILD-SNAPSHOT",
@@ -30,25 +34,35 @@
                   "version": "1.2.3",
                   "name": "ch.qos.logback:logback-core",
                   "dependencies": {},
-                  "scope": "compile"
+                  "labels": {
+                    "scope": "compile"
+                  }
                 }
               },
-              "scope": "compile"
+              "labels": {
+                "scope": "compile"
+              }
             },
             "org.slf4j:jul-to-slf4j": {
               "version": "1.7.25",
               "name": "org.slf4j:jul-to-slf4j",
               "dependencies": {},
-              "scope": "compile"
+              "labels": {
+                "scope": "compile"
+              }
             },
             "org.slf4j:log4j-over-slf4j": {
               "version": "1.7.25",
               "name": "org.slf4j:log4j-over-slf4j",
               "dependencies": {},
-              "scope": "compile"
+              "labels": {
+                "scope": "compile"
+              }
             }
           },
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         },
         "org.springframework:spring-core": {
           "version": "5.0.0.RC2",
@@ -58,19 +72,27 @@
               "version": "5.0.0.RC2",
               "name": "org.springframework:spring-jcl",
               "dependencies": {},
-              "scope": "compile"
+              "labels": {
+                "scope": "compile"
+              }
             }
           },
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         },
         "org.yaml:snakeyaml": {
           "version": "1.18",
           "name": "org.yaml:snakeyaml",
           "dependencies": {},
-          "scope": "runtime"
+          "labels": {
+            "scope": "runtime"
+          }
         }
       },
-      "scope": "compile"
+      "labels": {
+        "scope": "compile"
+      }
     },
     "org.springframework:spring-context-support": {
       "version": "5.0.0.RC2",
@@ -80,7 +102,9 @@
           "version": "5.0.0.RC2",
           "name": "org.springframework:spring-beans",
           "dependencies": {},
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         },
         "org.springframework:spring-context": {
           "version": "5.0.0.RC2",
@@ -90,25 +114,35 @@
               "version": "5.0.0.RC2",
               "name": "org.springframework:spring-aop",
               "dependencies": {},
-              "scope": "compile"
+              "labels": {
+                "scope": "compile"
+              }
             },
             "org.springframework:spring-expression": {
               "version": "5.0.0.RC2",
               "name": "org.springframework:spring-expression",
               "dependencies": {},
-              "scope": "compile"
+              "labels": {
+                "scope": "compile"
+              }
             }
           },
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         }
       },
-      "scope": "compile"
+      "labels": {
+        "scope": "compile"
+      }
     },
     "org.springframework:spring-tx": {
       "version": "5.0.0.RC2",
       "name": "org.springframework:spring-tx",
       "dependencies": {},
-      "scope": "compile"
+      "labels": {
+        "scope": "compile"
+      }
     },
     "org.quartz-scheduler:quartz": {
       "version": "2.3.0",
@@ -118,28 +152,38 @@
           "version": "0.9.5.2",
           "name": "com.mchange:c3p0",
           "dependencies": {},
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         },
         "com.mchange:mchange-commons-java": {
           "version": "0.2.11",
           "name": "com.mchange:mchange-commons-java",
           "dependencies": {},
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         },
         "com.zaxxer:HikariCP-java6": {
           "version": "2.3.13",
           "name": "com.zaxxer:HikariCP-java6",
           "dependencies": {},
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         },
         "org.slf4j:slf4j-api": {
           "version": "1.7.25",
           "name": "org.slf4j:slf4j-api",
           "dependencies": {},
-          "scope": "compile"
+          "labels": {
+            "scope": "compile"
+          }
         }
       },
-      "scope": "compile"
+      "labels": {
+        "scope": "compile"
+      }
     }
   },
   "packageFormatVersion": "mvn:0.0.1"

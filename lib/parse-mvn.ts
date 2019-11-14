@@ -1,5 +1,4 @@
-import {DepTree} from './types';
-import * as _ from 'lodash';
+import {legacyCommon} from '@snyk/cli-interface';
 
 const newline = /[\r\n]+/g;
 const logLabel = /^\[\w+\]\s*/gm;
@@ -7,7 +6,7 @@ const digraph = /digraph([\s\S]*?)\}/g;
 const errorLabel = /^\[ERROR\]/gm;
 
 // Parse the output from 'mvn dependency:tree -DoutputType=dot'
-export function parseTree(text, withDev) {
+export function parseTree(text: string, withDev) {
   // check for errors in mvn output
   if (errorLabel.test(text)) {
     throw new Error('Failed to execute an `mvn` command.');
@@ -28,7 +27,7 @@ function getRootProject(text, withDev) {
     throw new Error('Cannot find dependency information.');
   }
   const rootProject = getProject(projects[0], withDev);
-  const defaultRoot: DepTree =  {
+  const defaultRoot: legacyCommon.DepTree =  {
     name: 'no-name',
     version: '0.0.0',
     dependencies: {},
@@ -42,7 +41,7 @@ function getRootProject(text, withDev) {
 
   // Add any subsequent projects to the root as dependencies
   for (let i = 1; i < projects.length; i++) {
-    const project: DepTree | null = getProject(projects[i], withDev);
+    const project: legacyCommon.DepTree | null = getProject(projects[i], withDev);
     if (project && project.name) {
       root.dependencies = {};
       root.dependencies[project.name] = project;
@@ -66,9 +65,9 @@ function getProject(projectDump, withDev) {
   return assemblePackage(identity, deps, withDev);
 }
 
-function assemblePackage(source, projectDeps, withDev): DepTree | null {
-  const sourcePackage: DepTree = createPackage(source);
-  if (sourcePackage.scope === 'test' && !withDev) {
+function assemblePackage(source, projectDeps, withDev): legacyCommon.DepTree | null {
+  const sourcePackage: legacyCommon.DepTree = createPackage(source);
+  if (sourcePackage.labels && sourcePackage.labels.scope === 'test' && !withDev) {
     // skip a test dependency if it's not asked for
     return null;
   }
@@ -76,9 +75,9 @@ function assemblePackage(source, projectDeps, withDev): DepTree | null {
   if (sourceDeps) {
     sourcePackage.dependencies = {};
     for (const dep of sourceDeps) {
-      const pkg: DepTree | null = assemblePackage(
+      const pkg: legacyCommon.DepTree | null = assemblePackage(
         dep, projectDeps, withDev);
-      if (pkg) {
+      if (pkg && pkg.name) {
         sourcePackage.dependencies[pkg.name] = pkg;
       }
     }
@@ -94,20 +93,17 @@ function createPackage(pkgStr) {
   }
 
   const parts = pkgStr.split(':');
-  const result: DepTree = {
+  const result: legacyCommon.DepTree = {
     version: parts[3],
     name: parts[0] + ':' + parts[1],
     dependencies: {},
   };
 
   if (parts.length >= 5) {
-    result.scope = parts[parts.length - 1];
+    result.labels = {
+      scope: parts[parts.length - 1],
+    };
     result.version = parts[parts.length - 2];
-  }
-
-  // TODO: This is likely obsolete, remove
-  if (range) {
-    result.dep = range;
   }
 
   return result;
