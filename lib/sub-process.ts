@@ -4,7 +4,7 @@ export function execute(command, args, options): Promise<string> {
   const spawnOptions: {
     shell: boolean;
     cwd?: string;
-  } = {shell: true};
+  } = { shell: true };
   if (options && options.cwd) {
     spawnOptions.cwd = options.cwd;
   }
