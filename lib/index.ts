@@ -10,7 +10,6 @@ export async function inspect(
   targetFile: string,
   options?: legacyPlugin.InspectOptions,
 ): Promise<legacyPlugin.InspectResult> {
-
   if (!options) {
     options = { dev: false };
   }
