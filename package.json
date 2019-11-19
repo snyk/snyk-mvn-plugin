@@ -26,21 +26,22 @@
   "author": "snyk.io",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@snyk/cli-interface": "2.2.0",
     "@types/node": "11.13.8",
     "@typescript-eslint/eslint-plugin": "^1.13.0",
     "@typescript-eslint/parser": "^1.13.0",
     "eslint": "^6.5.1",
-    "eslint-config-prettier": "^6.4.0",
+    "eslint-config-prettier": "^6.6.0",
     "prettier": "^1.19.1",
     "semantic-release": "^15",
     "tap": "^12.0.1",
-    "tap-only": "0.0.5",
-    "tslint": "5.16.0"
+    "tap-only": "0.0.5"
   },
   "dependencies": {
     "@snyk/cli-interface": "2.2.0",
+    "debug": "^4.1.1",
     "lodash": "^4.17.15",
+    "request-promise-native": "^1.0.8",
+    "tmp": "^0.1.0",
     "tslib": "1.9.3"
   }
 }
