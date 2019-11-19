@@ -53,7 +53,7 @@ export async function getTempPomPathForJar(
         artifactId: a,
         version: v,
       },
-      jarName,
+      getProjectNameFromJarPathParts(root, jarName),
     );
     return createTempPomFile(jarPath, pomText);
   } catch (error) {
@@ -108,4 +108,17 @@ async function createTempPomFile(
       error.message + '\n\n' + 'Failed to create a temporary pom file.';
     throw error;
   }
+}
+
+function getProjectNameFromJarPathParts(root, jarName) {
+  let projectGroupId = path.dirname(jarName);
+  if (path.dirname(jarName) === '.') {
+    // we are in directory of the jar
+    projectGroupId = path.basename(root);
+  }
+
+  return {
+    projectGroupId,
+    projectArtifactId: path.basename(jarName),
+  };
 }

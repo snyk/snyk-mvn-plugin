@@ -17,6 +17,12 @@ test('run inspect() on jar', async (t) => {
   );
 
   t.equals(
+    result.package.name,
+    'jars:spring-core-5.1.8.RELEASE.jar',
+    'correct project name',
+  );
+
+  t.equals(
     result.package.dependencies!['org.springframework:spring-core'].version,
     '5.1.8.RELEASE',
     'correct version found',
@@ -27,6 +33,21 @@ test('run inspect() on jar', async (t) => {
       .dependencies!['org.springframework:spring-jcl'].version,
     '5.1.8.RELEASE',
     'correct sub dependency version found',
+  );
+});
+
+test('run inspect() on full path jar', async (t) => {
+  const result = await plugin.inspect(
+    path.join(__dirname, '..'),
+    path.join('fixtures', 'jars', 'spring-core-5.1.8.RELEASE.jar'),
+  );
+  if (legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected single inspect result');
+  }
+  t.equals(
+    result.package.name,
+    'fixtures.jars:spring-core-5.1.8.RELEASE.jar',
+    'correct project name',
   );
 });
 
