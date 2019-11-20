@@ -36,8 +36,8 @@ export async function readJSON(filePath: string) {
  *
  * @param fixturePath path relative to test fixtures directory.
  */
-export async function readFixture(fixturePath: string) {
-  const filePath = path.join(__dirname, 'fixtures', fixturePath);
+export async function readFixture(...paths: string[]) {
+  const filePath = path.join(__dirname, 'fixtures', ...paths);
   return await readFile(filePath);
 }
 
@@ -46,7 +46,7 @@ export async function readFixture(fixturePath: string) {
  *
  * @param fixturePath path relative to test fixtures directory.
  */
-export async function readFixtureJSON(fixturePath: string) {
-  const filePath = path.join(__dirname, 'fixtures', fixturePath);
+export async function readFixtureJSON(...paths: string[]) {
+  const filePath = path.join(__dirname, 'fixtures', ...paths);
   return await readJSON(filePath);
 }

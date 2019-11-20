@@ -1,5 +1,6 @@
 import * as test from 'tap-only';
-import { isJar } from '../../lib/jar';
+import * as path from 'path';
+import { containsJar, isJar } from '../../lib/jar';
 
 test('isJar', async (t) => {
   [
@@ -19,4 +20,19 @@ test('isJar', async (t) => {
     'path/to/war/mvn-app-1.0-SNAPSHOTwar',
     'path/to/zip/mvn-app-1.0-SNAPSHOTzip',
   ].forEach((i) => t.notOk(isJar(i), 'should be false for ' + i));
+});
+
+const fixturesPath = path.join(__dirname, '..', 'fixtures');
+const springCorePath = path.join(fixturesPath, 'spring-core');
+const badPath = path.join(fixturesPath, 'bad');
+const dummyPath = path.join(fixturesPath, 'dummy');
+
+test('containsJar', async (t) => {
+  [springCorePath, badPath].forEach((i) =>
+    t.ok(containsJar(i), 'should be true for ' + path.basename(i)),
+  );
+
+  [fixturesPath, dummyPath].forEach((i) =>
+    t.notOk(containsJar(i), 'should be false for ' + path.basename(i)),
+  );
 });
