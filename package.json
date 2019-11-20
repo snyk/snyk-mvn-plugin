@@ -40,7 +40,7 @@
     "@snyk/cli-interface": "2.2.0",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
-    "request-promise-native": "^1.0.8",
+    "needle": "^2.4.0",
     "tmp": "^0.1.0",
     "tslib": "1.9.3"
   }
