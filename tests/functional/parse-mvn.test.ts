@@ -1,88 +1,62 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import * as test from 'tap-only';
+import { readFixture, readFixtureJSON } from '../file-helper';
 import { parseTree } from '../../lib/parse-mvn';
 
-test('compare full results - without --dev', (t) => {
-  t.plan(1);
-  const mavenOutput = fs.readFileSync(
-    path.join(__dirname, '..', 'fixtures', 'maven-dependency-tree-output.txt'),
-    'utf8',
+test('parseTree without --dev', async (t) => {
+  const mavenOutput = await readFixture(
+    'parse-mvn/maven-dependency-tree-output.txt',
   );
   const depTree = parseTree(mavenOutput, false);
-  const results = require(path.join(
-    __dirname,
-    '..',
-    'fixtures',
-    'maven-parse-results.json',
-  ));
-
-  t.same(depTree.data, results);
+  const results = await readFixtureJSON('parse-mvn/maven-parse-results.json');
+  t.same(depTree.data, results, 'should return expected results');
 });
 
-test('compare full results - with --dev', (t) => {
-  t.plan(1);
-  const mavenOutput = fs.readFileSync(
-    path.join(__dirname, '..', 'fixtures', 'maven-dependency-tree-output.txt'),
-    'utf8',
+test('parseTree with --dev', async (t) => {
+  const mavenOutput = await readFixture(
+    'parse-mvn/maven-dependency-tree-output.txt',
   );
   const depTree = parseTree(mavenOutput, true);
-  const results = require(path.join(
-    __dirname,
-    '..',
-    'fixtures',
-    'maven-parse-dev-results.json',
-  ));
-
-  t.same(depTree.data, results);
+  const results = await readFixtureJSON(
+    'parse-mvn/maven-parse-dev-results.json',
+  );
+  t.same(depTree.data, results, 'should return expected results');
 });
 
-test('test with bad mvn dependency:tree output', (t) => {
-  t.plan(1);
-  const mavenOutput = fs.readFileSync(
-    path.join(__dirname, '..', 'fixtures', 'maven-dependency-tree-bad.txt'),
-    'utf8',
+test('parseTree with bad mvn dependency:tree output', async (t) => {
+  const mavenOutput = await readFixture(
+    'parse-mvn/maven-dependency-tree-bad.txt',
   );
   try {
     parseTree(mavenOutput, true);
-    t.fail('Should have thrown!');
+    t.fail('expected parseTree to throw error');
   } catch (error) {
     t.equals(
       error.message,
       'Cannot find dependency information.',
-      'proper error message',
+      'should throw expected error',
     );
   }
 });
 
-test('test with error mvn dependency:tree output', (t) => {
-  t.plan(1);
-  const mavenOutput = fs.readFileSync(
-    path.join(__dirname, '..', 'fixtures', 'maven-dependency-tree-error.txt'),
-    'utf8',
+test('parseTree with error mvn dependency:tree output', async (t) => {
+  const mavenOutput = await readFixture(
+    'parse-mvn/maven-dependency-tree-error.txt',
   );
   try {
     parseTree(mavenOutput, true);
-    t.fail('Should have thrown!');
+    t.fail('expected parseTree to throw error');
   } catch (error) {
     t.equals(
       error.message,
       'Failed to execute an `mvn` command.',
-      'proper error message',
+      'should throw expected error',
     );
   }
 });
 
-test('test with type "test-jar" in mvn dependency', (t) => {
-  t.plan(1);
-  const mavenOutput = fs.readFileSync(
-    path.join(
-      __dirname,
-      '..',
-      'fixtures',
-      'maven-dependency-tree-with-type.txt',
-    ),
-    'utf8',
+test('parseTree with type "test-jar" in mvn dependency', async (t) => {
+  const mavenOutput = await readFixture(
+    'parse-mvn/maven-dependency-tree-with-type.txt',
   );
   const result = parseTree(mavenOutput, true);
   if (result && result.data && result.data.dependencies) {
@@ -91,6 +65,6 @@ test('test with type "test-jar" in mvn dependency', (t) => {
       '15.0.0',
     );
   } else {
-    t.fail('Should have passed!');
+    t.fail('result.data.dependencies was empty');
   }
 });
