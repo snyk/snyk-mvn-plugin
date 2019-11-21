@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
-import * as request from 'request-promise-native';
+import * as needle from 'needle';
 import { createPom } from './pom';
 
 import * as tmp from 'tmp';
@@ -72,24 +72,29 @@ export function isJar(file: string) {
 }
 
 async function getMavenPackageInfo(sha1: string): Promise<MavenPackageInfo> {
-  const res: MavenCentralResponse = await request({
-    url: MAVEN_SEARCH_URL,
-    qs: {
-      wt: 'json',
-      q: `1:"${sha1}"`,
-    },
-    json: true,
+  const url = `${MAVEN_SEARCH_URL}?q=1:"${sha1}"&wt=json`;
+  return new Promise((resolve, reject) => {
+    needle.request(
+      'get',
+      url,
+      {},
+      { json: true },
+      (err, fullRes, res: MavenCentralResponse) => {
+        if (err) {
+          reject(err);
+        }
+        if (!res || !res.response || res.response.docs.length === 0) {
+          reject(new Error('No package found for provided sha1 hash'));
+        }
+
+        if (res.response.docs.length > 1) {
+          debug('Got multiple results for sha1, only returning first one');
+        }
+
+        resolve(res.response.docs[0]);
+      },
+    );
   });
-
-  if (!res || !res.response || res.response.docs.length === 0) {
-    throw new Error('No package found for provided sha1 hash');
-  }
-
-  if (res.response.docs.length > 1) {
-    debug('Got multiple results for sha1, only returning first one');
-  }
-
-  return res.response.docs[0];
 }
 
 async function createTempPomFile(
