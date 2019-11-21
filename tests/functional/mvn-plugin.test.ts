@@ -1,23 +1,20 @@
 import * as test from 'tap-only';
 import * as plugin from '../../lib';
 
-test('check build args with array', (t) => {
+test('buildArgs with array', async (t) => {
   const result = plugin.buildArgs(null, null, ['-Paxis', '-Pjaxen']);
-  t.deepEquals(result, [
-    'dependency:tree',
-    '-DoutputType=dot',
-    '-Paxis',
-    '-Pjaxen',
-  ]);
-  t.end();
+  t.same(
+    result,
+    ['dependency:tree', '-DoutputType=dot', '-Paxis', '-Pjaxen'],
+    'should return expected array',
+  );
 });
 
-test('check build args with string', (t) => {
+test('buildArgs with string', async (t) => {
   const result = plugin.buildArgs(null, null, '-Paxis -Pjaxen');
-  t.deepEqual(result, [
-    'dependency:tree',
-    '-DoutputType=dot',
-    '-Paxis -Pjaxen',
-  ]);
-  t.end();
+  t.same(
+    result,
+    ['dependency:tree', '-DoutputType=dot', '-Paxis -Pjaxen'],
+    'should return expected array',
+  );
 });

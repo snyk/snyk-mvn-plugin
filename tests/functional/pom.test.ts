@@ -1,11 +1,10 @@
-import * as path from 'path';
 import * as test from 'tap-only';
-import * as fs from 'fs';
+import * as path from 'path';
+import { readFixture } from '../file-helper';
 import { createPom } from '../../lib/pom';
 
-test('calling createPom with groupId and artifactId', async (t) => {
-  const fixturePath = path.join(__dirname, '../fixtures/snyk/pom.xml');
-  const expected = fs.readFileSync(fixturePath, 'utf8');
+test('createPom with dependency and root dependency', async (t) => {
+  const expected = await readFixture('snyk/pom.xml');
   const result = createPom(
     {
       artifactId: 'artifact',

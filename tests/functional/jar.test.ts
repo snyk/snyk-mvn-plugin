@@ -1,26 +1,22 @@
 import * as test from 'tap-only';
 import { isJar } from '../../lib/jar';
 
-test('detects jar files', (t) => {
-  const jarPaths = [
+test('isJar', async (t) => {
+  [
     'mvn-app-1.0-SNAPSHOT.jar',
     'mvn-app-1.0-SNAPSHOT.war',
     'mvn-app-1.0-SNAPSHOT.zip',
-  ];
-  for (const path of jarPaths) {
-    t.ok(isJar(path), path);
-  }
-  t.end();
-});
+    'path/to/mvn-app-1.0-SNAPSHOT.jar',
+    'path/to/mvn-app-1.0-SNAPSHOT.war',
+    'path/to/mvn-app-1.0-SNAPSHOT.zip',
+  ].forEach((i) => t.ok(isJar(i), 'should be true for ' + i));
 
-test('ignores non jar files', (t) => {
-  const jarPaths = [
+  [
     'mvn-app-1.0-SNAPSHOTjar',
     'mvn-app-1.0-SNAPSHOT.txt',
     'mvn-app-1.0-SNAPSHOT.jzip',
-  ];
-  for (const path of jarPaths) {
-    t.ok(!isJar(path), path);
-  }
-  t.end();
+    'path/to/jar/mvn-app-1.0-SNAPSHOTjar',
+    'path/to/war/mvn-app-1.0-SNAPSHOTwar',
+    'path/to/zip/mvn-app-1.0-SNAPSHOTzip',
+  ].forEach((i) => t.notOk(isJar(i), 'should be false for ' + i));
 });
