@@ -3,25 +3,43 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as subProcess from './sub-process';
 import { legacyPlugin } from '@snyk/cli-interface';
-import { isJar, getTempPomPathForJar } from './jar';
+import { containsJar, createPomForJar, createPomForJars, isJar } from './jar';
+
+export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
+  scanAllUnmanaged?: boolean;
+}
 
 export async function inspect(
   root: string,
-  targetFile: string,
-  options?: legacyPlugin.InspectOptions,
+  targetFile?: string,
+  options?: MavenOptions,
 ): Promise<legacyPlugin.InspectResult> {
+  const targetPath = targetFile
+    ? path.resolve(root, targetFile)
+    : path.resolve(root);
+  if (!fs.existsSync(targetPath)) {
+    throw new Error('Could not find file or directory ' + targetPath);
+  }
+
   if (!options) {
-    options = { dev: false };
+    options = { dev: false, scanAllUnmanaged: false };
   }
 
-  if (isJar(targetFile)) {
-    targetFile = await getTempPomPathForJar(root, targetFile);
+  if (isJar(targetPath)) {
+    targetFile = await createPomForJar(root, targetFile!);
   }
 
-  const mvnArgs = buildArgs(root, targetFile, options.args);
+  if (options.scanAllUnmanaged) {
+    if (containsJar(root)) {
+      targetFile = await createPomForJars(root);
+    } else {
+      throw Error(`Could not find any supported files in '${root}'.`);
+    }
+  }
+
+  const mvnArgs = buildArgs(targetFile, options.args);
   try {
     const result = await subProcess.execute('mvn', mvnArgs, { cwd: root });
-
     const parseResult = parseTree(result, options.dev);
     return {
       plugin: {
@@ -48,13 +66,13 @@ export async function inspect(
   }
 }
 
-export function buildArgs(root, targetFile, mavenArgs) {
+export function buildArgs(
+  targetFile?: string,
+  mavenArgs?: string[] | undefined,
+) {
   // Requires Maven >= 2.2
   let args = ['dependency:tree', '-DoutputType=dot'];
   if (targetFile) {
-    if (!fs.existsSync(path.resolve(root, targetFile))) {
-      throw new Error('File not found: "' + targetFile + '"');
-    }
     args.push('--file="' + targetFile + '"');
   }
   if (mavenArgs) {

@@ -1,8 +1,8 @@
 {
   "plugin": { "name": "bundled:maven", "runtime": "unknown" },
   "package": {
-    "name": "fixtures.jars:spring-core-5.1.8.RELEASE.jar",
-    "version": "1.0.0-SNAPSHOT",
+    "name": "spring-core:spring-core-5.1.8.RELEASE.jar",
+    "version": "1.0.0",
     "dependencies": {
       "org.springframework:spring-core": {
         "version": "5.1.8.RELEASE",
