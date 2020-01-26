@@ -17,6 +17,17 @@ test('inspect on test-project pom', async (t) => {
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('test-project', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
 });
 
@@ -35,6 +46,17 @@ test('inspect on test-project pom with --dev', async (t) => {
     'test-project',
     'expected-with-dev.json',
   );
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
 });
 
@@ -47,6 +69,17 @@ test('inspect on path with spaces pom', async (t) => {
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('path with spaces', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
 });
 
@@ -59,6 +92,17 @@ test('inspect on relative path to test-project pom', async (t) => {
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('test-project', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
 });
 
@@ -71,6 +115,17 @@ test('inspect on relative path to test-project dir', async (t) => {
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('test-project', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // once checked, compare platform-independent properties only
+  delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
 });
 
@@ -80,6 +135,17 @@ test('inspect on root that contains pom.xml and no target file', async (t) => {
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('test-project', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
 });
 

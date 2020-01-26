@@ -18,6 +18,17 @@ test('inspect with spring-core jar file', async (t) => {
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('spring-core', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
 });
 
@@ -75,6 +86,17 @@ test('inspect in directory with jars no target file and --scan-all-unmanaged arg
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('jars', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
 });
 
@@ -86,6 +108,17 @@ test('inspect on target pom file in directory with jars and --scan-all-unmanaged
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('jars', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
   t.same(
     result,
     expected,
@@ -114,5 +147,16 @@ test('inspect in directory with good and bad jars and --scan-all-unmanaged arg',
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('good-and-bad', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
   t.same(result, expected, 'should return good dependency, with bad ignored');
 });

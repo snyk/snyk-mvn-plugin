@@ -1,4 +1,4 @@
-import { parseTree } from './parse-mvn';
+import { parseTree, parseVersions } from './parse-mvn';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as subProcess from './sub-process';
@@ -40,11 +40,23 @@ export async function inspect(
   const mvnArgs = buildArgs(targetFile, options.args);
   try {
     const result = await subProcess.execute('mvn', mvnArgs, { cwd: root });
+    const versionResult = await subProcess.execute('mvn --version', [], {
+      cwd: root,
+    });
     const parseResult = parseTree(result, options.dev);
+    const { javaVersion, mavenVersion } = parseVersions(versionResult);
     return {
       plugin: {
         name: 'bundled:maven',
         runtime: 'unknown',
+        meta: {
+          versionBuildInfo: {
+            metaBuildVersion: {
+              mavenVersion,
+              javaVersion,
+            },
+          },
+        },
       },
       package: parseResult.data,
     };
