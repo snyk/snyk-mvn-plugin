@@ -1,6 +1,6 @@
 import * as test from 'tap-only';
 import { readFixture, readFixtureJSON } from '../file-helper';
-import { parseTree } from '../../lib/parse-mvn';
+import { parseTree, parseVersions } from '../../lib/parse-mvn';
 
 test('parseTree without --dev', async (t) => {
   const mavenOutput = await readFixture(
@@ -63,6 +63,23 @@ test('parseTree with type "test-jar" in mvn dependency', async (t) => {
     t.equals(
       result.data.dependencies['com.snyk.tester:tester-queue'].version,
       '15.0.0',
+    );
+  } else {
+    t.fail('result.data.dependencies was empty');
+  }
+});
+
+test('parseVersions from mvn --version', async (t) => {
+  const mavenOutput = await readFixture('parse-mvn/maven-versions.txt');
+  const result = parseVersions(mavenOutput);
+  if (result) {
+    t.equals(
+      result.javaVersion,
+      'Java version: 12.0.1, vendor: Oracle Corporation, runtime: /Library/Java/JavaVirtualMachines/openjdk-12.0.1.jdk/Contents/Home',
+    );
+    t.equals(
+      result.mavenVersion,
+      'Apache Maven 3.6.2 (40f52333136460af0dc0d7232c0dc0bcf0d9e117; 2019-08-27T17:06:16+02:00)',
     );
   } else {
     t.fail('result.data.dependencies was empty');
