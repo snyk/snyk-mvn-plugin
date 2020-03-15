@@ -9,6 +9,7 @@ const fixturesPath = path.join(testsPath, 'fixtures');
 const jarsPath = path.join(fixturesPath, 'jars');
 const badPath = path.join(fixturesPath, 'bad');
 const goodAndBadPath = path.join(fixturesPath, 'good-and-bad');
+const jarWrongPkgNamePath = path.join(fixturesPath, 'jar-wrong-package-name');
 const springCorePath = path.join(fixturesPath, 'spring-core');
 const springCoreJar = 'spring-core-5.1.8.RELEASE.jar';
 
@@ -159,4 +160,33 @@ test('inspect in directory with good and bad jars and --scan-all-unmanaged arg',
   // therefore, only independent objects are compared
   delete result.plugin.meta;
   t.same(result, expected, 'should return good dependency, with bad ignored');
+});
+
+test('inspect in directory with jar with wrong package name and --scan-all-unmanaged arg', async (t) => {
+  const result = await plugin.inspect(jarWrongPkgNamePath, undefined, {
+    scanAllUnmanaged: true,
+  });
+  if (legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected single inspect result');
+  }
+  const expected = await readFixtureJSON(
+    'jar-wrong-package-name',
+    'expected.json',
+  );
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
+  t.same(
+    result,
+    expected,
+    'should return a dependency regardless of the amount of sha1 versions from maven.',
+  );
 });

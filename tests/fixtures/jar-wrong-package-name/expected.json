@@ -1,0 +1,21 @@
+{
+  "package": {
+    "name": "fixtures:jar-wrong-package-name",
+    "packageFormatVersion": "mvn:0.0.1",
+    "version": "1.0.0",
+    "dependencies": {
+      "org.netbeans.external:org-apache-commons-io": {
+        "dependencies": {},
+        "labels": {
+          "scope": "compile"
+        },
+        "name": "org.netbeans.external:org-apache-commons-io",
+        "version": "RELEASE113"
+      }
+    }
+  },
+  "plugin": {
+    "name": "bundled:maven",
+    "runtime": "unknown"
+  }
+}

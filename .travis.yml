@@ -22,15 +22,6 @@ before_install:
 jobs:
   include:
     - stage: Node versions + actual Maven version
-      node_js: 6
-      env: MAVEN_VERSION=3.6.1 JDK=9
-      script:
-        - source install-jdk.sh --feature $JDK
-        - ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/lib/security/cacerts
-        - sdk install maven $MAVEN_VERSION
-        - java -version
-        - npm test
-    -
       node_js: 8
       env: MAVEN_VERSION=3.6.1 JDK=10
       script:
