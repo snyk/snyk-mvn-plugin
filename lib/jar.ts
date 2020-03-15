@@ -41,7 +41,7 @@ async function getMavenDependency(
   try {
     const contents = fs.readFileSync(targetPath);
     const sha1 = getSha1(contents);
-    const { g, a, v } = await getMavenPackageInfo(sha1);
+    const { g, a, v } = await getMavenPackageInfo(sha1, targetPath);
     return {
       groupId: g,
       artifactId: a,
@@ -119,7 +119,10 @@ export function containsJar(targetPath: string): boolean {
   return false;
 }
 
-async function getMavenPackageInfo(sha1: string): Promise<MavenPackageInfo> {
+async function getMavenPackageInfo(
+  sha1: string,
+  targetPath: string,
+): Promise<MavenPackageInfo> {
   const url = `${MAVEN_SEARCH_URL}?q=1:"${sha1}"&wt=json`;
   return new Promise((resolve, reject) => {
     needle.request(
@@ -138,11 +141,14 @@ async function getMavenPackageInfo(sha1: string): Promise<MavenPackageInfo> {
             ),
           );
         }
-
         if (res.response.docs.length > 1) {
-          debug('Got multiple results for sha1, only returning first one');
+          const sha1Target = path.parse(targetPath).base;
+          debug('Got multiple results for sha1, looking for', sha1Target);
+          const foundPackage = res.response.docs.find(({ g }) =>
+            sha1Target.includes(g),
+          );
+          res.response.docs = [foundPackage || res.response.docs[0]];
         }
-
         resolve(res.response.docs[0]);
       },
     );
