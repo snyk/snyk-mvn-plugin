@@ -18,3 +18,37 @@ Snyk helps you find, fix and monitor for known vulnerabilities in your dependenc
 This plugin provides dependency metadata for Maven projects that use mvn and have a pom.xml file. It is an internal component intended for use by our [CLI tool](https://github.com/snyk/snyk).
 
 If you are looking to add tasks to your Maven build process you should use our [Maven Plugin](https://github.com/snyk/snyk-maven-plugin).
+
+# Support
+
+❌ Not supported
+❓ No issues expected but not regularly tested
+✅ Supported and verified with tests
+
+## Supported OS
+
+| OS     |  Supported |
+|--------|------------|
+| Windows| ✅          |
+| Linux  | ✅          |
+| OSX    | ️✅          |
+
+## Supported Node versions
+
+| Node  |  Supported |
+|-------|------------|
+| 6     | ✅          |
+| 8     | ✅          |
+| 10    | ✅          |
+| 12    | ✅          |
+
+## Supported Java & Gradle versions
+
+| Java / Maven|3.* |
+|----------------|---|
+| 8 (LTS)        | ✅ |
+| 9              | ✅ |
+| 10             | ✅ |
+| 11 (LTS)       | ✅ |
+| 12             | ✅ | 
+| 13             | ✅ |
