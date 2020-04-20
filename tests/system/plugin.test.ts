@@ -1,10 +1,15 @@
 import * as path from 'path';
 import * as test from 'tap-only';
-import * as plugin from '../../lib';
-import { readFixtureJSON } from '../file-helper';
+import * as sinon from 'sinon';
+import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import { legacyPlugin } from '@snyk/cli-interface';
+import { CallGraph } from '@snyk/cli-interface/legacy/common';
 import * as os from 'os';
 
+import * as plugin from '../../lib';
+import { readFixtureJSON } from '../file-helper';
+
+// TODO update cli interface package
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');
 const testProjectPath = path.join(fixturesPath, 'test-project');
@@ -59,6 +64,34 @@ test('inspect on test-project pom with --dev', async (t) => {
   // therefore, only independent objects are compared
   delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
+});
+
+test('inspect on test-project pom with reachable vulns', async (t) => {
+  const mavenCallGraph = await readFixtureJSON('call-graphs', 'simple.json');
+  const javaCallGraphBuilderStub = sinon
+    .stub(javaCallGraphBuilder, 'getCallGraphMvn')
+    .resolves(mavenCallGraph as CallGraph);
+  const result = await plugin.inspect(
+    '.',
+    path.join(testProjectPath, 'pom.xml'),
+    {
+      reachableVulns: true,
+    },
+  );
+  const expected = await readFixtureJSON(
+    'test-project',
+    'expected-with-call-graph.json',
+  );
+  t.ok(javaCallGraphBuilderStub.calledOnce, 'called to the call graph builder');
+  t.ok(
+    javaCallGraphBuilderStub.calledWith(testProjectPath),
+    'call graph builder was called with the correct path',
+  );
+  delete result.plugin.meta;
+  t.same(result, expected, 'should return expected result');
+  t.tearDown(() => {
+    javaCallGraphBuilderStub.restore();
+  });
 });
 
 test('inspect on path with spaces pom', async (t) => {

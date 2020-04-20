@@ -27,19 +27,20 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "11.13.8",
+    "@types/sinon": "^7.5.2",
     "@typescript-eslint/eslint-plugin": "^2.8.0",
     "@typescript-eslint/parser": "^2.8.0",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.7.0",
     "prettier": "^1.19.1",
-    "@types/sinon": "^7.0.10",
     "semantic-release": "^15",
     "sinon": "^2.4.1",
     "tap": "^12.0.1",
     "tap-only": "0.0.5"
   },
   "dependencies": {
-    "@snyk/cli-interface": "2.3.1",
+    "@snyk/cli-interface": "2.4.0",
+    "@snyk/java-call-graph-builder": "^1.3.4",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "needle": "^2.4.0",

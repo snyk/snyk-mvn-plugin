@@ -17,5 +17,6 @@
   "plugin": {
     "name": "bundled:maven",
     "runtime": "unknown"
-  }
+  },
+  "callGraph": null
 }
