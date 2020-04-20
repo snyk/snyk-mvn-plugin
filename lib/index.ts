@@ -1,15 +1,15 @@
-import { parseTree, parseVersions } from './parse-mvn';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as subProcess from './sub-process';
 import { legacyPlugin } from '@snyk/cli-interface';
 import { CallGraph } from '@snyk/cli-interface/legacy/common';
-
 import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
-import { containsJar, createPomForJar, createPomForJars, isJar } from './jar';
 import * as os from 'os';
-
+import * as fs from 'fs';
+import * as path from 'path';
 import debugLib = require('debug');
+
+import { parseTree, parseVersions } from './parse-mvn';
+import * as subProcess from './sub-process';
+import { containsJar, createPomForJar, createPomForJars, isJar } from './jar';
+
 const debug = debugLib('snyk-mvn-plugin');
 
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {

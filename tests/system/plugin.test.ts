@@ -9,7 +9,6 @@ import * as os from 'os';
 import * as plugin from '../../lib';
 import { readFixtureJSON } from '../file-helper';
 
-// TODO update cli interface package
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');
 const testProjectPath = path.join(fixturesPath, 'test-project');
