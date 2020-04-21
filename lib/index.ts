@@ -1,13 +1,20 @@
-import { parseTree, parseVersions } from './parse-mvn';
+import { legacyPlugin } from '@snyk/cli-interface';
+import { CallGraph } from '@snyk/cli-interface/legacy/common';
+import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
+import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
+import debugLib = require('debug');
+
+import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
-import { legacyPlugin } from '@snyk/cli-interface';
 import { containsJar, createPomForJar, createPomForJars, isJar } from './jar';
-import * as os from 'os';
+
+const debug = debugLib('snyk-mvn-plugin');
 
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   scanAllUnmanaged?: boolean;
+  reachableVulns?: boolean;
 }
 
 export function getCommand(root: string, targetFile: string | undefined) {
@@ -88,6 +95,14 @@ export async function inspect(
     );
     const parseResult = parseTree(result, options.dev);
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
+    let callGraph: CallGraph | undefined;
+    if (options.reachableVulns) {
+      debug(`getting call graph from path ${targetPath}`);
+      callGraph = await javaCallGraphBuilder.getCallGraphMvn(
+        path.dirname(targetPath),
+      );
+      debug('got call graph successfully');
+    }
     return {
       plugin: {
         name: 'bundled:maven',
@@ -102,6 +117,7 @@ export async function inspect(
         },
       },
       package: parseResult.data,
+      callGraph,
     };
   } catch (error) {
     error.message = buildErrorMessage(error, mvnArgs, mavenCommand);

@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { test, Test } from 'tap';
+import { test } from 'tap';
 import { getCommand } from '../../lib';
 import * as os from 'os';
 
