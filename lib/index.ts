@@ -9,6 +9,8 @@ import debugLib = require('debug');
 import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
 import { containsJar, createPomForJar, createPomForJars, isJar } from './jar';
+import { CallGraphError } from './errors/call-graph-error';
+import { formatCallGraphError, formatGenericPluginError } from './error-format';
 
 const debug = debugLib('snyk-mvn-plugin');
 
@@ -98,10 +100,15 @@ export async function inspect(
     let callGraph: CallGraph | undefined;
     if (options.reachableVulns) {
       debug(`getting call graph from path ${targetPath}`);
-      callGraph = await javaCallGraphBuilder.getCallGraphMvn(
-        path.dirname(targetPath),
-      );
-      debug('got call graph successfully');
+      try {
+        callGraph = await javaCallGraphBuilder.getCallGraphMvn(
+          path.dirname(targetPath),
+        );
+        debug('got call graph successfully');
+      } catch (err) {
+        debug('call graph error: ', err);
+        throw new CallGraphError(err.message, err);
+      }
     }
     return {
       plugin: {
@@ -145,21 +152,8 @@ function buildErrorMessage(
   mvnArgs: string[],
   mavenCommand: string,
 ): string {
-  const mavenArguments: string = mvnArgs.join(' ');
-  const fullCommand = `${mavenCommand} ${mavenArguments}`;
-  const mvnwCommandTipMessage =
-    'Currently, you cannot run `mvnw` outside your current directory, you will have to go inside the directory of your project (see: https://github.com/takari/maven-wrapper/issues/133)\n\n';
-  return (
-    error.message +
-    '\n\n' +
-    'Please make sure that Apache Maven Dependency Plugin ' +
-    'version 2.2 or above is installed, and that `' +
-    fullCommand +
-    '` executes successfully ' +
-    'on this project.\n\n' +
-    (mavenCommand.indexOf('mvnw') >= 0 ? mvnwCommandTipMessage : '') +
-    'If the problem persists, collect the output of `' +
-    fullCommand +
-    '` and contact support@snyk.io\n'
-  );
+  if (error instanceof CallGraphError) {
+    return formatCallGraphError(error);
+  }
+  return formatGenericPluginError(error, mavenCommand, mvnArgs);
 }
