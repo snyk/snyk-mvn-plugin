@@ -98,12 +98,16 @@ export async function inspect(
     const parseResult = parseTree(result, options.dev);
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
     let callGraph: CallGraph | undefined;
+    let callGraphMetrics = {};
     if (options.reachableVulns) {
       debug(`getting call graph from path ${targetPath}`);
       try {
         callGraph = await javaCallGraphBuilder.getCallGraphMvn(
           path.dirname(targetPath),
         );
+        callGraphMetrics = {
+          callGraphMetrics: javaCallGraphBuilder.runtimeMetrics(),
+        };
         debug('got call graph successfully');
       } catch (err) {
         debug('call graph error: ', err);
@@ -121,6 +125,7 @@ export async function inspect(
               javaVersion,
             },
           },
+          ...callGraphMetrics,
         },
       },
       package: parseResult.data,
