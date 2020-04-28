@@ -52,6 +52,17 @@ test('inspect on test-project pom with reachable vulns', async (t) => {
   const javaCallGraphBuilderStub = sinon
     .stub(javaCallGraphBuilder, 'getCallGraphMvn')
     .resolves(mavenCallGraph as CallGraph);
+
+  const metrics = {
+    getEntrypoints: 0,
+    generateCallGraph: 13,
+    mapClassesPerJar: 12,
+    getCallGraph: 10,
+  };
+  const callGraphMetrics = sinon
+    .stub(javaCallGraphBuilder, 'runtimeMetrics')
+    .returns(metrics);
+
   const result = await plugin.inspect(
     '.',
     path.join(testProjectPath, 'pom.xml'),
@@ -68,6 +79,9 @@ test('inspect on test-project pom with reachable vulns', async (t) => {
     javaCallGraphBuilderStub.calledWith(testProjectPath),
     'call graph builder was called with the correct path',
   );
+  t.ok(callGraphMetrics.calledOnce, 'callgraph metrics were fetched');
+  t.equals((result.plugin.meta as any).callGraphMetrics, metrics);
+
   delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
   t.tearDown(() => {
