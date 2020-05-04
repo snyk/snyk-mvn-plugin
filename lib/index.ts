@@ -102,9 +102,7 @@ export async function inspect(
     if (options.reachableVulns) {
       debug(`getting call graph from path ${targetPath}`);
       try {
-        callGraph = await javaCallGraphBuilder.getCallGraphMvn(
-          path.dirname(targetPath),
-        );
+        callGraph = await javaCallGraphBuilder.getCallGraphMvn(targetFilePath);
         maybeCallGraphMetrics = {
           callGraphMetrics: javaCallGraphBuilder.runtimeMetrics(),
         };
