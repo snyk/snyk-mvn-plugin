@@ -16,6 +16,14 @@ test('inspect with spring-core jar file', async (t) =>
     assertMessage: 'should return expected result',
   }));
 
+test('inspect with aar file', async (t) =>
+  assertFixture({
+    t,
+    fixtureDirectory: 'aar',
+    targetFile: 'library-1.1.0.aar',
+    assertMessage: 'should return expected result',
+  }));
+
 test('inspect on altered jar', async (t) => {
   try {
     await plugin.inspect(badPath, 'jackson-databind-2.9.9.jar');

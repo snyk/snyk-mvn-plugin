@@ -101,7 +101,7 @@ export async function createPomForJars(
 }
 
 export function isJar(file: string): boolean {
-  return !!file.match(/\.(([jw]ar)|(zip))$/);
+  return !!file.match(/\.(([jwa]ar)|(zip))$/);
 }
 
 export function findJars(targetPath: string, recursive = false): string[] {
