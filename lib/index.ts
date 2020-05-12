@@ -4,7 +4,7 @@ import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
-import debugLib = require('debug');
+import debugModule = require('debug');
 
 import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
@@ -12,7 +12,19 @@ import { containsJar, createPomForJar, createPomForJars, isJar } from './jar';
 import { CallGraphError } from './errors/call-graph-error';
 import { formatCallGraphError, formatGenericPluginError } from './error-format';
 
-const debug = debugLib('snyk-mvn-plugin');
+// To enable debugging output, use `snyk -d`
+let logger: debugModule.Debugger | null = null;
+function debug(s: string) {
+  if (logger === null) {
+    // Lazy init: Snyk CLI needs to process the CLI argument "-d" first.
+    // TODO(BST-648): more robust handling of the debug settings
+    if (process.env.DEBUG) {
+      debugModule.enable(process.env.DEBUG);
+    }
+    logger = debugModule('snyk-mvn-plugin');
+  }
+  logger(s);
+}
 
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   scanAllUnmanaged?: boolean;
@@ -60,17 +72,18 @@ export async function inspect(
   if (!fs.existsSync(targetPath)) {
     throw new Error('Could not find file or directory ' + targetPath);
   }
-
   if (!options) {
     options = { dev: false, scanAllUnmanaged: false };
   }
 
   if (isJar(targetPath)) {
+    debug(`Creating pom from jar ${targetFile}`);
     targetFile = await createPomForJar(root, targetFile!);
   }
 
   if (options.scanAllUnmanaged) {
     if (containsJar(root)) {
+      debug(`Creating pom from jars in for ${root}`);
       targetFile = await createPomForJars(root);
     } else {
       throw Error(`Could not find any supported files in '${root}'.`);
@@ -110,7 +123,7 @@ export async function inspect(
         };
         debug('got call graph successfully');
       } catch (err) {
-        debug('call graph error: ', err);
+        debug('call graph error: ' + err);
         throw new CallGraphError(err.message, err);
       }
     }

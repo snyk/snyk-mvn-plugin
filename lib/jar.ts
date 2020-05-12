@@ -38,22 +38,18 @@ function getSha1(buf: Buffer) {
 async function getMavenDependency(
   targetPath: string,
 ): Promise<MavenDependency> {
-  try {
-    const contents = fs.readFileSync(targetPath);
-    const sha1 = getSha1(contents);
-    const { g, a, v } = await getMavenPackageInfo(sha1, targetPath);
-    return {
-      groupId: g,
-      artifactId: a,
-      version: v,
-    };
-  } catch (err) {
-    throw err;
-  }
+  const contents = fs.readFileSync(targetPath);
+  const sha1 = getSha1(contents);
+  const { g, a, v } = await getMavenPackageInfo(sha1, targetPath);
+  return {
+    groupId: g,
+    artifactId: a,
+    version: v,
+  };
 }
 
 async function getDependencies(paths: string[]): Promise<MavenDependency[]> {
-  let dependencies: MavenDependency[] = [];
+  const dependencies: MavenDependency[] = [];
   for (const p of paths) {
     try {
       const dependency = await getMavenDependency(p);
@@ -73,6 +69,7 @@ export async function createPomForJar(
   const targetPath = path.resolve(root, targetFile);
   try {
     const dependency = await getMavenDependency(targetPath);
+    debug(`Creating pom.xml for ${JSON.stringify(dependency)}`);
     const rootDependency = getRootDependency(root, targetFile);
     const pomContents = getPomContents([dependency], rootDependency);
     const pomFile = createTempPomFile(targetPath, pomContents);
@@ -91,6 +88,7 @@ export async function createPomForJars(root: string): Promise<string> {
       .filter(isJar)
       .map((jar) => path.join(root, jar));
     const dependencies = await getDependencies(jarPaths);
+    debug(`Creating pom.xml for ${JSON.stringify(dependencies)}`);
     const rootDependency = getRootDependency(root);
     const pomContents = getPomContents(dependencies, rootDependency);
     const pomFile = createTempPomFile(root, pomContents);
