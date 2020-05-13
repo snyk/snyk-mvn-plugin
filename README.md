@@ -42,7 +42,7 @@ If you are looking to add tasks to your Maven build process you should use our [
 | 10    | ✅          |
 | 12    | ✅          |
 
-## Supported Java & Gradle versions
+## Supported Java & Maven versions
 
 | Java / Maven|3.* |
 |----------------|---|
