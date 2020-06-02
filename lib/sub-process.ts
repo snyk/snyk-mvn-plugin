@@ -1,10 +1,7 @@
 import * as childProcess from 'child_process';
 
 export function execute(command, args, options): Promise<string> {
-  const spawnOptions: {
-    shell: boolean;
-    cwd?: string;
-  } = { shell: true };
+  const spawnOptions: { cwd?: string } = {};
   if (options && options.cwd) {
     spawnOptions.cwd = options.cwd;
   }
