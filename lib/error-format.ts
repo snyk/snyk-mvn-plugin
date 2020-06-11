@@ -1,5 +1,5 @@
 export function formatCallGraphError(error: Error): string {
-  if (error.message === 'Could not find target folder') {
+  if (error.message === 'Could not find a target folder') {
     return 'Failed to scan for reachable vulns. Please compile your code by running `mvn compile` and try again.';
   }
   if (error.message === 'No entrypoints found') {

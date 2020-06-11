@@ -7,7 +7,7 @@ import {
 import { CallGraphError } from '../../lib/errors/call-graph-error';
 
 test('formatCallGraphError - not target folder', (t) => {
-  const err = new CallGraphError('Could not find target folder', new Error());
+  const err = new CallGraphError('Could not find a target folder', new Error());
   t.equals(
     formatCallGraphError(err),
     'Failed to scan for reachable vulns. Please compile your code by running `mvn compile` and try again.',
