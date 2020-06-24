@@ -66,6 +66,17 @@ export async function inspect(
   targetFile?: string,
   options?: MavenOptions,
 ): Promise<legacyPlugin.InspectResult> {
+  if (targetFile) {
+    const { dir } = path.parse(targetFile);
+    if (!dir) {
+      // if we are in the same directory as the file
+      // drop the targetFile arg to avoid sending --file argument to mvn as it is not
+      // supported for some older versions
+      targetFile = undefined;
+    }
+    debug(`targetFile: ${targetFile}`);
+  }
+
   const targetPath = targetFile
     ? path.resolve(root, targetFile)
     : path.resolve(root);
@@ -98,6 +109,7 @@ export async function inspect(
     targetPath,
   );
   try {
+    debug(`Executing maven command: ${mavenCommand} ${mvnArgs}`);
     const result = await subProcess.execute(mavenCommand, mvnArgs, {
       cwd: targetFilePath,
     });
@@ -156,6 +168,7 @@ export function buildArgs(
 ) {
   // Requires Maven >= 2.2
   let args = ['dependency:tree', '-DoutputType=dot'];
+
   if (targetFile) {
     args.push('--file="' + targetFile + '"');
   }

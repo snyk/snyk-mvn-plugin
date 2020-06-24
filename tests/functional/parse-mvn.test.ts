@@ -7,6 +7,7 @@ test('parseTree without --dev', async (t) => {
     'parse-mvn/maven-dependency-tree-output.txt',
   );
   const depTree = parseTree(mavenOutput, false);
+  console.log('*** depTree', JSON.stringify(depTree));
   const results = await readFixtureJSON('parse-mvn/maven-parse-results.json');
   t.same(depTree.data, results, 'should return expected results');
 });
