@@ -2,10 +2,11 @@ import * as path from 'path';
 import * as test from 'tap-only';
 import * as sinon from 'sinon';
 import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
-import { CallGraph } from '@snyk/cli-interface/legacy/common';
+import { CallGraph, CallGraphError } from '@snyk/cli-interface/legacy/common';
 
 import * as plugin from '../../lib';
 import { readFixtureJSON } from '../file-helper';
+import { SinglePackageResult } from '@snyk/cli-interface/legacy/plugin';
 
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -20,12 +21,16 @@ test('inspect on test-project pom with reachable vulns no entry points found', a
     javaCallGraphBuilderStub.restore();
   });
 
-  try {
-    await plugin.inspect('.', path.join(testProjectPath, 'pom.xml'), {
+  const result = await plugin.inspect(
+    '.',
+    path.join(testProjectPath, 'pom.xml'),
+    {
       reachableVulns: true,
-    });
-    t.fail('should not reach here, test should have failed');
-  } catch (err) {
+    },
+  );
+
+  if ('callGraph' in result && 'innerError' in result.callGraph) {
+    const err = result.callGraph;
     t.ok(
       javaCallGraphBuilderStub.calledOnce,
       'called to the call graph builder',
@@ -36,7 +41,7 @@ test('inspect on test-project pom with reachable vulns no entry points found', a
     );
     t.equals(
       err.message,
-      "Failed to scan for reachable vulns. Couldn't find the application entry point.",
+      'Failed to scan for reachable vulns. Please contact our support or submit an issue at https://github.com/snyk/java-call-graph-builder/issues.',
       'correct error message',
     );
     t.equals(
@@ -44,6 +49,8 @@ test('inspect on test-project pom with reachable vulns no entry points found', a
       'No entrypoints found',
       'correct inner error',
     );
+  } else {
+    t.fail('the call to inspect() should have failed to generate a call graph');
   }
 });
 
