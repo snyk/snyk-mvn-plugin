@@ -73,11 +73,19 @@ export async function inspect(
   const targetPath = targetFile
     ? path.resolve(root, targetFile)
     : path.resolve(root);
+
   if (!fs.existsSync(targetPath)) {
     throw new Error('Could not find file or directory ' + targetPath);
   }
   if (!options) {
     options = { dev: false, scanAllUnmanaged: false };
+  }
+
+  // Mutate root and targetFile for when we have allProjects scenario.
+  // This is needed so we invoke the wrapper from the same dir
+  if (targetFile && targetFile.includes('/')) {
+    root = path.dirname(targetPath);
+    targetFile = path.basename(targetPath);
   }
 
   if (isJar(targetPath)) {
