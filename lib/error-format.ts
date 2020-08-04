@@ -1,13 +1,3 @@
-export function formatCallGraphError(error: Error): string {
-  if (error.message === 'Could not find a target folder') {
-    return 'Failed to scan for reachable vulns. Please compile your code by running `mvn compile` and try again.';
-  }
-  if (error.message === 'No entrypoints found') {
-    return 'Failed to scan for reachable vulns. Couldn\'t find the application entry point.';
-  }
-  return 'Failed to scan for reachable vulns. Please contact our support or submit an issue at https://github.com/snyk/java-call-graph-builder/issues.';
-}
-
 export function formatGenericPluginError(
   error: Error,
   mavenCommand: string,

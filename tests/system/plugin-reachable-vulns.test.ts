@@ -2,11 +2,10 @@ import * as path from 'path';
 import * as test from 'tap-only';
 import * as sinon from 'sinon';
 import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
-import { CallGraph, CallGraphError } from '@snyk/cli-interface/legacy/common';
+import { CallGraph } from '@snyk/cli-interface/legacy/common';
 
 import * as plugin from '../../lib';
 import { readFixtureJSON } from '../file-helper';
-import { SinglePackageResult } from '@snyk/cli-interface/legacy/plugin';
 
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -15,7 +14,13 @@ const testProjectPath = path.join(fixturesPath, 'test-project');
 test('inspect on test-project pom with reachable vulns no entry points found', async (t) => {
   const javaCallGraphBuilderStub = sinon
     .stub(javaCallGraphBuilder, 'getCallGraphMvn')
-    .rejects(new Error('No entrypoints found'));
+    .rejects({
+      message:
+        'Scanning for reachable vulnerabilities took too long. Please use the --reachable-timeout flag to increase the timeout for finding reachable vulnerabilities.',
+      innerError: new Error(
+        'Timed out while generating call graph for project',
+      ),
+    });
 
   t.tearDown(() => {
     javaCallGraphBuilderStub.restore();
@@ -41,12 +46,11 @@ test('inspect on test-project pom with reachable vulns no entry points found', a
     );
     t.equals(
       err.message,
-      'Failed to scan for reachable vulns. Please contact our support or submit an issue at https://github.com/snyk/java-call-graph-builder/issues.',
-      'correct error message',
+      'Scanning for reachable vulnerabilities took too long. Please use the --reachable-timeout flag to increase the timeout for finding reachable vulnerabilities.',
     );
     t.equals(
       err.innerError.message,
-      'No entrypoints found',
+      'Timed out while generating call graph for project',
       'correct inner error',
     );
   } else {

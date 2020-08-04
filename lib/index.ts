@@ -3,17 +3,13 @@ import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
-import debugModule = require('debug');
 
 import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
 import { containsJar, createPomForJar, createPomForJars, isJar } from './jar';
-import { formatCallGraphError, formatGenericPluginError } from './error-format';
-import {
-  CallGraph,
-  CallGraphResult,
-  CallGraphError,
-} from '@snyk/cli-interface/legacy/common';
+import { formatGenericPluginError } from './error-format';
+import { CallGraph, CallGraphResult } from '@snyk/cli-interface/legacy/common';
+import debugModule = require('debug');
 
 // To enable debugging output, use `snyk -d`
 let logger: debugModule.Debugger | null = null;
@@ -175,9 +171,6 @@ async function getCallGraph(
   timeout?: number,
 ): Promise<CallGraphResult> {
   debug(`getting call graph from path ${targetPath}`);
-  if (timeout) {
-    debug(`the timeout for call graph generation is ${timeout / 1000}s`);
-  }
   try {
     const callGraph: CallGraph = await javaCallGraphBuilder.getCallGraphMvn(
       path.dirname(targetPath),
@@ -186,13 +179,10 @@ async function getCallGraph(
     debug('got call graph successfully');
     return callGraph;
   } catch (e) {
-    const userMessage = formatCallGraphError(e.message);
     debug('call graph error: ' + e);
-    debug(userMessage);
-    const err: CallGraphError = {
-      message: userMessage,
-      innerError: e,
+    return {
+      message: e.message,
+      innerError: e.innerError || e,
     };
-    return err;
   }
 }
