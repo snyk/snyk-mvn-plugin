@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@snyk/cli-interface": "2.8.1",
-    "@snyk/java-call-graph-builder": "1.13.0",
+    "@snyk/java-call-graph-builder": "1.13.1",
     "debug": "^4.1.1",
     "needle": "^2.5.0",
     "tmp": "^0.1.0",
