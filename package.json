@@ -18,7 +18,7 @@
     "lint": "prettier --check '{lib,tests}/**/*.ts'",
     "format": "prettier --write '{lib,tests}/**/*.ts'",
     "prepare": "npm run build",
-    "test": "npm run prepare && npm run lint && npm run test:functional && npm run test:system",
+    "test": "npm run prepare && npm run test:functional && npm run test:system",
     "test:functional": "tap -R spec ./tests/functional/*.test.ts",
     "test:system": "tap -R spec --timeout=180 ./tests/system/*.test.ts",
     "semantic-release": "semantic-release"
