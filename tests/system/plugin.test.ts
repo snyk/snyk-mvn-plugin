@@ -1,9 +1,6 @@
 import * as path from 'path';
 import * as test from 'tap-only';
-import * as sinon from 'sinon';
-import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import { legacyPlugin } from '@snyk/cli-interface';
-import { CallGraph } from '@snyk/cli-interface/legacy/common';
 import * as os from 'os';
 
 import * as plugin from '../../lib';
@@ -300,6 +297,32 @@ test('inspect on mvnw is successful with targetFile', async (t) => {
     return t.fail('expected single inspect result');
   }
   const expected = await readFixtureJSON('maven-with-mvnw', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
+  t.same(result, expected, 'should return expected result');
+});
+
+test('inspect on mvnw is successful with targetFile in sub folder', async (t) => {
+  const result = await plugin.inspect(
+    path.join(fixturesPath, 'maven-with-mvnw-sub'),
+    path.join('sub', 'pom.xml'),
+  );
+  if (legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected single inspect result');
+  }
+  const expected = await readFixtureJSON(
+    'maven-with-mvnw-sub',
+    'expected.json',
+  );
   // result.metadata depends on platform, so no fixture can be provided
   t.ok(
     result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,

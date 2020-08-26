@@ -1,6 +1,10 @@
 import * as childProcess from 'child_process';
 
-export function execute(command, args, options): Promise<string> {
+export function execute(
+  command: string,
+  args: string[],
+  options: { cwd?: string },
+): Promise<string> {
   const spawnOptions: {
     shell: boolean;
     cwd?: string;

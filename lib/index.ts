@@ -31,9 +31,12 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   callGraphBuilderTimeout?: number;
 }
 
-export function getCommand(root: string, targetFile: string | undefined) {
+export function getCommand(
+  root: string,
+  targetFile: string | undefined,
+): { command: string; location?: string } {
   if (!targetFile) {
-    return 'mvn';
+    return { command: 'mvn' };
   }
   const isWinLocal = /^win/.test(os.platform()); // local check, can be stubbed in tests
   const wrapperScript = isWinLocal ? 'mvnw.cmd' : './mvnw';
@@ -44,20 +47,30 @@ export function getCommand(root: string, targetFile: string | undefined) {
     wrapperScript,
   );
   if (fs.existsSync(pathToWrapper)) {
-    return wrapperScript;
+    return {
+      command: wrapperScript,
+      location: path.dirname(pathToWrapper),
+    };
   }
   // now try to find a wrapper in the root
   pathToWrapper = path.resolve(root, wrapperScript);
   if (fs.existsSync(pathToWrapper)) {
-    return wrapperScript;
+    return {
+      command: wrapperScript, //path.relative(path.dirname(path.resolve(root, targetFile)), pathToWrapper),
+      location: root,
+    };
   }
-  return 'mvn';
+  return { command: 'mvn' };
 }
 
 // When we have `mvn`, we can run the subProcess from anywhere.
 // However due to https://github.com/takari/maven-wrapper/issues/133, `mvnw` can only be run
 // within the directory where `mvnw` exists
-function calculateTargetFilePath(mavenCommand, root: string, targetPath) {
+function calculateTargetFilePath(
+  mavenCommand,
+  root: string,
+  targetPath: string,
+) {
   return mavenCommand === 'mvn' ? root : path.dirname(targetPath);
 }
 
@@ -93,19 +106,20 @@ export async function inspect(
   const mvnArgs = buildArgs(targetFile, options.args);
   const mavenCommand = getCommand(root, targetFile);
   const targetFilePath = calculateTargetFilePath(
-    mavenCommand,
+    mavenCommand.command,
     root,
     targetPath,
   );
+
   try {
-    const result = await subProcess.execute(mavenCommand, mvnArgs, {
-      cwd: targetFilePath,
+    const result = await subProcess.execute(mavenCommand.command, mvnArgs, {
+      cwd: mavenCommand.location || targetFilePath,
     });
     const versionResult = await subProcess.execute(
-      `${mavenCommand} --version`,
+      `${mavenCommand.command} --version`,
       [],
       {
-        cwd: targetFilePath,
+        cwd: mavenCommand.location || targetFilePath,
       },
     );
     const parseResult = parseTree(result, options.dev);
@@ -146,7 +160,11 @@ export async function inspect(
       callGraph,
     };
   } catch (error) {
-    error.message = formatGenericPluginError(error, mavenCommand, mvnArgs);
+    error.message = formatGenericPluginError(
+      error,
+      mavenCommand.command,
+      mvnArgs,
+    );
     throw error;
   }
 }
@@ -154,7 +172,7 @@ export async function inspect(
 export function buildArgs(
   targetFile?: string,
   mavenArgs?: string[] | undefined,
-) {
+): string[] {
   // Requires Maven >= 2.2
   let args = ['dependency:tree', '-DoutputType=dot'];
   if (targetFile) {
