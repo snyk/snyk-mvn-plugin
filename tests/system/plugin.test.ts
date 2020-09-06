@@ -238,29 +238,14 @@ test('inspect on mvn error', async (t) => {
 
 test('inspect on mvnw error', async (t) => {
   const targetFile = path.join(fixturesPath, 'bad-maven-with-mvnw', 'pom.xml');
-  const isWinLocal = /^win/.test(os.platform());
-  const mvnwCommand = isWinLocal ? `mvnw.cmd` : './mvnw';
-  const fullCommand = `${mvnwCommand} dependency:tree -DoutputType=dot --file="${targetFile}"`;
   try {
     await plugin.inspect('.', targetFile, {
       dev: true,
     });
     t.fail('expected inspect to throw error');
   } catch (error) {
-    const mvnwCommandTipMessage =
-      'Currently, you cannot run `mvnw` outside your current directory, you will have to go inside the directory of your project (see: https://github.com/takari/maven-wrapper/issues/133)\n\n';
     const expectedCommand =
-      '\n\n' +
-      'Please make sure that Apache Maven Dependency Plugin ' +
-      'version 2.2 or above is installed, and that `' +
-      fullCommand +
-      '` executes successfully ' +
-      'on this project.\n\n' +
-      mvnwCommandTipMessage +
-      'If the problem persists, collect the output of `' +
-      fullCommand +
-      '` and contact support@snyk.io\n';
-
+      '[WARNING] The POM for no.such.groupId:no.such.artifactId:jar:1.0.0 is missing, no dependency information available';
     t.match(
       error.message,
       expectedCommand,
@@ -295,6 +280,29 @@ test('inspect on mvnw is successful with targetFile', async (t) => {
   const result = await plugin.inspect(
     '.',
     path.join(fixturesPath, 'maven-with-mvnw', 'pom.xml'),
+  );
+  if (legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected single inspect result');
+  }
+  const expected = await readFixtureJSON('maven-with-mvnw', 'expected.json');
+  // result.metadata depends on platform, so no fixture can be provided
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
+    'should contain javaVersion key',
+  );
+  t.ok(
+    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
+    'should contain mavenVersion key',
+  );
+  // therefore, only independent objects are compared
+  delete result.plugin.meta;
+  t.same(result, expected, 'should return expected result');
+});
+
+test('inspect on mvnw successful when resides in parent directory with targetFile', async (t) => {
+  const result = await plugin.inspect(
+    path.join(fixturesPath, 'wrapper-at-parent'),
+    path.join(fixturesPath, 'wrapper-at-parent', 'project-a', 'pom.xml'),
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');

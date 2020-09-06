@@ -11,8 +11,10 @@ import { formatGenericPluginError } from './error-format';
 import { CallGraph, CallGraphResult } from '@snyk/cli-interface/legacy/common';
 import debugModule = require('debug');
 
+const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
 let logger: debugModule.Debugger | null = null;
+
 function debug(s: string) {
   if (logger === null) {
     // Lazy init: Snyk CLI needs to process the CLI argument "-d" first.
@@ -54,11 +56,44 @@ export function getCommand(root: string, targetFile: string | undefined) {
   return 'mvn';
 }
 
+function getParentDirectory(p: string): string {
+  return path.dirname(p);
+}
+
 // When we have `mvn`, we can run the subProcess from anywhere.
 // However due to https://github.com/takari/maven-wrapper/issues/133, `mvnw` can only be run
 // within the directory where `mvnw` exists
-function calculateTargetFilePath(mavenCommand, root: string, targetPath) {
-  return mavenCommand === 'mvn' ? root : path.dirname(targetPath);
+function findWrapper(
+  mavenCommand: string,
+  root: string,
+  targetPath: string,
+): string {
+  if (mavenCommand === 'mvn') {
+    return root;
+  }
+
+  // In this branch we need to -find- the mvnw location;
+  // we start from the containing directory and climb up to the scanned-root-folder
+  let foundMVWLocation = false;
+
+  // Look for mvnw in the current directory. if not - climb one up
+  let currentFolder = targetPath;
+  do {
+    if (getParentDirectory(root) === currentFolder || !currentFolder.length) {
+      // if we climbed up the tree 1 level higher than our root directory
+      throw new Error("Couldn't find mvnw");
+    }
+
+    foundMVWLocation = !!WRAPPERS.map((name) => path.join(currentFolder, name)) // paths
+      .map(fs.existsSync) // since we're on the client's machine - check if the file exists
+      .filter(Boolean).length; // hope for truths & bolleanify
+    if (!foundMVWLocation) {
+      // if we couldn't find the file, go to the parent, or empty string for quick escape if needed
+      currentFolder = getParentDirectory(currentFolder);
+    }
+  } while (!foundMVWLocation);
+
+  return currentFolder;
 }
 
 export async function inspect(
@@ -90,22 +125,23 @@ export async function inspect(
     }
   }
 
-  const mvnArgs = buildArgs(targetFile, options.args);
   const mavenCommand = getCommand(root, targetFile);
-  const targetFilePath = calculateTargetFilePath(
-    mavenCommand,
+  const mvnWorkingDirectory = findWrapper(mavenCommand, root, targetPath);
+  const mvnArgs = buildArgs(
     root,
-    targetPath,
+    mvnWorkingDirectory,
+    targetFile,
+    options.args,
   );
   try {
     const result = await subProcess.execute(mavenCommand, mvnArgs, {
-      cwd: targetFilePath,
+      cwd: mvnWorkingDirectory,
     });
     const versionResult = await subProcess.execute(
       `${mavenCommand} --version`,
       [],
       {
-        cwd: targetFilePath,
+        cwd: mvnWorkingDirectory,
       },
     );
     const parseResult = parseTree(result, options.dev);
@@ -152,13 +188,21 @@ export async function inspect(
 }
 
 export function buildArgs(
+  rootPath: string,
+  executionPath: string,
   targetFile?: string,
   mavenArgs?: string[] | undefined,
 ) {
   // Requires Maven >= 2.2
   let args = ['dependency:tree', '-DoutputType=dot'];
   if (targetFile) {
-    args.push('--file="' + targetFile + '"');
+    // if we are where we can execute - we preserve the original path;
+    // if not - we rely on the executor (mvnw) to be spawned at the closest directory, leaving us w/ the file itself
+    if (rootPath === executionPath) {
+      args.push('--file="' + targetFile + '"');
+    } else {
+      args.push('--file="' + path.basename(targetFile) + '"');
+    }
   }
   if (mavenArgs) {
     args = args.concat(mavenArgs);
