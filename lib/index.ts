@@ -29,6 +29,8 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   scanAllUnmanaged?: boolean;
   reachableVulns?: boolean;
   callGraphBuilderTimeout?: number;
+  precomputedCallgraph?: string;
+  precomputedClasspath?: string;
 }
 
 export function getCommand(root: string, targetFile: string | undefined) {
@@ -122,6 +124,8 @@ export async function inspect(
       callGraph = await getCallGraph(
         targetPath,
         timeout, // expects ms
+        options.precomputedCallgraph,
+        options.precomputedClasspath
       );
       maybeCallGraphMetrics = {
         callGraphMetrics: javaCallGraphBuilder.runtimeMetrics(),
@@ -169,12 +173,16 @@ export function buildArgs(
 async function getCallGraph(
   targetPath: string,
   timeout?: number,
+  precomputedCallgraph?: string,
+  precomputedClasspath?: string
 ): Promise<CallGraphResult> {
   debug(`getting call graph from path ${targetPath}`);
   try {
     const callGraph: CallGraph = await javaCallGraphBuilder.getCallGraphMvn(
       path.dirname(targetPath),
       timeout,
+      precomputedCallgraph,
+      precomputedClasspath
     );
     debug('got call graph successfully');
     return callGraph;
