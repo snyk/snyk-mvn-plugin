@@ -34,7 +34,11 @@ test('inspect on test-project pom with reachable vulns no entry points found', a
     },
   );
 
-  if ('callGraph' in result && 'innerError' in result.callGraph) {
+  if (
+    'callGraph' in result &&
+    result.callGraph != null &&
+    'innerError' in result.callGraph
+  ) {
     const err = result.callGraph;
     t.ok(
       javaCallGraphBuilderStub.calledOnce,
