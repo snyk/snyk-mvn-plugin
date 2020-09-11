@@ -220,8 +220,8 @@ test('inspect on mvn error', async (t) => {
   } catch (error) {
     const expectedCommand =
       '\n\n' +
-      'Please make sure that Apache Maven Dependency Plugin ' +
-      'version 2.2 or above is installed, and that `' +
+      'Please make sure that Maven ' +
+      'version 3.0.4 or above is installed, and that `' +
       fullCommand +
       '` executes successfully ' +
       'on this project.\n\n' +
