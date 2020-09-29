@@ -1,6 +1,6 @@
 import * as test from 'tap-only';
 import * as path from 'path';
-import { containsJar, isJar } from '../../lib/jar';
+import { findJars, isJar } from '../../lib/jar';
 
 test('isJar', async (t) => {
   [
@@ -26,13 +26,19 @@ const fixturesPath = path.join(__dirname, '..', 'fixtures');
 const springCorePath = path.join(fixturesPath, 'spring-core');
 const badPath = path.join(fixturesPath, 'bad');
 const dummyPath = path.join(fixturesPath, 'dummy');
+const nestedJarsPath = path.join(fixturesPath, 'nested-jars');
 
-test('containsJar', async (t) => {
-  [springCorePath, badPath].forEach((i) =>
-    t.ok(containsJar(i), 'should be true for ' + path.basename(i)),
-  );
-
-  [fixturesPath, dummyPath].forEach((i) =>
-    t.notOk(containsJar(i), 'should be false for ' + path.basename(i)),
-  );
-});
+test('findJars', async (t) => {
+  [
+    { dir: springCorePath, expectedNumOfJars: 1 },
+    { dir: badPath, expectedNumOfJars: 2 },
+    { dir: fixturesPath, expectedNumOfJars: 0 },
+    { dir: dummyPath, expectedNumOfJars: 0 },
+    { dir: nestedJarsPath, expectedNumOfJars: 1 },
+    { dir: nestedJarsPath, expectedNumOfJars: 2, recursive: true },
+  ]
+    .forEach(({ dir, expectedNumOfJars , recursive }) =>
+      t.same(findJars(dir, recursive).length, expectedNumOfJars, `should find ${expectedNumOfJars} jars for "${path.basename(dir)}" ${recursive ? "(recursive)" : ""}`)
+    );
+  }
+);
