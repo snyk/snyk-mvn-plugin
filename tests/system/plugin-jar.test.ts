@@ -9,14 +9,12 @@ const fixturesPath = path.join(testsPath, 'fixtures');
 const badPath = path.join(fixturesPath, 'bad');
 
 test('inspect with spring-core jar file', async (t) =>
-  assertFixture(
-    {
-      t,
-      fixtureDirectory: 'spring-core',
-      targetFile: 'spring-core-5.1.8.RELEASE.jar',
-      assertMessage: 'should return expected result'
-    },
-  ));
+  assertFixture({
+    t,
+    fixtureDirectory: 'spring-core',
+    targetFile: 'spring-core-5.1.8.RELEASE.jar',
+    assertMessage: 'should return expected result',
+  }));
 
 test('inspect on altered jar', async (t) => {
   try {
@@ -65,25 +63,21 @@ test('inspect on user created jar (same as altered)', async (t) => {
 });
 
 test('inspect in directory with jars no target file and --scan-all-unmanaged arg', async (t) =>
-  assertFixture(
-    {
-      t,
-      fixtureDirectory: 'jars',
-      options: { scanAllUnmanaged: true },
-      assertMessage: 'should return expected result'
-    },
-  ));
+  assertFixture({
+    t,
+    fixtureDirectory: 'jars',
+    options: { scanAllUnmanaged: true },
+    assertMessage: 'should return expected result',
+  }));
 
 test('inspect on target pom file in directory with jars and --scan-all-unmanaged arg', async (t) =>
-  assertFixture(
-    {
-      t,
-      fixtureDirectory: 'jars',
-      targetFile: 'pom.xml',
-      options: { scanAllUnmanaged: true },
-      assertMessage: 'should return expected result (using jars not pom)'
-    },
-  ));
+  assertFixture({
+    t,
+    fixtureDirectory: 'jars',
+    targetFile: 'pom.xml',
+    options: { scanAllUnmanaged: true },
+    assertMessage: 'should return expected result (using jars not pom)',
+  }));
 
 test('inspect in directory with no jars no target file and --scan-all-unmanaged arg', async (t) => {
   try {
@@ -99,39 +93,43 @@ test('inspect in directory with no jars no target file and --scan-all-unmanaged 
 });
 
 test('inspect in directory with good and bad jars and --scan-all-unmanaged arg', async (t) =>
-  assertFixture(
-    {
-      t,
-      fixtureDirectory: 'good-and-bad',
-      options: { scanAllUnmanaged: true },
-      assertMessage: 'should return good dependency, with bad ignored'
-    },
-  ));
+  assertFixture({
+    t,
+    fixtureDirectory: 'good-and-bad',
+    options: { scanAllUnmanaged: true },
+    assertMessage: 'should return good dependency, with bad ignored',
+  }));
 
 test('inspect in directory with jar with wrong package name and --scan-all-unmanaged arg', async (t) =>
-  assertFixture(
-    {
-      t,
-      fixtureDirectory: 'jar-wrong-package-name',
-      options: { scanAllUnmanaged: true },
-      assertMessage: 'should return a dependency regardless of the amount of sha1 versions from maven.'
-    },
-  ));
+  assertFixture({
+    t,
+    fixtureDirectory: 'jar-wrong-package-name',
+    options: { scanAllUnmanaged: true },
+    assertMessage:
+      'should return a dependency regardless of the amount of sha1 versions from maven.',
+  }));
 
 test('inspect in directory with jars no target file and --scan-all-unmanaged and --all-projects args', async (t) =>
-  assertFixture(
-    {
-      t,
-      fixtureDirectory: 'nested-jars',
-      options: { scanAllUnmanaged: true, allProjects: true },
-      assertMessage: 'should return expected result'
-    },
-  ));
+  assertFixture({
+    t,
+    fixtureDirectory: 'nested-jars',
+    options: { scanAllUnmanaged: true, allProjects: true },
+    assertMessage: 'should return expected result',
+  }));
 
-async function assertFixture(
-  { t, fixtureDirectory, targetFile, options, assertMessage }:
-    { t: any, fixtureDirectory: string, targetFile?: string, options?: any, assertMessage: string },
-) {
+async function assertFixture({
+  t,
+  fixtureDirectory,
+  targetFile,
+  options,
+  assertMessage,
+}: {
+  t: any;
+  fixtureDirectory: string;
+  targetFile?: string;
+  options?: any;
+  assertMessage: string;
+}) {
   const root = path.join(fixturesPath, fixtureDirectory);
   const result = await plugin.inspect(root, targetFile, options);
   if (legacyPlugin.isMultiResult(result)) {

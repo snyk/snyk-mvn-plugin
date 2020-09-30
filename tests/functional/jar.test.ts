@@ -36,9 +36,13 @@ test('findJars', async (t) => {
     { dir: dummyPath, expectedNumOfJars: 0 },
     { dir: nestedJarsPath, expectedNumOfJars: 1 },
     { dir: nestedJarsPath, expectedNumOfJars: 2, recursive: true },
-  ]
-    .forEach(({ dir, expectedNumOfJars , recursive }) =>
-      t.same(findJars(dir, recursive).length, expectedNumOfJars, `should find ${expectedNumOfJars} jars for "${path.basename(dir)}" ${recursive ? "(recursive)" : ""}`)
-    );
-  }
-);
+  ].forEach(({ dir, expectedNumOfJars, recursive }) =>
+    t.same(
+      findJars(dir, recursive).length,
+      expectedNumOfJars,
+      `should find ${expectedNumOfJars} jars for "${path.basename(dir)}" ${
+        recursive ? '(recursive)' : ''
+      }`,
+    ),
+  );
+});

@@ -82,7 +82,10 @@ export async function createPomForJar(
   }
 }
 
-export async function createPomForJars(root: string, jarPaths: string[]): Promise<string> {
+export async function createPomForJars(
+  root: string,
+  jarPaths: string[],
+): Promise<string> {
   try {
     const dependencies = await getDependencies(jarPaths);
     debug(`Creating pom.xml for ${JSON.stringify(dependencies)}`);
@@ -104,7 +107,7 @@ export function isJar(file: string): boolean {
 export function findJars(targetPath: string, recursive = false): string[] {
   const stats = fs.statSync(targetPath);
   const dir = stats.isFile() ? path.dirname(targetPath) : targetPath;
-  return glob.sync(`${dir}/${recursive ? '**/' : ''}*.jar`)
+  return glob.sync(`${dir}/${recursive ? '**/' : ''}*.jar`);
 }
 
 async function getMavenPackageInfo(
