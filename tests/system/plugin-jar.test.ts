@@ -6,32 +6,15 @@ import { legacyPlugin } from '@snyk/cli-interface';
 
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');
-const jarsPath = path.join(fixturesPath, 'jars');
 const badPath = path.join(fixturesPath, 'bad');
-const goodAndBadPath = path.join(fixturesPath, 'good-and-bad');
-const jarWrongPkgNamePath = path.join(fixturesPath, 'jar-wrong-package-name');
-const springCorePath = path.join(fixturesPath, 'spring-core');
-const springCoreJar = 'spring-core-5.1.8.RELEASE.jar';
 
-test('inspect with spring-core jar file', async (t) => {
-  const result = await plugin.inspect(springCorePath, springCoreJar);
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
-  }
-  const expected = await readFixtureJSON('spring-core', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
-  );
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
-  );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
-});
+test('inspect with spring-core jar file', async (t) =>
+  assertFixture({
+    t,
+    fixtureDirectory: 'spring-core',
+    targetFile: 'spring-core-5.1.8.RELEASE.jar',
+    assertMessage: 'should return expected result',
+  }));
 
 test('inspect on altered jar', async (t) => {
   try {
@@ -79,53 +62,22 @@ test('inspect on user created jar (same as altered)', async (t) => {
   }
 });
 
-test('inspect in directory with jars no target file and --scan-all-unmanaged arg', async (t) => {
-  const result = await plugin.inspect(jarsPath, undefined, {
-    scanAllUnmanaged: true,
-  });
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
-  }
-  const expected = await readFixtureJSON('jars', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
-  );
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
-  );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
-});
+test('inspect in directory with jars no target file and --scan-all-unmanaged arg', async (t) =>
+  assertFixture({
+    t,
+    fixtureDirectory: 'jars',
+    options: { scanAllUnmanaged: true },
+    assertMessage: 'should return expected result',
+  }));
 
-test('inspect on target pom file in directory with jars and --scan-all-unmanaged arg', async (t) => {
-  const result = await plugin.inspect(jarsPath, 'pom.xml', {
-    scanAllUnmanaged: true,
-  });
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
-  }
-  const expected = await readFixtureJSON('jars', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
-  );
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
-  );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(
-    result,
-    expected,
-    'should return expected result (using jars not pom)',
-  );
-});
+test('inspect on target pom file in directory with jars and --scan-all-unmanaged arg', async (t) =>
+  assertFixture({
+    t,
+    fixtureDirectory: 'jars',
+    targetFile: 'pom.xml',
+    options: { scanAllUnmanaged: true },
+    assertMessage: 'should return expected result (using jars not pom)',
+  }));
 
 test('inspect in directory with no jars no target file and --scan-all-unmanaged arg', async (t) => {
   try {
@@ -140,39 +92,50 @@ test('inspect in directory with no jars no target file and --scan-all-unmanaged 
   }
 });
 
-test('inspect in directory with good and bad jars and --scan-all-unmanaged arg', async (t) => {
-  const result = await plugin.inspect(goodAndBadPath, undefined, {
-    scanAllUnmanaged: true,
-  });
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
-  }
-  const expected = await readFixtureJSON('good-and-bad', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
-  );
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
-  );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return good dependency, with bad ignored');
-});
+test('inspect in directory with good and bad jars and --scan-all-unmanaged arg', async (t) =>
+  assertFixture({
+    t,
+    fixtureDirectory: 'good-and-bad',
+    options: { scanAllUnmanaged: true },
+    assertMessage: 'should return good dependency, with bad ignored',
+  }));
 
-test('inspect in directory with jar with wrong package name and --scan-all-unmanaged arg', async (t) => {
-  const result = await plugin.inspect(jarWrongPkgNamePath, undefined, {
-    scanAllUnmanaged: true,
-  });
+test('inspect in directory with jar with wrong package name and --scan-all-unmanaged arg', async (t) =>
+  assertFixture({
+    t,
+    fixtureDirectory: 'jar-wrong-package-name',
+    options: { scanAllUnmanaged: true },
+    assertMessage:
+      'should return a dependency regardless of the amount of sha1 versions from maven.',
+  }));
+
+test('inspect in directory with jars no target file and --scan-all-unmanaged and --all-projects args', async (t) =>
+  assertFixture({
+    t,
+    fixtureDirectory: 'nested-jars',
+    options: { scanAllUnmanaged: true, allProjects: true },
+    assertMessage: 'should return expected result',
+  }));
+
+async function assertFixture({
+  t,
+  fixtureDirectory,
+  targetFile,
+  options,
+  assertMessage,
+}: {
+  t: any;
+  fixtureDirectory: string;
+  targetFile?: string;
+  options?: any;
+  assertMessage: string;
+}) {
+  const root = path.join(fixturesPath, fixtureDirectory);
+  const result = await plugin.inspect(root, targetFile, options);
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
   }
-  const expected = await readFixtureJSON(
-    'jar-wrong-package-name',
-    'expected.json',
-  );
+  const expected = await readFixtureJSON(fixtureDirectory, 'expected.json');
   // result.metadata depends on platform, so no fixture can be provided
   t.ok(
     result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
@@ -184,9 +147,5 @@ test('inspect in directory with jar with wrong package name and --scan-all-unman
   );
   // therefore, only independent objects are compared
   delete result.plugin.meta;
-  t.same(
-    result,
-    expected,
-    'should return a dependency regardless of the amount of sha1 versions from maven.',
-  );
-});
+  t.same(result, expected, assertMessage);
+}

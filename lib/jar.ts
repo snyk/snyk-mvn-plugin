@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
+import * as glob from 'glob';
 import * as needle from 'needle';
 import { getPomContents, MavenDependency } from './pom';
 
@@ -81,12 +82,11 @@ export async function createPomForJar(
   }
 }
 
-export async function createPomForJars(root: string): Promise<string> {
+export async function createPomForJars(
+  root: string,
+  jarPaths: string[],
+): Promise<string> {
   try {
-    const jarPaths = fs
-      .readdirSync(root)
-      .filter(isJar)
-      .map((jar) => path.join(root, jar));
     const dependencies = await getDependencies(jarPaths);
     debug(`Creating pom.xml for ${JSON.stringify(dependencies)}`);
     const rootDependency = getRootDependency(root);
@@ -104,17 +104,10 @@ export function isJar(file: string): boolean {
   return !!file.match(/\.(([jw]ar)|(zip))$/);
 }
 
-export function containsJar(targetPath: string): boolean {
+export function findJars(targetPath: string, recursive = false): string[] {
   const stats = fs.statSync(targetPath);
-  if (stats.isFile()) {
-    // look in files directory
-    const dir = path.dirname(targetPath);
-    return fs.readdirSync(dir).some(isJar);
-  }
-  if (stats.isDirectory()) {
-    return fs.readdirSync(targetPath).some(isJar);
-  }
-  return false;
+  const dir = stats.isFile() ? path.dirname(targetPath) : targetPath;
+  return glob.sync(`${dir}/${recursive ? '**/' : ''}*.jar`);
 }
 
 async function getMavenPackageInfo(

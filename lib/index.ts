@@ -6,7 +6,7 @@ import * as path from 'path';
 
 import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
-import { containsJar, createPomForJar, createPomForJars, isJar } from './jar';
+import { createPomForJar, createPomForJars, findJars, isJar } from './jar';
 import { formatGenericPluginError } from './error-format';
 import { CallGraph, CallGraphResult } from '@snyk/cli-interface/legacy/common';
 import debugModule = require('debug');
@@ -31,6 +31,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   scanAllUnmanaged?: boolean;
   reachableVulns?: boolean;
   callGraphBuilderTimeout?: number;
+  allProjects?: boolean;
 }
 
 export function getCommand(root: string, targetFile: string | undefined) {
@@ -116,10 +117,12 @@ export async function inspect(
     targetFile = await createPomForJar(root, targetFile!);
   }
 
-  if (options.scanAllUnmanaged) {
-    if (containsJar(root)) {
+  if (options.scanAllUnmanaged || options.allProjects) {
+    const recursive = !!options.allProjects;
+    const jars = findJars(root, recursive);
+    if (jars.length > 0) {
       debug(`Creating pom from jars in for ${root}`);
-      targetFile = await createPomForJars(root);
+      targetFile = await createPomForJars(root, jars);
     } else {
       throw Error(`Could not find any supported files in '${root}'.`);
     }
