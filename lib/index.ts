@@ -117,7 +117,7 @@ export async function inspect(
     targetFile = await createPomForJar(root, targetFile!);
   }
 
-  if (options.scanAllUnmanaged || options.allProjects) {
+  if (options.scanAllUnmanaged) {
     const recursive = !!options.allProjects;
     const jars = findJars(root, recursive);
     if (jars.length > 0) {
