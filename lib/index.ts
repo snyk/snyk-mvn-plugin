@@ -8,7 +8,10 @@ import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
 import { createPomForJar, createPomForJars, findJars, isJar } from './jar';
 import { formatGenericPluginError } from './error-format';
-import { CallGraph, CallGraphResult } from '@snyk/cli-interface/legacy/common';
+import {
+  CallGraph,
+  CallGraphResult,
+} from '@snyk/cli-interface/legacy/common';
 import debugModule = require('debug');
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
@@ -30,6 +33,7 @@ function debug(s: string) {
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   scanAllUnmanaged?: boolean;
   reachableVulns?: boolean;
+  reachableVulnsEngine?: string;
   callGraphBuilderTimeout?: number;
   allProjects?: boolean;
 }
@@ -152,21 +156,34 @@ export async function inspect(
     let callGraph: CallGraphResult | undefined;
     let maybeCallGraphMetrics = {};
     if (options.reachableVulns) {
-      // NOTE[muscar] We get the timeout in seconds, and the call graph builder
-      // wants it in milliseconds
       const timeout = options?.callGraphBuilderTimeout
         ? options?.callGraphBuilderTimeout * 1000
         : undefined;
 
-      callGraph = await getCallGraph(
-        targetPath,
-        timeout, // expects ms
-      );
-      maybeCallGraphMetrics = {
-        callGraphMetrics: javaCallGraphBuilder.runtimeMetrics(),
-        callGraphBuilderTimeoutSeconds: options?.callGraphBuilderTimeout,
-      };
+      if (!options.reachableVulnsEngine) {
+        throw new Error("Reachable vulns specified, but no engine set");
+      }
+
+      if (options.reachableVulnsEngine === "WALA") {
+        callGraph = await getCallGraphWithWala(
+          targetPath,
+          timeout, // expects ms
+        );
+        maybeCallGraphMetrics = {
+          callGraphMetrics: javaCallGraphBuilder.runtimeMetrics(),
+          callGraphBuilderTimeoutSeconds: options?.callGraphBuilderTimeout,
+        };
+      } else if (options.reachableVulnsEngine === "DC") {
+        callGraph = await getCallGraphWithDeepcode(root);
+        maybeCallGraphMetrics = {
+          callGraphMetrics: javaCallGraphBuilder.runtimeMetrics(),
+          callGraphBuilderTimeoutSeconds: options?.callGraphBuilderTimeout,
+        };
+      } else {
+        throw new Error("Unknown reachable engine option: " + options.reachableVulnsEngine);
+      }
     }
+
     return {
       plugin: {
         name: 'bundled:maven',
@@ -213,11 +230,11 @@ export function buildArgs(
   return args;
 }
 
-async function getCallGraph(
+async function getCallGraphWithWala(
   targetPath: string,
   timeout?: number,
 ): Promise<CallGraphResult> {
-  debug(`getting call graph from path ${targetPath}`);
+  debug(`getting call graph with WALA from path ${targetPath}`);
   try {
     const callGraph: CallGraph = await javaCallGraphBuilder.getCallGraphMvn(
       path.dirname(targetPath),
@@ -233,3 +250,21 @@ async function getCallGraph(
     };
   }
 }
+
+async function getCallGraphWithDeepcode(sourceFolder: string): Promise<CallGraphResult> {
+  debug(`getting call graph with Deepcode from source folder ${sourceFolder}`);
+  try {
+    const callGraph: CallGraph = await javaCallGraphBuilder.getCallGraphDeepcode(sourceFolder);
+    debug('got call graph with Deepcode successfully');
+    return callGraph;
+  } catch (e) {
+    debug('call graph error: ' + e);
+    return {
+      message: e.message,
+      innerError: e.innerError || e,
+    };
+  }
+}
+
+
+
