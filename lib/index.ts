@@ -174,7 +174,7 @@ export async function inspect(
           callGraphBuilderTimeoutSeconds: options?.callGraphBuilderTimeout,
         };
       } else if (options.reachableVulnsEngine === "DC") {
-        callGraph = await getCallGraphWithDeepcode(root);
+        callGraph = await getCallGraphWithDeepcode(root, timeout);
         maybeCallGraphMetrics = {
           callGraphMetrics: javaCallGraphBuilder.runtimeMetrics(),
           callGraphBuilderTimeoutSeconds: options?.callGraphBuilderTimeout,
@@ -251,10 +251,10 @@ async function getCallGraphWithWala(
   }
 }
 
-async function getCallGraphWithDeepcode(sourceFolder: string): Promise<CallGraphResult> {
+async function getCallGraphWithDeepcode(sourceFolder: string, timeout?: number): Promise<CallGraphResult> {
   debug(`getting call graph with Deepcode from source folder ${sourceFolder}`);
   try {
-    const callGraph: CallGraph = await javaCallGraphBuilder.getCallGraphDeepcode(sourceFolder);
+    const callGraph: CallGraph = await javaCallGraphBuilder.getCallGraphDeepcode(sourceFolder, timeout);
     debug('got call graph with Deepcode successfully');
     return callGraph;
   } catch (e) {
