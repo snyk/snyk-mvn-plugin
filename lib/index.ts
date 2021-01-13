@@ -3,6 +3,8 @@ import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as depGraphLib from '@snyk/dep-graph';
+import { writeFileSync } from 'fs';
 
 import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
@@ -13,6 +15,7 @@ import {
   CallGraphResult,
 } from '@snyk/cli-interface/legacy/common';
 import debugModule = require('debug');
+import { DepTree } from '@snyk/dep-graph/dist/legacy';
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
@@ -152,6 +155,15 @@ export async function inspect(
       },
     );
     const parseResult = parseTree(result, options.dev);
+
+    const depGraph = await depGraphLib.legacy.depTreeToGraph(
+      parseResult.data as DepTree,
+      "maven",
+    );
+    const depGraphStr =  JSON.stringify(depGraph.toJSON(), null, 2);
+    const depGraphPath = path.join(root, "depgraph.json");
+    writeFileSync(depGraphPath, depGraphStr);
+
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
     let callGraph: CallGraphResult | undefined;
     let maybeCallGraphMetrics = {};
@@ -184,7 +196,7 @@ export async function inspect(
       }
     }
 
-    const exploitability = await javaCallGraphBuilder.getExploitability(root)
+    const exploitability = await javaCallGraphBuilder.getExploitability(root);
 
     return {
       plugin: {
