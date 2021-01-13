@@ -184,6 +184,8 @@ export async function inspect(
       }
     }
 
+    const exploitability = await javaCallGraphBuilder.getExploitability(root)
+
     return {
       plugin: {
         name: 'bundled:maven',
@@ -200,7 +202,8 @@ export async function inspect(
       },
       package: parseResult.data,
       callGraph,
-    };
+      exploitability,
+    } as any;
   } catch (error) {
     error.message = formatGenericPluginError(error, mavenCommand, mvnArgs);
     throw error;
