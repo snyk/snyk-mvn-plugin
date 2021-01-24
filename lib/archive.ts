@@ -63,7 +63,7 @@ async function getDependencies(paths: string[]): Promise<MavenDependency[]> {
   return dependencies;
 }
 
-export async function createPomForJar(
+export async function createPomForArchive(
   root: string,
   targetFile: string,
 ): Promise<string> {
@@ -82,7 +82,7 @@ export async function createPomForJar(
   }
 }
 
-export async function createPomForJars(
+export async function createPomForArchives(
   root: string,
   jarPaths: string[],
 ): Promise<string> {
@@ -100,14 +100,14 @@ export async function createPomForJars(
   }
 }
 
-export function isJar(file: string): boolean {
+export function isArchive(file: string): boolean {
   return !!file.match(/\.(([jwa]ar)|(zip))$/);
 }
 
-export function findJars(targetPath: string, recursive = false): string[] {
+export function findArchives(targetPath: string, recursive = false): string[] {
   const stats = fs.statSync(targetPath);
   const dir = stats.isFile() ? path.dirname(targetPath) : targetPath;
-  return glob.sync(`${dir}/${recursive ? '**/' : ''}*.jar`);
+  return glob.sync(`${dir}/${recursive ? '**/' : ''}*.@(jar|war|aar|zip)`);
 }
 
 async function getMavenPackageInfo(
