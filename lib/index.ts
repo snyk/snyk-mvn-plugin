@@ -6,7 +6,12 @@ import * as path from 'path';
 
 import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
-import { createPomForJar, createPomForJars, findJars, isJar } from './jar';
+import {
+  createPomForArchive,
+  createPomForArchives,
+  findArchives,
+  isArchive,
+} from './archive';
 import { formatGenericPluginError } from './error-format';
 import { CallGraph, CallGraphResult } from '@snyk/cli-interface/legacy/common';
 import debugModule = require('debug');
@@ -112,17 +117,17 @@ export async function inspect(
     options = { dev: false, scanAllUnmanaged: false };
   }
 
-  if (isJar(targetPath)) {
+  if (isArchive(targetPath)) {
     debug(`Creating pom from jar ${targetFile}`);
-    targetFile = await createPomForJar(root, targetFile!);
+    targetFile = await createPomForArchive(root, targetFile!);
   }
 
   if (options.scanAllUnmanaged) {
     const recursive = !!options.allProjects;
-    const jars = findJars(root, recursive);
+    const jars = findArchives(root, recursive);
     if (jars.length > 0) {
       debug(`Creating pom from jars in for ${root}`);
-      targetFile = await createPomForJars(root, jars);
+      targetFile = await createPomForArchives(root, jars);
     } else {
       throw Error(`Could not find any supported files in '${root}'.`);
     }
