@@ -101,5 +101,55 @@ test('inspect on test-project pom with reachable vulns', async (t) => {
   t.same(result, expected, 'should return expected result');
   t.tearDown(() => {
     javaCallGraphBuilderStub.restore();
+    callGraphMetrics.restore();
+  });
+});
+
+test('inspect on test-project pom with reachable vulns with maven args', async (t) => {
+  const mavenCallGraph = await readFixtureJSON('call-graphs', 'simple.json');
+  const javaCallGraphBuilderStub = sinon
+    .stub(javaCallGraphBuilder, 'getCallGraphMvn')
+    .resolves(mavenCallGraph as CallGraph);
+
+  const metrics = {
+    getEntrypoints: 0,
+    generateCallGraph: 13,
+    mapClassesPerJar: 12,
+    getCallGraph: 10,
+  };
+  const callGraphMetrics = sinon
+    .stub(javaCallGraphBuilder, 'runtimeMetrics')
+    .returns(metrics);
+
+  const args = [`-s=${path.join(testProjectPath, 'settings.xml')}`];
+  const result = await plugin.inspect(
+    '.',
+    path.join(testProjectPath, 'pom.xml'),
+    {
+      reachableVulns: true,
+      args,
+    },
+  );
+  t.ok(
+    javaCallGraphBuilderStub.calledWith(testProjectPath, undefined, args),
+    'call graph builder was called with the correct path and custom args',
+  );
+  const expected = await readFixtureJSON(
+    'test-project',
+    'expected-with-call-graph.json',
+  );
+  t.ok(javaCallGraphBuilderStub.calledOnce, 'called to the call graph builder');
+  t.ok(
+    javaCallGraphBuilderStub.calledWith(testProjectPath),
+    'call graph builder was called with the correct path',
+  );
+  t.ok(callGraphMetrics.calledOnce, 'callgraph metrics were fetched');
+  t.equals((result.plugin.meta as any).callGraphMetrics, metrics);
+
+  delete result.plugin.meta;
+  t.same(result, expected, 'should return expected result');
+  t.tearDown(() => {
+    javaCallGraphBuilderStub.restore();
+    callGraphMetrics.restore();
   });
 });

@@ -166,6 +166,7 @@ export async function inspect(
       callGraph = await getCallGraph(
         targetPath,
         timeout, // expects ms
+        options.args,
       );
       maybeCallGraphMetrics = {
         callGraphMetrics: javaCallGraphBuilder.runtimeMetrics(),
@@ -221,12 +222,14 @@ export function buildArgs(
 async function getCallGraph(
   targetPath: string,
   timeout?: number,
+  customMavenArgs?: string[],
 ): Promise<CallGraphResult> {
   debug(`getting call graph from path ${targetPath}`);
   try {
     const callGraph: CallGraph = await javaCallGraphBuilder.getCallGraphMvn(
       path.dirname(targetPath),
       timeout,
+      customMavenArgs,
     );
     debug('got call graph successfully');
     return callGraph;
