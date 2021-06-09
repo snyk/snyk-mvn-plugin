@@ -22,6 +22,17 @@ test('parseTree with --dev', async (t) => {
   t.same(depTree.data, results, 'should return expected results');
 });
 
+test('parseTree given duplicate dep with classifier', async (t) => {
+  const mavenOutput = await readFixture(
+    'parse-mvn/duplicate-dep-with-classifier.txt',
+  );
+  const depTree = parseTree(mavenOutput, false);
+  const results = await readFixtureJSON(
+    'parse-mvn/duplicate-dep-with-classifier-results.json',
+  );
+  t.same(depTree.data, results, 'should return expected results');
+});
+
 test('parseTree with bad mvn dependency:tree output', async (t) => {
   const mavenOutput = await readFixture(
     'parse-mvn/maven-dependency-tree-bad.txt',
