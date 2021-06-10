@@ -1,5 +1,4 @@
 import { legacyCommon } from '@snyk/cli-interface';
-import * as os from 'os';
 
 const newline = /[\r\n]+/g;
 const logLabel = /^\[\w+\]\s*/gm;
@@ -69,7 +68,7 @@ function getRootProject(text, withDev) {
 function getProject(projectDump, withDev) {
   const lines = projectDump.split(newline);
   const identity = dequote(lines[0]);
-  const deps = {};
+  const deps: { [source: string]: string[] } = {};
   for (let i = 1; i < lines.length - 1; i++) {
     const line = lines[i];
     const nodes = line.trim().split('->');
@@ -83,7 +82,7 @@ function getProject(projectDump, withDev) {
 
 function assemblePackage(
   source,
-  projectDeps,
+  projectDeps: { [source: string]: string[] },
   withDev,
 ): legacyCommon.DepTree | null {
   const sourcePackage: legacyCommon.DepTree = createPackage(source);
@@ -120,17 +119,51 @@ function createPackage(pkgStr) {
   }
 
   const parts = pkgStr.split(':');
-  const result: legacyCommon.DepTree = {
-    version: parts[3],
-    name: parts[0] + ':' + parts[1],
+  let result: legacyCommon.DepTree = {
     dependencies: {},
   };
 
-  if (parts.length >= 5) {
-    result.labels = {
-      scope: parts[parts.length - 1],
-    };
-    result.version = parts[parts.length - 2];
+  switch (parts.length) {
+    // using classifier and scope
+    case 6: {
+      const groupId = parts[0];
+      const artifactId = parts[1];
+      // not using type parts[2]
+      const classifier = parts[3];
+      const version = parts[4];
+      const scope = parts[5];
+      result.version = version;
+      result.name = `${groupId}:${artifactId}:${classifier}`;
+      result.labels = {
+        scope,
+      };
+      break;
+    }
+    // using scope
+    case 5: {
+      const groupId = parts[0];
+      const artifactId = parts[1];
+      // not using type parts[2]
+      const version = parts[3];
+      const scope = parts[4];
+      result.version = version;
+      result.name = `${groupId}:${artifactId}`;
+      result.labels = {
+        scope,
+      };
+      break;
+    }
+    // everything else
+    case 4:
+    default: {
+      const groupId = parts[0];
+      const artifactId = parts[1];
+      // not using type parts[2]
+      const version = parts[3];
+      result.version = version;
+      result.name = `${groupId}:${artifactId}`;
+      break;
+    }
   }
 
   return result;
