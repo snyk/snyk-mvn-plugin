@@ -152,7 +152,7 @@ jobs:
   release:
     <<: *defaults
     docker:
-      - image: circleci/node:<< parameters.node_version >>
+      - image: circleci/node:14
     steps:
       - checkout
       - install_deps
