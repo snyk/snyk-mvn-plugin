@@ -51,17 +51,6 @@ function getRootProject(text, withDev) {
     ...rootProject,
   };
 
-  // Add any subsequent projects to the root as dependencies
-  for (let i = 1; i < projects.length; i++) {
-    const project: legacyCommon.DepTree | null = getProject(
-      projects[i],
-      withDev,
-    );
-    if (project && project.name) {
-      root.dependencies = {};
-      root.dependencies[project.name] = project;
-    }
-  }
   return root;
 }
 
