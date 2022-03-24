@@ -1,14 +1,11 @@
+import { DepGraph, DepGraphBuilder } from '@snyk/dep-graph';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as glob from 'glob';
 import * as needle from 'needle';
-import { getPomContents, MavenDependency } from './pom';
+import * as debugLib from 'debug';
 
-import * as tmp from 'tmp';
-tmp.setGracefulCleanup();
-
-import debugLib = require('debug');
 const debug = debugLib('snyk-mvn-plugin');
 
 // Using the maven-central sha1 checksum API call (see: https://search.maven.org/classic/#api)
@@ -27,6 +24,12 @@ interface MavenPackageInfo {
   g: string; // group
   a: string; // artifact
   v: string; // version
+}
+
+interface MavenDependency {
+  groupId: string;
+  artifactId: string;
+  version: string;
 }
 
 function getSha1(buf: Buffer) {
@@ -63,38 +66,53 @@ async function getDependencies(paths: string[]): Promise<MavenDependency[]> {
   return dependencies;
 }
 
-export async function createPomForArchive(
+export async function createDepGraphFromArchive(
   root: string,
-  targetFile: string,
-): Promise<string> {
-  const targetPath = path.resolve(root, targetFile);
+  targetPath: string,
+): Promise<DepGraph> {
   try {
-    const dependency = await getMavenDependency(targetPath);
-    debug(`Creating pom.xml for ${JSON.stringify(dependency)}`);
-    const rootDependency = getRootDependency(root, targetFile);
-    const pomContents = getPomContents([dependency], rootDependency);
-    const pomFile = createTempPomFile(targetPath, pomContents);
-    return pomFile;
+    return await createDepGraphFromArchives(root, [targetPath]);
   } catch (err) {
-    const msg = `There was a problem generating a pom file for jar ${targetPath}.`;
+    const msg = `There was a problem generating a dep-graph for '${targetPath}'.`;
     debug(msg, err);
     throw new Error(msg + ' ' + err.message);
   }
 }
 
-export async function createPomForArchives(
+export async function createDepGraphFromArchives(
   root: string,
-  jarPaths: string[],
-): Promise<string> {
+  archivePaths: string[],
+): Promise<DepGraph> {
   try {
-    const dependencies = await getDependencies(jarPaths);
-    debug(`Creating pom.xml for ${JSON.stringify(dependencies)}`);
+    const dependencies = await getDependencies(archivePaths);
+    if (!dependencies.length) {
+      throw new Error(
+        `No Maven artifacts found when searching ${MAVEN_SEARCH_URL}`,
+      );
+    }
+    debug(`Creating dep-graph from ${JSON.stringify(dependencies)}`);
     const rootDependency = getRootDependency(root);
-    const pomContents = getPomContents(dependencies, rootDependency);
-    const pomFile = createTempPomFile(root, pomContents);
-    return pomFile;
+    const rootPkg = {
+      name: `${rootDependency.groupId}:${rootDependency.artifactId}`,
+      version: rootDependency.version,
+    };
+    const builder = new DepGraphBuilder({ name: ' maven' }, rootPkg);
+    for (const dependency of dependencies) {
+      const nodeId = `${dependency.groupId}:${dependency.artifactId}@${dependency.version}`;
+      builder.addPkgNode(
+        {
+          name: `${dependency.groupId}:${dependency.artifactId}`,
+          version: dependency.version,
+        },
+        nodeId,
+      );
+      builder.connectDep(builder.rootNodeId, nodeId);
+    }
+    const depGraph = builder.build();
+    debug(`Created dep-graph ${JSON.stringify(depGraph.toJSON())}`);
+    return depGraph;
   } catch (err) {
-    const msg = `Detected jar file(s) in: '${root}', but there was a problem generating a pom file.`;
+    const msg = `Detected supported file(s) in '${root}', but there was a problem generating a dep-graph.`;
     debug(msg, err);
     throw new Error(msg + ' ' + err.message);
   }
@@ -146,19 +164,6 @@ async function getMavenPackageInfo(
   });
 }
 
-function createTempPomFile(filePath: string, pomContents: string): string {
-  try {
-    const tmpPom = tmp.fileSync({
-      postfix: '-pom.xml',
-      dir: path.resolve(path.dirname(filePath)),
-    });
-    fs.writeFileSync(tmpPom.name, pomContents);
-    return tmpPom.name;
-  } catch (err) {
-    throw new Error('Failed to create temporary pom. ' + err.message);
-  }
-}
-
 function getRootDependency(root: string, targetFile?: string): MavenDependency {
   let groupId;
   if (targetFile) {
@@ -171,7 +176,7 @@ function getRootDependency(root: string, targetFile?: string): MavenDependency {
     // take root's parent directory base name
     groupId = path.basename(path.dirname(path.resolve(root)));
   }
-  // replace path seperators with dots
+  // replace path separators with dots
   groupId = groupId
     .replace(/\//g, '.') // *inx
     .replace(/\\/g, '.') // windows

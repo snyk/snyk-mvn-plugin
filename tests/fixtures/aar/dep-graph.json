@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.2.0",
+  "pkgManager": { "name": " maven" },
+  "pkgs": [
+    {
+      "id": "fixtures:aar@1.0.0",
+      "info": {
+        "name": "fixtures:aar",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "id": "org.keycloak:keycloak-core@5.0.0",
+      "info": {
+        "name": "org.keycloak:keycloak-core",
+        "version": "5.0.0"
+      }
+    }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "fixtures:aar@1.0.0",
+        "deps": [
+          {
+            "nodeId": "org.keycloak:keycloak-core@5.0.0"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.keycloak:keycloak-core@5.0.0",
+        "pkgId": "org.keycloak:keycloak-core@5.0.0",
+        "deps": []
+      }
+    ]
+  }
+}

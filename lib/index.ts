@@ -1,4 +1,5 @@
 import { legacyPlugin } from '@snyk/cli-interface';
+import * as depGraphLib from '@snyk/dep-graph';
 import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -7,8 +8,8 @@ import * as path from 'path';
 import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
 import {
-  createPomForArchive,
-  createPomForArchives,
+  createDepGraphFromArchive,
+  createDepGraphFromArchives,
   findArchives,
   isArchive,
 } from './archive';
@@ -117,17 +118,35 @@ export async function inspect(
     options = { dev: false, scanAllUnmanaged: false };
   }
 
-  if (isArchive(targetPath)) {
-    debug(`Creating pom from jar ${targetFile}`);
-    targetFile = await createPomForArchive(root, targetFile!);
+  if (targetPath && isArchive(targetPath)) {
+    debug(`Creating dep-graph from ${targetPath}`);
+    const depGraph = await createDepGraphFromArchive(root, targetPath);
+    return {
+      plugin: {
+        name: 'bundled:maven',
+        runtime: 'unknown',
+        meta: {},
+      },
+      package: {}, // using dep-graph over depTree
+      dependencyGraph: depGraph,
+    };
   }
 
   if (options.scanAllUnmanaged) {
     const recursive = !!options.allProjects;
-    const jars = findArchives(root, recursive);
-    if (jars.length > 0) {
-      debug(`Creating pom from jars in for ${root}`);
-      targetFile = await createPomForArchives(root, jars);
+    const archives = findArchives(root, recursive);
+    if (archives.length > 0) {
+      debug(`Creating dep-graph from archives in ${root}`);
+      const depGraph = await createDepGraphFromArchives(root, archives);
+      return {
+        plugin: {
+          name: 'bundled:maven',
+          runtime: 'unknown',
+          meta: {},
+        },
+        package: {}, // using dep-graph over depTree
+        dependencyGraph: depGraph,
+      };
     } else {
       throw Error(`Could not find any supported files in '${root}'.`);
     }
