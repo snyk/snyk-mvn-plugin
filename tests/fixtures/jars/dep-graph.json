@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.2.0",
+  "pkgManager": { "name": " maven" },
+  "pkgs": [
+    {
+      "id": "fixtures:jars@1.0.0",
+      "info": {
+        "name": "fixtures:jars",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "id": "org.keycloak:keycloak-core@5.0.0",
+      "info": {
+        "name": "org.keycloak:keycloak-core",
+        "version": "5.0.0"
+      }
+    },
+    {
+      "id": "tomcat:tomcat-http11@4.1.34",
+      "info": {
+        "name": "tomcat:tomcat-http11",
+        "version": "4.1.34"
+      }
+    }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "fixtures:jars@1.0.0",
+        "deps": [
+          {
+            "nodeId": "org.keycloak:keycloak-core@5.0.0"
+          },
+          {
+            "nodeId": "tomcat:tomcat-http11@4.1.34"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.keycloak:keycloak-core@5.0.0",
+        "pkgId": "org.keycloak:keycloak-core@5.0.0",
+        "deps": []
+      },
+      {
+        "nodeId": "tomcat:tomcat-http11@4.1.34",
+        "pkgId": "tomcat:tomcat-http11@4.1.34",
+        "deps": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.2.0",
+  "pkgManager": {
+    "name": " maven"
+  },
+  "pkgs": [
+    {
+      "id": "fixtures:spring-core@1.0.0",
+      "info": {
+        "name": "fixtures:spring-core",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "id": "org.springframework:spring-core@5.1.8.RELEASE",
+      "info": {
+        "name": "org.springframework:spring-core",
+        "version": "5.1.8.RELEASE"
+      }
+    }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "fixtures:spring-core@1.0.0",
+        "deps": [
+          {
+            "nodeId": "org.springframework:spring-core@5.1.8.RELEASE"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.springframework:spring-core@5.1.8.RELEASE",
+        "pkgId": "org.springframework:spring-core@5.1.8.RELEASE",
+        "deps": []
+      }
+    ]
+  }
+}

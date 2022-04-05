@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.2.0",
+  "pkgManager": { "name": " maven" },
+  "pkgs": [
+    {
+      "id": "fixtures:jar-wrong-package-name@1.0.0",
+      "info": {
+        "name": "fixtures:jar-wrong-package-name",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "id": "org.netbeans.external:org-apache-commons-io@RELEASE113",
+      "info": {
+        "name": "org.netbeans.external:org-apache-commons-io",
+        "version": "RELEASE113"
+      }
+    }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "fixtures:jar-wrong-package-name@1.0.0",
+        "deps": [
+          {
+            "nodeId": "org.netbeans.external:org-apache-commons-io@RELEASE113"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.netbeans.external:org-apache-commons-io@RELEASE113",
+        "pkgId": "org.netbeans.external:org-apache-commons-io@RELEASE113",
+        "deps": []
+      }
+    ]
+  }
+}
