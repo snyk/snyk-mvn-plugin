@@ -4,6 +4,7 @@ import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
+import { readFile } from '../tests/file-helper';
 
 import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
@@ -38,6 +39,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   reachableVulns?: boolean;
   callGraphBuilderTimeout?: number;
   allProjects?: boolean;
+  depTreeFile?: string;
 }
 
 export function getCommand(root: string, targetFile: string | undefined) {
@@ -161,9 +163,11 @@ export async function inspect(
     options.args,
   );
   try {
-    const result = await subProcess.execute(mavenCommand, mvnArgs, {
-      cwd: mvnWorkingDirectory,
-    });
+    const result = await (options.depTreeFile
+      ? readFile(options.depTreeFile)
+      : subProcess.execute(mavenCommand, mvnArgs, {
+          cwd: mvnWorkingDirectory,
+        }));
     const versionResult = await subProcess.execute(
       `${mavenCommand} --version`,
       [],
