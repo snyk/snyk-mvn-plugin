@@ -160,8 +160,9 @@ export async function inspect(
     targetFile,
     options.args,
   );
+  let result;
   try {
-    const result = await subProcess.execute(mavenCommand, mvnArgs, {
+    result = await subProcess.execute(mavenCommand, mvnArgs, {
       cwd: mvnWorkingDirectory,
     });
     const versionResult = await subProcess.execute(
@@ -210,6 +211,7 @@ export async function inspect(
       callGraph,
     };
   } catch (error) {
+    debug(`>>> Output from mvn: ${result}`);
     error.message = formatGenericPluginError(error, mavenCommand, mvnArgs);
     throw error;
   }
