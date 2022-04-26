@@ -23,7 +23,7 @@ export function execute(command, args, options): Promise<string> {
 
     proc.on('close', (code) => {
       if (code !== 0) {
-        return reject(new Error(stdout || stderr));
+        return reject(new Error(stderr || stdout));
       }
       resolve(stdout || stderr);
     });
