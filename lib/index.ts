@@ -162,6 +162,8 @@ export async function inspect(
   );
   let result;
   try {
+    debug(`Maven command: ${mavenCommand} ${mvnArgs.join(' ')}`);
+    debug(`Maven working directory: ${mvnWorkingDirectory}`);
     result = await subProcess.execute(mavenCommand, mvnArgs, {
       cwd: mvnWorkingDirectory,
     });
