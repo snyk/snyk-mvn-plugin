@@ -11,7 +11,7 @@
     "allowJs": false,
     "sourceMap": true,
     "strict": true,
-    // "declaration": true,
+    "declaration": true,
     "importHelpers": true,
     "noImplicitAny": false // Needed to compile tap and ansi-escapes
   },
