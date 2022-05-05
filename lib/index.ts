@@ -21,7 +21,7 @@ const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
 let logger: debugModule.Debugger | null = null;
 
-function debug(s: string) {
+export function debug(s: string) {
   if (logger === null) {
     // Lazy init: Snyk CLI needs to process the CLI argument "-d" first.
     // TODO(BST-648): more robust handling of the debug settings
@@ -213,7 +213,7 @@ export async function inspect(
       callGraph,
     };
   } catch (error) {
-    debug(`>>> Output from mvn: ${result}`);
+    if (result) debug(`>>> Output from mvn: ${result}`);
     error.message = formatGenericPluginError(error, mavenCommand, mvnArgs);
     throw error;
   }
@@ -226,7 +226,7 @@ export function buildArgs(
   mavenArgs?: string[] | undefined,
 ) {
   // Requires Maven >= 2.2
-  let args = ['dependency:tree', '-DoutputType=dot'];
+  let args = ['dependency:tree', '-DoutputType=dot', '--batch-mode'];
   if (targetFile) {
     // if we are where we can execute - we preserve the original path;
     // if not - we rely on the executor (mvnw) to be spawned at the closest directory, leaving us w/ the file itself
