@@ -1,4 +1,5 @@
 import * as childProcess from 'child_process';
+import { debug } from './index';
 
 export function execute(command, args, options): Promise<string> {
   const spawnOptions: {
@@ -19,6 +20,14 @@ export function execute(command, args, options): Promise<string> {
     });
     proc.stderr.on('data', (data) => {
       stderr = stderr + data;
+    });
+
+    proc.on('error', (err) => {
+      debug(`Child process errored with: ${err.message}`);
+    });
+
+    proc.on('exit', (code) => {
+      debug(`Child process exited with code: ${code}`);
     });
 
     proc.on('close', (code) => {
