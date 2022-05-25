@@ -226,7 +226,12 @@ export function buildArgs(
   mavenArgs?: string[] | undefined,
 ) {
   // Requires Maven >= 2.2
-  let args = ['dependency:tree', '-DoutputType=dot', '--batch-mode'];
+  let args = [
+    'dependency:tree', // use dependency plugin to display a tree of dependencies
+    '-DoutputType=dot', // use 'dot' output format
+    '--batch-mode', // clean up output, disables output color and download progress
+    '--non-recursive', // do not include sub modules these are handled by separate scans using --all-projects
+  ];
   if (targetFile) {
     // if we are where we can execute - we preserve the original path;
     // if not - we rely on the executor (mvnw) to be spawned at the closest directory, leaving us w/ the file itself

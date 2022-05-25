@@ -9,6 +9,7 @@ test('buildArgs with array', async (t) => {
       'dependency:tree',
       '-DoutputType=dot',
       '--batch-mode',
+      '--non-recursive',
       '-Paxis',
       '-Pjaxen',
     ],
