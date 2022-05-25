@@ -40,9 +40,9 @@
     "ts-node": "^8.10.2"
   },
   "dependencies": {
-    "@snyk/cli-interface": "2.11.0",
+    "@snyk/cli-interface": "2.11.3",
     "@snyk/dep-graph": "^1.23.1",
-    "@snyk/java-call-graph-builder": "1.23.3",
+    "@snyk/java-call-graph-builder": "1.23.6",
     "debug": "^4.1.1",
     "glob": "^7.1.6",
     "needle": "^2.5.0",

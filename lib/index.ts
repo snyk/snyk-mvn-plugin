@@ -1,4 +1,5 @@
 import { legacyPlugin } from '@snyk/cli-interface';
+import * as depGraphLib from '@snyk/dep-graph';
 import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -7,8 +8,8 @@ import * as path from 'path';
 import { parseTree, parseVersions } from './parse-mvn';
 import * as subProcess from './sub-process';
 import {
-  createPomForArchive,
-  createPomForArchives,
+  createDepGraphFromArchive,
+  createDepGraphFromArchives,
   findArchives,
   isArchive,
 } from './archive';
@@ -20,7 +21,7 @@ const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
 let logger: debugModule.Debugger | null = null;
 
-function debug(s: string) {
+export function debug(s: string) {
   if (logger === null) {
     // Lazy init: Snyk CLI needs to process the CLI argument "-d" first.
     // TODO(BST-648): more robust handling of the debug settings
@@ -117,17 +118,35 @@ export async function inspect(
     options = { dev: false, scanAllUnmanaged: false };
   }
 
-  if (isArchive(targetPath)) {
-    debug(`Creating pom from jar ${targetFile}`);
-    targetFile = await createPomForArchive(root, targetFile!);
+  if (targetPath && isArchive(targetPath)) {
+    debug(`Creating dep-graph from ${targetPath}`);
+    const depGraph = await createDepGraphFromArchive(root, targetPath);
+    return {
+      plugin: {
+        name: 'bundled:maven',
+        runtime: 'unknown',
+        meta: {},
+      },
+      package: {}, // using dep-graph over depTree
+      dependencyGraph: depGraph,
+    };
   }
 
   if (options.scanAllUnmanaged) {
     const recursive = !!options.allProjects;
-    const jars = findArchives(root, recursive);
-    if (jars.length > 0) {
-      debug(`Creating pom from jars in for ${root}`);
-      targetFile = await createPomForArchives(root, jars);
+    const archives = findArchives(root, recursive);
+    if (archives.length > 0) {
+      debug(`Creating dep-graph from archives in ${root}`);
+      const depGraph = await createDepGraphFromArchives(root, archives);
+      return {
+        plugin: {
+          name: 'bundled:maven',
+          runtime: 'unknown',
+          meta: {},
+        },
+        package: {}, // using dep-graph over depTree
+        dependencyGraph: depGraph,
+      };
     } else {
       throw Error(`Could not find any supported files in '${root}'.`);
     }
@@ -141,8 +160,11 @@ export async function inspect(
     targetFile,
     options.args,
   );
+  let result;
   try {
-    const result = await subProcess.execute(mavenCommand, mvnArgs, {
+    debug(`Maven command: ${mavenCommand} ${mvnArgs.join(' ')}`);
+    debug(`Maven working directory: ${mvnWorkingDirectory}`);
+    result = await subProcess.execute(mavenCommand, mvnArgs, {
       cwd: mvnWorkingDirectory,
     });
     const versionResult = await subProcess.execute(
@@ -191,6 +213,7 @@ export async function inspect(
       callGraph,
     };
   } catch (error) {
+    if (result) debug(`>>> Output from mvn: ${result}`);
     error.message = formatGenericPluginError(error, mavenCommand, mvnArgs);
     throw error;
   }
@@ -203,7 +226,12 @@ export function buildArgs(
   mavenArgs?: string[] | undefined,
 ) {
   // Requires Maven >= 2.2
-  let args = ['dependency:tree', '-DoutputType=dot'];
+  let args = [
+    'dependency:tree', // use dependency plugin to display a tree of dependencies
+    '-DoutputType=dot', // use 'dot' output format
+    '--batch-mode', // clean up output, disables output color and download progress
+    '--non-recursive', // do not include sub modules these are handled by separate scans using --all-projects
+  ];
   if (targetFile) {
     // if we are where we can execute - we preserve the original path;
     // if not - we rely on the executor (mvnw) to be spawned at the closest directory, leaving us w/ the file itself

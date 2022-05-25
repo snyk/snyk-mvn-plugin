@@ -1,10 +1,6 @@
 import * as path from 'path';
 import * as test from 'tap-only';
-import * as sinon from 'sinon';
-import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import { legacyPlugin } from '@snyk/cli-interface';
-import { CallGraph } from '@snyk/cli-interface/legacy/common';
-import * as os from 'os';
 
 import * as plugin from '../../lib';
 import { readFixtureJSON } from '../file-helper';
@@ -211,7 +207,7 @@ test('inspect on pom with bad dependency', async (t) => {
 
 test('inspect on mvn error', async (t) => {
   const targetFile = path.join(fixturesPath, 'bad', 'pom.xml');
-  const fullCommand = `mvn dependency:tree -DoutputType=dot --file="${targetFile}"`;
+  const fullCommand = `mvn dependency:tree -DoutputType=dot --batch-mode --non-recursive --file="${targetFile}"`;
   try {
     await plugin.inspect('.', targetFile, {
       dev: true,
@@ -320,4 +316,25 @@ test('inspect on mvnw successful when resides in parent directory with targetFil
   // therefore, only independent objects are compared
   delete result.plugin.meta;
   t.same(result, expected, 'should return expected result');
+});
+
+test('inspect on aggregate project root pom', async (t) => {
+  const result = await plugin.inspect(
+    path.join(fixturesPath, 'aggregate-project'),
+    'pom.xml',
+  );
+  if (legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected single inspect result');
+  }
+  t.same(
+    result.package,
+    {
+      // root pom has no dependencies
+      dependencies: {},
+      name: 'io.snyk:my-app',
+      packageFormatVersion: 'mvn:0.0.1',
+      version: '1.2.3',
+    },
+    'should return expected result',
+  );
 });
