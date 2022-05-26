@@ -96,7 +96,7 @@ export async function createDepGraphFromArchives(
       name: `${rootDependency.groupId}:${rootDependency.artifactId}`,
       version: rootDependency.version,
     };
-    const builder = new DepGraphBuilder({ name: ' maven' }, rootPkg);
+    const builder = new DepGraphBuilder({ name: 'maven' }, rootPkg);
     for (const dependency of dependencies) {
       const nodeId = `${dependency.groupId}:${dependency.artifactId}@${dependency.version}`;
       builder.addPkgNode(
