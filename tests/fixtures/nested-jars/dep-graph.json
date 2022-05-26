@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.2.0",
-  "pkgManager": { "name": " maven" },
+  "pkgManager": { "name": "maven" },
   "pkgs": [
     {
       "id": "fixtures:nested-jars@1.0.0",
