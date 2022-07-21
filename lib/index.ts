@@ -212,10 +212,13 @@ export async function inspect(
       package: parseResult.data,
       callGraph,
     };
-  } catch (error) {
+  } catch (err) {
     if (result) debug(`>>> Output from mvn: ${result}`);
-    error.message = formatGenericPluginError(error, mavenCommand, mvnArgs);
-    throw error;
+    if (err instanceof Error) {
+      const msg = formatGenericPluginError(err, mavenCommand, mvnArgs);
+      throw new Error(msg);
+    }
+    throw err;
   }
 }
 
@@ -261,8 +264,9 @@ async function getCallGraph(
     );
     debug('got call graph successfully');
     return callGraph;
-  } catch (e) {
-    debug('call graph error: ' + e);
+  } catch (err) {
+    debug('call graph error: ' + err);
+    const e = err as { message: string; innerError: Error };
     return {
       message: e.message,
       innerError: e.innerError || e,

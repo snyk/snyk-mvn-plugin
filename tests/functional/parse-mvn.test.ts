@@ -40,12 +40,16 @@ test('parseTree with bad mvn dependency:tree output', async (t) => {
   try {
     parseTree(mavenOutput, true);
     t.fail('expected parseTree to throw error');
-  } catch (error) {
-    t.equals(
-      error.message,
-      'Cannot find dependency information.',
-      'should throw expected error',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      t.equals(
+        err.message,
+        'Cannot find dependency information.',
+        'should throw expected error',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 
@@ -56,12 +60,16 @@ test('parseTree with error mvn dependency:tree output', async (t) => {
   try {
     parseTree(mavenOutput, true);
     t.fail('expected parseTree to throw error');
-  } catch (error) {
-    t.equals(
-      error.message,
-      'Failed to execute an `mvn` command.',
-      'should throw expected error',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      t.equals(
+        err.message,
+        'Failed to execute an `mvn` command.',
+        'should throw expected error',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 

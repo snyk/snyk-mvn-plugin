@@ -60,7 +60,12 @@ async function getDependencies(paths: string[]): Promise<MavenDependency[]> {
       dependencies.push(dependency);
     } catch (err) {
       // log error and continue with other paths
-      console.error(`Failed to get maven dependency for '${p}'.`, err.message);
+      if (err instanceof Error) {
+        console.error(
+          `Failed to get maven dependency for '${p}'.`,
+          err.message,
+        );
+      }
     }
   }
   return dependencies;
@@ -75,7 +80,10 @@ export async function createDepGraphFromArchive(
   } catch (err) {
     const msg = `There was a problem generating a dep-graph for '${targetPath}'.`;
     debug(msg, err);
-    throw new Error(msg + ' ' + err.message);
+    if (err instanceof Error) {
+      throw new Error(msg + ' ' + err.message);
+    }
+    throw new Error(msg);
   }
 }
 
@@ -114,7 +122,10 @@ export async function createDepGraphFromArchives(
   } catch (err) {
     const msg = `Detected supported file(s) in '${root}', but there was a problem generating a dep-graph.`;
     debug(msg, err);
-    throw new Error(msg + ' ' + err.message);
+    if (err instanceof Error) {
+      throw new Error(msg + ' ' + err.message);
+    }
+    throw new Error(msg);
   }
 }
 

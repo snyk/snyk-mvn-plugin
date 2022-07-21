@@ -25,9 +25,7 @@ export async function readJSON(filePath: string) {
     const contents = await readFile(filePath);
     return JSON.parse(contents);
   } catch (err) {
-    throw new Error(
-      'Could not parse json file ' + filePath + '. ' + err.message,
-    );
+    throw new Error(`Could not parse json file ${filePath}. ${err}`);
   }
 }
 
