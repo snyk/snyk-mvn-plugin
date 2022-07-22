@@ -158,7 +158,7 @@ test('inspect on root that does not contain a pom.xml and no target file', async
     if (err instanceof Error) {
       t.match(
         err.message,
-        'BUILD FAILURE',
+        'Child process failed with exit code: 1.',
         'should throw expected error with build failure message',
       );
       t.match(
@@ -235,6 +235,7 @@ test('inspect on mvn error', async (t) => {
         '` executes successfully ' +
         'on this project.\n\n' +
         'If the problem persists, collect the output of `' +
+        'DEBUG=* ' +
         fullCommand +
         '` and contact support@snyk.io\n';
       t.match(

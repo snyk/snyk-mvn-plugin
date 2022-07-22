@@ -21,7 +21,7 @@ const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
 let logger: debugModule.Debugger | null = null;
 
-export function debug(s: string) {
+export function debug(...messages: string[]) {
   if (logger === null) {
     // Lazy init: Snyk CLI needs to process the CLI argument "-d" first.
     // TODO(BST-648): more robust handling of the debug settings
@@ -30,7 +30,7 @@ export function debug(s: string) {
     }
     logger = debugModule('snyk-mvn-plugin');
   }
-  logger(s);
+  messages.forEach((m) => logger(m));
 }
 
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {

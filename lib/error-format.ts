@@ -16,6 +16,7 @@ export function formatGenericPluginError(
     'on this project.\n\n' +
     (mavenCommand.indexOf('mvnw') >= 0 ? mvnwCommandTipMessage : '') +
     'If the problem persists, collect the output of `' +
+    'DEBUG=* ' +
     fullCommand +
     '` and contact support@snyk.io\n'
   );
