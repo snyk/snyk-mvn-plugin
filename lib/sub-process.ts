@@ -32,7 +32,30 @@ export function execute(command, args, options): Promise<string> {
 
     proc.on('close', (code) => {
       if (code !== 0) {
-        return reject(new Error(stderr || stdout));
+        debug(
+          `Child process failed with exit code: ${code}`,
+          '----------------',
+          'STDERR:',
+          stderr,
+          '----------------',
+          'STDOUT:',
+          stdout,
+          '----------------',
+        );
+
+        const stdErrMessage = stderr ? `\nSTDERR:\n${stderr}` : '';
+        const stdOutMessage = stdout ? `\nSTDOUT:\n${stdout}` : '';
+        const debugSuggestion = process.env.DEBUG
+          ? ''
+          : `\nRun in debug mode (-d) to see STDERR and STDOUT.`;
+
+        return reject(
+          new Error(
+            `Child process failed with exit code: ${code}.` +
+              debugSuggestion +
+              (stdErrMessage || stdOutMessage),
+          ),
+        );
       }
       resolve(stdout || stderr);
     });
