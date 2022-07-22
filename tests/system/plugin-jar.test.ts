@@ -27,15 +27,19 @@ test('inspect on altered jar', async (t) => {
   try {
     await plugin.inspect(badPath, 'jackson-databind-2.9.9.jar');
     t.fail('expected inspect to throw error');
-  } catch (error) {
-    const expectedPath = path.join(badPath, 'jackson-databind-2.9.9.jar');
-    t.equal(
-      error.message,
-      `There was a problem generating a dep-graph for '${expectedPath}'. ` +
-        `Detected supported file(s) in '${badPath}', but there was a problem generating a dep-graph. ` +
-        'No Maven artifacts found when searching https://search.maven.org/solrsearch/select',
-      'should throw expected error',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      const expectedPath = path.join(badPath, 'jackson-databind-2.9.9.jar');
+      t.equal(
+        err.message,
+        `There was a problem generating a dep-graph for '${expectedPath}'. ` +
+          `Detected supported file(s) in '${badPath}', but there was a problem generating a dep-graph. ` +
+          'No Maven artifacts found when searching https://search.maven.org/solrsearch/select',
+        'should throw expected error',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 
@@ -43,13 +47,17 @@ test('inspect on non-existent jar', async (t) => {
   try {
     await plugin.inspect(__dirname, 'nowhere-to-be-found-1.0.jar');
     t.fail('expected inspect to throw error');
-  } catch (error) {
-    const expectedPath = path.join(__dirname, 'nowhere-to-be-found-1.0.jar');
-    t.equal(
-      error.message,
-      'Could not find file or directory ' + expectedPath,
-      'should throw expected error',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      const expectedPath = path.join(__dirname, 'nowhere-to-be-found-1.0.jar');
+      t.equal(
+        err.message,
+        'Could not find file or directory ' + expectedPath,
+        'should throw expected error',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 
@@ -57,15 +65,19 @@ test('inspect on user created jar (same as altered)', async (t) => {
   try {
     await plugin.inspect(badPath, 'mvn-app-1.0-SNAPSHOT.jar');
     t.fail('expected inspect to throw error');
-  } catch (error) {
-    const expectedPath = path.join(badPath, 'mvn-app-1.0-SNAPSHOT.jar');
-    t.equal(
-      error.message,
-      `There was a problem generating a dep-graph for '${expectedPath}'. ` +
-        `Detected supported file(s) in '${badPath}', but there was a problem generating a dep-graph. ` +
-        'No Maven artifacts found when searching https://search.maven.org/solrsearch/select',
-      'should throw expected error',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      const expectedPath = path.join(badPath, 'mvn-app-1.0-SNAPSHOT.jar');
+      t.equal(
+        err.message,
+        `There was a problem generating a dep-graph for '${expectedPath}'. ` +
+          `Detected supported file(s) in '${badPath}', but there was a problem generating a dep-graph. ` +
+          'No Maven artifacts found when searching https://search.maven.org/solrsearch/select',
+        'should throw expected error',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 
@@ -88,12 +100,16 @@ test('inspect in directory with no jars no target file and --scan-all-unmanaged 
   try {
     await plugin.inspect(__dirname, undefined, { scanAllUnmanaged: true });
     t.fail('expected inspect to throw error');
-  } catch (error) {
-    t.equal(
-      error.message,
-      `Could not find any supported files in '${__dirname}'.`,
-      'should throw error with message could not find supported files',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      t.equal(
+        err.message,
+        `Could not find any supported files in '${__dirname}'.`,
+        'should throw error with message could not find supported files',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 

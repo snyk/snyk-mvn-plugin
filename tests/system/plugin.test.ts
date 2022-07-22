@@ -154,17 +154,21 @@ test('inspect on root that does not contain a pom.xml and no target file', async
   try {
     await plugin.inspect(__dirname);
     t.fail('expected inspect to throw error');
-  } catch (error) {
-    t.match(
-      error.message,
-      'BUILD FAILURE',
-      'should throw expected error with build failure message',
-    );
-    t.match(
-      error.message,
-      'there is no POM in this directory',
-      'should throw expected error and mention no pom',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      t.match(
+        err.message,
+        'BUILD FAILURE',
+        'should throw expected error with build failure message',
+      );
+      t.match(
+        err.message,
+        'there is no POM in this directory',
+        'should throw expected error and mention no pom',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 
@@ -176,12 +180,16 @@ test('inspect on pom with plugin', async (t) => {
       { dev: true },
     );
     t.fail('expected inspect to throw error');
-  } catch (error) {
-    t.match(
-      error.message,
-      'Cannot find dependency information.',
-      'should throw expected error',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      t.match(
+        err.message,
+        'Cannot find dependency information.',
+        'should throw expected error',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 
@@ -191,17 +199,21 @@ test('inspect on pom with bad dependency', async (t) => {
       dev: true,
     });
     t.fail('expected inspect to throw error');
-  } catch (error) {
-    t.match(
-      error.message,
-      'BUILD FAILURE',
-      'should throw expected error with build failure message',
-    );
-    t.match(
-      error.message,
-      'no.such.groupId:no.such.artifactId:jar:1.0.0',
-      'should throw expected error and mention the bad dependency',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      t.match(
+        err.message,
+        'BUILD FAILURE',
+        'should throw expected error with build failure message',
+      );
+      t.match(
+        err.message,
+        'no.such.groupId:no.such.artifactId:jar:1.0.0',
+        'should throw expected error and mention the bad dependency',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 
@@ -213,22 +225,26 @@ test('inspect on mvn error', async (t) => {
       dev: true,
     });
     t.fail('expected inspect to throw error');
-  } catch (error) {
-    const expectedCommand =
-      '\n\n' +
-      'Please make sure that Apache Maven Dependency Plugin ' +
-      'version 2.2 or above is installed, and that `' +
-      fullCommand +
-      '` executes successfully ' +
-      'on this project.\n\n' +
-      'If the problem persists, collect the output of `' +
-      fullCommand +
-      '` and contact support@snyk.io\n';
-    t.match(
-      error.message,
-      expectedCommand,
-      'should throw expected error showing corresponding maven command',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      const expectedCommand =
+        '\n\n' +
+        'Please make sure that Apache Maven Dependency Plugin ' +
+        'version 2.2 or above is installed, and that `' +
+        fullCommand +
+        '` executes successfully ' +
+        'on this project.\n\n' +
+        'If the problem persists, collect the output of `' +
+        fullCommand +
+        '` and contact support@snyk.io\n';
+      t.match(
+        err.message,
+        expectedCommand,
+        'should throw expected error showing corresponding maven command',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 
@@ -239,14 +255,18 @@ test('inspect on mvnw error', async (t) => {
       dev: true,
     });
     t.fail('expected inspect to throw error');
-  } catch (error) {
-    const expectedCommand =
-      '[WARNING] The POM for no.such.groupId:no.such.artifactId:jar:1.0.0 is missing, no dependency information available';
-    t.match(
-      error.message,
-      expectedCommand,
-      'should throw expected error showing corresponding maven command',
-    );
+  } catch (err) {
+    if (err instanceof Error) {
+      const expectedCommand =
+        '[WARNING] The POM for no.such.groupId:no.such.artifactId:jar:1.0.0 is missing, no dependency information available';
+      t.match(
+        err.message,
+        expectedCommand,
+        'should throw expected error showing corresponding maven command',
+      );
+    } else {
+      t.fail('error is not instance of Error');
+    }
   }
 });
 
