@@ -2,7 +2,7 @@
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
   "parserOptions": {
-    "ecmaVersion": 6
+    "project": "./tsconfig.json"
   },
   "env": {
     "node": true,
@@ -12,22 +12,20 @@
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
-    "prettier",
-    "prettier/@typescript-eslint"
+    "prettier"
   ],
   "rules": {
-    "@typescript-eslint/explicit-function-return-type": 0,
-    "@typescript-eslint/no-explicit-any": 0,
-    "@typescript-eslint/no-var-requires": 0,
-    "@typescript-eslint/no-use-before-define": 0,
-    // non-null assertions compromise the type safety somewhat, but many
-    // our types are still imprecisely defined and we don't use noImplicitAny
-    // anyway, so for the time being assertions are allowed
-    "@typescript-eslint/no-non-null-assertion": 1,
-    "no-prototype-builtins": 0,
-    "no-var": 2,
-    "prefer-arrow-callback": 2,
-    "prefer-const": 2,
-    "require-atomic-updates": 0
-  }
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/no-unused-vars": "error",
+    "no-buffer-constructor": "error"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "id-blacklist": ["error", "exports"] // in TS, use "export" instead of Node's "module.exports"
+      }
+    }
+  ]
 }

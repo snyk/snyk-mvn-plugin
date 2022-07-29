@@ -21,9 +21,10 @@ export function parseTree(text: string, withDev) {
   return { ok: true, data };
 }
 
-export function parseVersions(
-  text: string,
-): { javaVersion: string; mavenVersion: string } {
+export function parseVersions(text: string): {
+  javaVersion: string;
+  mavenVersion: string;
+} {
   // AppVeyor (at least) doesn't use \n\r, therefore os.EOL doesn't work
   const data = text.split('\n');
   const mavenVersion = data[0];
@@ -108,7 +109,7 @@ function createPackage(pkgStr) {
   }
 
   const parts = pkgStr.split(':');
-  let result: legacyCommon.DepTree = {
+  const result: legacyCommon.DepTree = {
     dependencies: {},
   };
 

@@ -1,5 +1,4 @@
 import { legacyPlugin } from '@snyk/cli-interface';
-import * as depGraphLib from '@snyk/dep-graph';
 import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import * as os from 'os';
 import * as fs from 'fs';

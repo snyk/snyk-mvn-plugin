@@ -33,10 +33,7 @@ interface MavenDependency {
 }
 
 function getSha1(buf: Buffer) {
-  return crypto
-    .createHash(ALGORITHM)
-    .update(buf)
-    .digest(DIGEST);
+  return crypto.createHash(ALGORITHM).update(buf).digest(DIGEST);
 }
 
 async function getMavenDependency(
