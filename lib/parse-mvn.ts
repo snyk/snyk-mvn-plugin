@@ -1,4 +1,5 @@
 import { legacyCommon } from '@snyk/cli-interface';
+import { parseDependency } from './parse/dependency';
 
 const newline = /[\r\n]+/g;
 const logLabel = /^\[\w+\]\s*/gm;
@@ -101,61 +102,25 @@ function assemblePackage(
   return sourcePackage;
 }
 
-function createPackage(pkgStr) {
-  const range = getConstraint(pkgStr);
+function createPackage(pkg: string): legacyCommon.DepTree {
+  const range = getConstraint(pkg);
 
   if (range) {
-    pkgStr = pkgStr.substring(0, pkgStr.indexOf(' '));
+    pkg = pkg.substring(0, pkg.indexOf(' '));
   }
 
-  const parts = pkgStr.split(':');
+  const { groupId, artifactId, version, scope, classifier } =
+    parseDependency(pkg);
+  const coordinate = `${groupId}:${artifactId}`;
+  const name = classifier ? `${coordinate}:${classifier}` : coordinate;
   const result: legacyCommon.DepTree = {
+    name,
+    version,
     dependencies: {},
   };
-
-  switch (parts.length) {
-    // using classifier and scope
-    case 6: {
-      const groupId = parts[0];
-      const artifactId = parts[1];
-      // not using type parts[2]
-      const classifier = parts[3];
-      const version = parts[4];
-      const scope = parts[5];
-      result.version = version;
-      result.name = `${groupId}:${artifactId}:${classifier}`;
-      result.labels = {
-        scope,
-      };
-      break;
-    }
-    // using scope
-    case 5: {
-      const groupId = parts[0];
-      const artifactId = parts[1];
-      // not using type parts[2]
-      const version = parts[3];
-      const scope = parts[4];
-      result.version = version;
-      result.name = `${groupId}:${artifactId}`;
-      result.labels = {
-        scope,
-      };
-      break;
-    }
-    // everything else
-    case 4:
-    default: {
-      const groupId = parts[0];
-      const artifactId = parts[1];
-      // not using type parts[2]
-      const version = parts[3];
-      result.version = version;
-      result.name = `${groupId}:${artifactId}`;
-      break;
-    }
+  if (scope) {
+    result.labels = { scope };
   }
-
   return result;
 }
 
