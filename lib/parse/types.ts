@@ -6,3 +6,12 @@ export interface MavenDependency {
   classifier?: string;
   scope?: string;
 }
+
+export interface MavenGraph {
+  rootId: string;
+  nodes: Record<string, MavenGraphNode>;
+}
+
+export interface MavenGraphNode {
+  dependsOn: string[];
+}
