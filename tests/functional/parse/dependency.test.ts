@@ -1,4 +1,4 @@
-import * as test from 'tap-only';
+import { test } from 'tap';
 import { parseDependency } from '../../../lib/parse/dependency';
 
 test('parseDependency returns expected object', async (t) => {
@@ -57,6 +57,28 @@ test('parseDependency returns unknown', async (t) => {
       version: 'unknown',
     },
     'when input has less than 4 parts',
+  );
+  t.same(
+    parseDependency(':::::'),
+    {
+      groupId: 'unknown',
+      artifactId: 'unknown',
+      type: 'unknown',
+      version: 'unknown',
+      scope: 'unknown',
+      classifier: 'unknown',
+    },
+    'when input has empty parts',
+  );
+  t.same(
+    parseDependency(':::1.2.3'),
+    {
+      groupId: 'unknown',
+      artifactId: 'unknown',
+      type: 'unknown',
+      version: '1.2.3',
+    },
+    'when input has a mix of empty and valid parts',
   );
   t.same(
     parseDependency(1),
