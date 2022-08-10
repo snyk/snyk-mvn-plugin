@@ -1,5 +1,5 @@
 import { test } from 'tap';
-import { parseStdout } from '../../../lib/parse/stdout';
+import { parseStdout } from '../../lib/parse/stdout';
 
 const singleProjectStdout = `[INFO] Scanning for projects...
 [INFO] 

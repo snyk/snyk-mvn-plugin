@@ -1,5 +1,5 @@
 import { test } from 'tap';
-import { buildDepGraph } from '../../../lib/parse/dep-graph';
+import { buildDepGraph } from '../../lib/parse/dep-graph';
 
 test('buildDepGraph', async (t) => {
   const depGraph = buildDepGraph({

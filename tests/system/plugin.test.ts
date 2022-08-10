@@ -3,7 +3,7 @@ import * as test from 'tap-only';
 import { legacyPlugin } from '@snyk/cli-interface';
 
 import * as plugin from '../../lib';
-import { readFixtureJSON } from '../file-helper';
+import { readFixtureJSON } from '../helpers/read';
 
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');

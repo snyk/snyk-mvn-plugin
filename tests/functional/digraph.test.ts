@@ -1,5 +1,5 @@
 import { test } from 'tap';
-import { parseDigraphs } from '../../../lib/parse/digraph';
+import { parseDigraphs } from '../../lib/parse/digraph';
 
 const core = `digraph "io.snyk:core:jar:1.0.0" { 
 "io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile" ; 

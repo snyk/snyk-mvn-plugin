@@ -1,5 +1,5 @@
 import { test } from 'tap';
-import { parseDependency } from '../../../lib/parse/dependency';
+import { parseDependency } from '../../lib/parse/dependency';
 
 test('parseDependency returns expected object', async (t) => {
   t.same(
