@@ -1,5 +1,5 @@
 import * as test from 'tap-only';
-import { readFixture, readFixtureJSON } from '../file-helper';
+import { readFixture, readFixtureJSON } from '../helpers/read';
 import { parseTree, parseVersions } from '../../lib/parse-mvn';
 
 test('parseTree without --dev', async (t) => {
@@ -8,7 +8,7 @@ test('parseTree without --dev', async (t) => {
   );
   const depTree = parseTree(mavenOutput, false);
   const results = await readFixtureJSON('parse-mvn/maven-parse-results.json');
-  t.same(depTree.data, results, 'should return expected results');
+  t.same(depTree.package, results, 'should return expected results');
 });
 
 test('parseTree with --dev', async (t) => {
@@ -19,7 +19,7 @@ test('parseTree with --dev', async (t) => {
   const results = await readFixtureJSON(
     'parse-mvn/maven-parse-dev-results.json',
   );
-  t.same(depTree.data, results, 'should return expected results');
+  t.same(depTree.package, results, 'should return expected results');
 });
 
 test('parseTree given duplicate dep with classifier', async (t) => {
@@ -30,7 +30,7 @@ test('parseTree given duplicate dep with classifier', async (t) => {
   const results = await readFixtureJSON(
     'parse-mvn/duplicate-dep-with-classifier-results.json',
   );
-  t.same(depTree.data, results, 'should return expected results');
+  t.same(depTree.package, results, 'should return expected results');
 });
 
 test('parseTree with bad mvn dependency:tree output', async (t) => {
@@ -78,9 +78,9 @@ test('parseTree with type "test-jar" in mvn dependency', async (t) => {
     'parse-mvn/maven-dependency-tree-with-type.txt',
   );
   const result = parseTree(mavenOutput, true);
-  if (result && result.data && result.data.dependencies) {
+  if (result && result.package && result.package.dependencies) {
     t.equals(
-      result.data.dependencies['com.snyk.tester:tester-queue'].version,
+      result.package.dependencies['com.snyk.tester:tester-queue'].version,
       '15.0.0',
     );
   } else {

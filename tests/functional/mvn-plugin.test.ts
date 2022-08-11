@@ -16,3 +16,26 @@ test('buildArgs with array', async (t) => {
     'should return expected array',
   );
 });
+
+test('buildArgs with option mavenAggregateProject', async (t) => {
+  const mavenAggregateProject = true;
+  const result = plugin.buildArgs(
+    '.',
+    '.',
+    'pom.xml',
+    ['-Paxis', '-Pjaxen'],
+    mavenAggregateProject,
+  );
+  t.same(
+    result,
+    [
+      'test-compile',
+      'dependency:tree',
+      '-DoutputType=dot',
+      '--batch-mode',
+      '-Paxis',
+      '-Pjaxen',
+    ],
+    'should return expected array',
+  );
+});

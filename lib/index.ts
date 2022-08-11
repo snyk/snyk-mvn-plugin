@@ -15,6 +15,7 @@ import {
 import { formatGenericPluginError } from './error-format';
 import { CallGraph, CallGraphResult } from '@snyk/cli-interface/legacy/common';
 import debugModule = require('debug');
+import { parse } from './parse';
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
@@ -37,6 +38,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   reachableVulns?: boolean;
   callGraphBuilderTimeout?: number;
   allProjects?: boolean;
+  mavenAggregateProject?: boolean;
 }
 
 export function getCommand(root: string, targetFile: string | undefined) {
@@ -158,6 +160,7 @@ export async function inspect(
     mvnWorkingDirectory,
     targetFile,
     options.args,
+    options.mavenAggregateProject,
   );
   let result;
   try {
@@ -173,7 +176,12 @@ export async function inspect(
         cwd: mvnWorkingDirectory,
       },
     );
-    const parseResult = parseTree(result, options.dev);
+    let parseResult = {};
+    if (options.mavenAggregateProject) {
+      parseResult = parse(result);
+    } else {
+      parseResult = parseTree(result, options.dev);
+    }
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
     let callGraph: CallGraphResult | undefined;
     let maybeCallGraphMetrics = {};
@@ -208,7 +216,7 @@ export async function inspect(
           ...maybeCallGraphMetrics,
         },
       },
-      package: parseResult.data,
+      ...parseResult,
       callGraph,
     };
   } catch (err) {
@@ -226,15 +234,29 @@ export function buildArgs(
   executionPath: string,
   targetFile?: string,
   mavenArgs?: string[] | undefined,
+  mavenAggregateProject = false,
 ) {
+  let args: string[] = [];
+
+  if (mavenAggregateProject) {
+    // to workaround an issue in maven-dependency-tree plugin
+    // when unpublished artifacts do not exist in either a local or remote repository
+    // see https://stackoverflow.com/questions/1677473/maven-doesnt-recognize-sibling-modules-when-running-mvn-dependencytree
+    args = args.concat('test-compile');
+  }
+
   // Requires Maven >= 2.2
-  let args = [
+  args = args.concat([
     'dependency:tree', // use dependency plugin to display a tree of dependencies
     '-DoutputType=dot', // use 'dot' output format
     '--batch-mode', // clean up output, disables output color and download progress
-    '--non-recursive', // do not include sub modules these are handled by separate scans using --all-projects
-  ];
-  if (targetFile) {
+  ]);
+
+  if (!mavenAggregateProject) {
+    args = args.concat('--non-recursive'); // do not include modules unless performing aggregate project scan
+  }
+
+  if (targetFile && !mavenAggregateProject) {
     // if we are where we can execute - we preserve the original path;
     // if not - we rely on the executor (mvnw) to be spawned at the closest directory, leaving us w/ the file itself
     if (rootPath === executionPath) {
@@ -243,9 +265,11 @@ export function buildArgs(
       args.push('--file="' + path.basename(targetFile) + '"');
     }
   }
+
   if (mavenArgs) {
     args = args.concat(mavenArgs);
   }
+
   return args;
 }
 

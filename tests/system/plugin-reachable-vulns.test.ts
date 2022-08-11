@@ -5,7 +5,7 @@ import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import { CallGraph } from '@snyk/cli-interface/legacy/common';
 
 import * as plugin from '../../lib';
-import { readFixtureJSON } from '../file-helper';
+import { readFixtureJSON } from '../helpers/read';
 
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');

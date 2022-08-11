@@ -1,12 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+const fixtures = path.join(__dirname, '..', 'fixtures');
+
 /**
  * Asynchronous fs.readFile.
  */
 export async function readFile(path): Promise<string> {
   return new Promise((resolve, reject) => {
-    fs.readFile(path, 'utf8', function(err, data) {
+    fs.readFile(path, 'utf8', function (err, data) {
       if (err) {
         reject(err);
       }
@@ -35,7 +37,7 @@ export async function readJSON(filePath: string) {
  * @param fixturePath path relative to test fixtures directory.
  */
 export async function readFixture(...paths: string[]) {
-  const filePath = path.join(__dirname, 'fixtures', ...paths);
+  const filePath = path.join(fixtures, ...paths);
   return await readFile(filePath);
 }
 
@@ -45,6 +47,6 @@ export async function readFixture(...paths: string[]) {
  * @param fixturePath path relative to test fixtures directory.
  */
 export async function readFixtureJSON(...paths: string[]) {
-  const filePath = path.join(__dirname, 'fixtures', ...paths);
+  const filePath = path.join(fixtures, ...paths);
   return await readJSON(filePath);
 }

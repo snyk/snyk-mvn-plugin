@@ -19,7 +19,7 @@ export function parseTree(text: string, withDev) {
   // extract deps
   const data = getRootProject(text, withDev);
 
-  return { ok: true, data };
+  return { package: data };
 }
 
 export function parseVersions(text: string): {
