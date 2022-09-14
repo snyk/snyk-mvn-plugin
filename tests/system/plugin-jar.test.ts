@@ -23,24 +23,19 @@ test('inspect with aar file', async (t) =>
     targetFile: 'library-1.1.0.aar',
   }));
 
-test('inspect on altered jar', async (t) => {
-  try {
-    await plugin.inspect(badPath, 'jackson-databind-2.9.9.jar');
-    t.fail('expected inspect to throw error');
-  } catch (err) {
-    if (err instanceof Error) {
-      const expectedPath = path.join(badPath, 'jackson-databind-2.9.9.jar');
-      t.equal(
-        err.message,
-        `There was a problem generating a dep-graph for '${expectedPath}'. ` +
-          `Detected supported file(s) in '${badPath}', but there was a problem generating a dep-graph. ` +
-          'No Maven artifacts found when searching https://search.maven.org/solrsearch/select',
-        'should throw expected error',
-      );
-    } else {
-      t.fail('error is not instance of Error');
-    }
+test('inspect on altered jar marks package as unknown', async (t) => {
+  const result = await plugin.inspect(badPath, 'jackson-databind-2.9.9.jar');
+  if (legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected single inspect result');
   }
+  const pkgs = result.dependencyGraph?.getDepPkgs() || [];
+  t.equal(pkgs.length, 1, 'dep-graph contains one package');
+  t.match(
+    pkgs[0].name,
+    /unknown:.*jackson-databind-2\.9\.9\.jar:[a-zA-Z0-9]{40}/,
+    'package has expected name format',
+  );
+  t.equal(pkgs[0].version, 'unknown', 'unknown version');
 });
 
 test('inspect on non-existent jar', async (t) => {
@@ -61,24 +56,19 @@ test('inspect on non-existent jar', async (t) => {
   }
 });
 
-test('inspect on user created jar (same as altered)', async (t) => {
-  try {
-    await plugin.inspect(badPath, 'mvn-app-1.0-SNAPSHOT.jar');
-    t.fail('expected inspect to throw error');
-  } catch (err) {
-    if (err instanceof Error) {
-      const expectedPath = path.join(badPath, 'mvn-app-1.0-SNAPSHOT.jar');
-      t.equal(
-        err.message,
-        `There was a problem generating a dep-graph for '${expectedPath}'. ` +
-          `Detected supported file(s) in '${badPath}', but there was a problem generating a dep-graph. ` +
-          'No Maven artifacts found when searching https://search.maven.org/solrsearch/select',
-        'should throw expected error',
-      );
-    } else {
-      t.fail('error is not instance of Error');
-    }
+test('inspect on user created jar marks package as unknown', async (t) => {
+  const result = await plugin.inspect(badPath, 'mvn-app-1.0-SNAPSHOT.jar');
+  if (legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected single inspect result');
   }
+  const pkgs = result.dependencyGraph?.getDepPkgs() || [];
+  t.equal(pkgs.length, 1, 'dep-graph contains one package');
+  t.match(
+    pkgs[0].name,
+    /unknown:.*mvn-app-1\.0-SNAPSHOT\.jar:[a-zA-Z0-9]{40}/,
+    'package has expected name format',
+  );
+  t.equal(pkgs[0].version, 'unknown', 'unknown version');
 });
 
 test('inspect in directory with jars no target file and --scan-all-unmanaged arg', async (t) =>
@@ -113,12 +103,32 @@ test('inspect in directory with no jars no target file and --scan-all-unmanaged 
   }
 });
 
-test('inspect in directory with good and bad jars and --scan-all-unmanaged arg', async (t) =>
-  assertFixture({
-    t,
-    fixtureDirectory: 'good-and-bad',
-    options: { scanAllUnmanaged: true },
-  }));
+test('inspect in directory with good and bad jars and --scan-all-unmanaged arg', async (t) => {
+  const root = path.join(fixturesPath, 'good-and-bad');
+  const result = await plugin.inspect(root, undefined, {
+    scanAllUnmanaged: true,
+  });
+  if (legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected single inspect result');
+  }
+  const pkgs = result.dependencyGraph?.getDepPkgs() || [];
+  t.equal(pkgs.length, 2, 'dep-graph contains two packages');
+  const commonsIo = pkgs.find((pkg) => pkg.name === 'commons-io:commons-io');
+  t.equal(commonsIo?.version, '2.6', 'commons-io found with expected version');
+  const doesNotExist = pkgs.find((pkg) =>
+    pkg.name.includes('does-not-exist.jar'),
+  );
+  t.match(
+    doesNotExist?.name,
+    /unknown:.*does-not-exist\.jar:[a-zA-Z0-9]{40}/,
+    'unknown package has expected name format',
+  );
+  t.equal(
+    doesNotExist?.version,
+    'unknown',
+    'unknown package has unknown version',
+  );
+});
 
 test('inspect in directory with jar with wrong package name and --scan-all-unmanaged arg', async (t) =>
   assertFixture({

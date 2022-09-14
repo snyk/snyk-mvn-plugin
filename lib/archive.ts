@@ -151,12 +151,19 @@ async function getMavenPackageInfo(
         if (err) {
           reject(err);
         }
-        if (!res || !res.response || res.response.docs.length === 0) {
+        if (!res || !res.response) {
           reject(
             new Error(
-              `No package found querying '${MAVEN_SEARCH_URL}' for sha1 hash '${sha1}'.`,
+              `Unexpected result querying '${MAVEN_SEARCH_URL}' for sha1 hash '${sha1}'.`,
             ),
           );
+        }
+        if (res.response.docs.length === 0) {
+          resolve({
+            g: 'unknown',
+            a: `${targetPath}:${sha1}`,
+            v: 'unknown',
+          });
         }
         if (res.response.docs.length > 1) {
           const sha1Target = path.parse(targetPath).base;
