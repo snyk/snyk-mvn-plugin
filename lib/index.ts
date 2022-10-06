@@ -1,5 +1,4 @@
 import { legacyPlugin } from '@snyk/cli-interface';
-import * as javaCallGraphBuilder from '@snyk/java-call-graph-builder';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -13,7 +12,6 @@ import {
   isArchive,
 } from './archive';
 import { formatGenericPluginError } from './error-format';
-import { CallGraph, CallGraphResult } from '@snyk/cli-interface/legacy/common';
 import debugModule = require('debug');
 import { parse } from './parse';
 
@@ -35,8 +33,6 @@ export function debug(...messages: string[]) {
 
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   scanAllUnmanaged?: boolean;
-  reachableVulns?: boolean;
-  callGraphBuilderTimeout?: number;
   allProjects?: boolean;
   mavenAggregateProject?: boolean;
 }
@@ -183,25 +179,6 @@ export async function inspect(
       parseResult = parseTree(result, options.dev);
     }
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
-    let callGraph: CallGraphResult | undefined;
-    let maybeCallGraphMetrics = {};
-    if (options.reachableVulns) {
-      // NOTE[muscar] We get the timeout in seconds, and the call graph builder
-      // wants it in milliseconds
-      const timeout = options?.callGraphBuilderTimeout
-        ? options?.callGraphBuilderTimeout * 1000
-        : undefined;
-
-      callGraph = await getCallGraph(
-        targetPath,
-        timeout, // expects ms
-        options.args,
-      );
-      maybeCallGraphMetrics = {
-        callGraphMetrics: javaCallGraphBuilder.runtimeMetrics(),
-        callGraphBuilderTimeoutSeconds: options?.callGraphBuilderTimeout,
-      };
-    }
     return {
       plugin: {
         name: 'bundled:maven',
@@ -213,11 +190,9 @@ export async function inspect(
               javaVersion,
             },
           },
-          ...maybeCallGraphMetrics,
         },
       },
       ...parseResult,
-      callGraph,
     };
   } catch (err) {
     if (result) debug(`>>> Output from mvn: ${result}`);
@@ -271,28 +246,4 @@ export function buildArgs(
   }
 
   return args;
-}
-
-async function getCallGraph(
-  targetPath: string,
-  timeout?: number,
-  customMavenArgs?: string[],
-): Promise<CallGraphResult> {
-  debug(`getting call graph from path ${targetPath}`);
-  try {
-    const callGraph: CallGraph = await javaCallGraphBuilder.getCallGraphMvn(
-      path.dirname(targetPath),
-      timeout,
-      customMavenArgs,
-    );
-    debug('got call graph successfully');
-    return callGraph;
-  } catch (err) {
-    debug('call graph error: ' + err);
-    const e = err as { message: string; innerError: Error };
-    return {
-      message: e.message,
-      innerError: e.innerError || e,
-    };
-  }
 }

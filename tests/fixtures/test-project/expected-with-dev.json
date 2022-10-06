@@ -1,6 +1,5 @@
 {
   "plugin": { "name": "bundled:maven", "runtime": "unknown" },
-  "callGraph": null,
   "package": {
     "name": "io.snyk.example:test-project",
     "version": "1.0-SNAPSHOT",

@@ -1,11 +1,5 @@
 {
   "plugin": { "name": "bundled:maven", "runtime": "unknown" },
-  "callGraph": {
-    "options": {
-      "directed": true,
-      "multigraph": false,
-      "compound": false
-    },
     "nodes": [
       {
         "v": "com.ibm.wala.FakeRootClass:fakeRootMethod",
