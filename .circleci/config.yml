@@ -7,13 +7,13 @@ defaults: &defaults
   parameters:
     maven_version:
       type: string
-      default: ""
+      default: ''
     jdk_version:
       type: string
-      default: ""
+      default: '8'
     node_version:
       type: string
-      default: ""
+      default: '16'
   working_directory: ~/snyk-mvn-plugin
 
 windows_defaults: &windows_defaults
@@ -21,6 +21,19 @@ windows_defaults: &windows_defaults
     npm_config_loglevel: silent
   executor:
     name: win/default
+
+test_matrix_unix: &test_matrix_unix
+  matrix:
+    parameters:
+      jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca']
+      maven_version: ['3.3.9', '3.6.3', '3.8.4']
+      node_version: ['12', '16']
+test_matrix_win: &test_matrix_win
+  matrix:
+    parameters:
+      jdk_version: ['8', '17']
+      maven_version: ['3.3.9.2', '3.6.3', '3.8.4']
+      node_version: ['12', '16']
 
 commands:
   install_deps:
@@ -34,7 +47,7 @@ commands:
     parameters:
       node_version:
         type: string
-        default: ""
+        default: ''
     steps:
       - run:
           name: Install correct version of Node
@@ -65,7 +78,7 @@ commands:
     parameters:
       jdk_version:
         type: string
-        default: ""
+        default: ''
     steps:
       - run:
           name: Installing JDK
@@ -75,7 +88,7 @@ commands:
     parameters:
       jdk_version:
         type: string
-        default: ""
+        default: ''
     steps:
       - run:
           name: Installing JDK
@@ -85,7 +98,7 @@ commands:
     parameters:
       maven_version:
         type: string
-        default: ""
+        default: ''
     steps:
       - run:
           name: Installing Maven
@@ -95,7 +108,7 @@ commands:
     parameters:
       maven_version:
         type: string
-        default: ""
+        default: ''
     steps:
       - run: choco install maven --version=<< parameters.maven_version >>
 
@@ -165,213 +178,33 @@ workflows:
   version: 2
   test_and_release:
     jobs:
-    - lint:
-        name: Lint
-        context: nodejs-install
-        node_version: "lts"
-        filters:
-          branches:
-            ignore:
-              - master
+      - lint:
+          name: Lint
+          context: nodejs-install
+          node_version: 'lts'
+          filters:
+            branches:
+              ignore:
+                - master
 
-    # UNIX tests
-    - test-unix:
-        name: Unix Tests for Maven=3.6.1 JDK=10 Node=8
-        context: nodejs-install
-        maven_version: "3.6.1"
-        jdk_version: "10"
-        node_version: "8"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.6.1 JDK=11 Node=10
-        context: nodejs-install
-        maven_version: "3.6.1"
-        jdk_version: "11"
-        node_version: "10"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.6.1 JDK=11 Node=12
-        context: nodejs-install
-        maven_version: "3.6.1"
-        jdk_version: "11"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.3.9 JDK=8 Node=12
-        context: nodejs-install
-        maven_version: "3.3.9"
-        jdk_version: "8"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.3.9 JDK=9 Node=12
-        context: nodejs-install
-        maven_version: "3.3.9"
-        jdk_version: "9"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.3.9 JDK=10 Node=12
-        context: nodejs-install
-        maven_version: "3.3.9"
-        jdk_version: "10"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.3.9 JDK=11 Node=12
-        context: nodejs-install
-        maven_version: "3.3.9"
-        jdk_version: "11"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.3.9 JDK=12 Node=12
-        context: nodejs-install
-        maven_version: "3.3.9"
-        jdk_version: "12"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.3.9 JDK=13 Node=12
-        context: nodejs-install
-        maven_version: "3.3.9"
-        jdk_version: "13"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.6.1 JDK=8 Node=12
-        context: nodejs-install
-        maven_version: "3.6.1"
-        jdk_version: "8"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.6.1 JDK=12 Node=12
-        context: nodejs-install
-        maven_version: "3.6.1"
-        jdk_version: "12"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-unix:
-        name: Unix Tests for Maven=3.6.1 JDK=11 Node=12
-        context: nodejs-install
-        maven_version: "3.6.1"
-        jdk_version: "11"
-        node_version: "12"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
+      # UNIX tests
+      - test-unix:
+          name: Unix Tests for Maven=<<matrix.maven_version>> JDK=<<matrix.jdk_version>> Node=<<matrix.node_version>>
+          context: nodejs-install
+          <<: *test_matrix_unix
 
-    # Windows tests
-    - test-windows:
-        name: Windows Tests for Maven=3.6.1 Node=8
-        context: nodejs-install
-        maven_version: "3.6.1"
-        node_version: "8.17.0"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-windows:
-        name: Windows Tests for Maven=3.6.1 Node=10
-        context: nodejs-install
-        maven_version: "3.6.1"
-        node_version: "10.21.0"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-windows:
-        name: Windows Tests for Maven=3.6.1 Node=12
-        context: nodejs-install
-        maven_version: "3.6.1"
-        node_version: "12.0.0"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
-    - test-windows:
-        name: Windows Tests for Maven=3.3.9 Node=12
-        context: nodejs-install
-        maven_version: "3.3.9.2"
-        node_version: "12.0.0"
-        requires:
-          - Lint
-        filters:
-          branches:
-            ignore:
-              - master
+      # Windows tests
+      - test-windows:
+          name: Windows Tests for Maven=<<matrix.maven_version>> JDK=<<matrix.jdk_version>> Node=<<matrix.node_version>>
+          context: nodejs-install
+          <<: *test_matrix_win
 
-    # Release
-    - release:
-        name: Release
-        context: nodejs-app-release
-        node_version: "10"
-        filters:
-          branches:
-            only:
-              - master
+      # Release
+      - release:
+          name: Release
+          context: nodejs-app-release
+          node_version: '16'
+          filters:
+            branches:
+              only:
+                - master
