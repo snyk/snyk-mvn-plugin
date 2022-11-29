@@ -3,34 +3,14 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as glob from 'glob';
-import * as needle from 'needle';
 import * as debugLib from 'debug';
+import { MavenPackage, SnykHttpClient } from './parse/types';
+import { getMavenPackageInfo } from './search';
 
 const debug = debugLib('snyk-mvn-plugin');
 
-// Using the maven-central sha1 checksum API call (see: https://search.maven.org/classic/#api)
-const MAVEN_SEARCH_URL =
-  process.env.MAVEN_SEARCH_URL || 'https://search.maven.org/solrsearch/select';
 const ALGORITHM = 'sha1';
 const DIGEST = 'hex';
-
-interface MavenCentralResponse {
-  response: {
-    docs: MavenPackageInfo[];
-  };
-}
-
-interface MavenPackageInfo {
-  g: string; // group
-  a: string; // artifact
-  v: string; // version
-}
-
-interface MavenDependency {
-  groupId: string;
-  artifactId: string;
-  version: string;
-}
 
 function getSha1(buf: Buffer) {
   return crypto.createHash(ALGORITHM).update(buf).digest(DIGEST);
@@ -38,22 +18,21 @@ function getSha1(buf: Buffer) {
 
 async function getMavenDependency(
   targetPath: string,
-): Promise<MavenDependency> {
+  snykHttpClient: SnykHttpClient,
+): Promise<MavenPackage> {
   const contents = fs.readFileSync(targetPath);
   const sha1 = getSha1(contents);
-  const { g, a, v } = await getMavenPackageInfo(sha1, targetPath);
-  return {
-    groupId: g,
-    artifactId: a,
-    version: v,
-  };
+  return getMavenPackageInfo(sha1, targetPath, snykHttpClient);
 }
 
-async function getDependencies(paths: string[]): Promise<MavenDependency[]> {
-  const dependencies: MavenDependency[] = [];
+async function getDependencies(
+  paths: string[],
+  snykHttpClient: SnykHttpClient,
+): Promise<MavenPackage[]> {
+  const dependencies: MavenPackage[] = [];
   for (const p of paths) {
     try {
-      const dependency = await getMavenDependency(p);
+      const dependency = await getMavenDependency(p, snykHttpClient);
       dependencies.push(dependency);
     } catch (err) {
       // log error and continue with other paths
@@ -71,9 +50,10 @@ async function getDependencies(paths: string[]): Promise<MavenDependency[]> {
 export async function createDepGraphFromArchive(
   root: string,
   targetPath: string,
+  snykHttpClient?: SnykHttpClient,
 ): Promise<DepGraph> {
   try {
-    return await createDepGraphFromArchives(root, [targetPath]);
+    return await createDepGraphFromArchives(root, [targetPath], snykHttpClient);
   } catch (err) {
     const msg = `There was a problem generating a dep-graph for '${targetPath}'.`;
     debug(msg, err);
@@ -87,13 +67,16 @@ export async function createDepGraphFromArchive(
 export async function createDepGraphFromArchives(
   root: string,
   archivePaths: string[],
+  snykHttpClient?: SnykHttpClient,
 ): Promise<DepGraph> {
+  if (!snykHttpClient) {
+    throw new Error('No HTTP client provided!');
+  }
+
   try {
-    const dependencies = await getDependencies(archivePaths);
+    const dependencies = await getDependencies(archivePaths, snykHttpClient);
     if (!dependencies.length) {
-      throw new Error(
-        `No Maven artifacts found when searching ${MAVEN_SEARCH_URL}`,
-      );
+      throw new Error(`No Maven artifacts found!`);
     }
     debug(`Creating dep-graph from ${JSON.stringify(dependencies)}`);
     const rootDependency = getRootDependency(root);
@@ -136,50 +119,7 @@ export function findArchives(targetPath: string, recursive = false): string[] {
   return glob.sync(`${dir}/${recursive ? '**/' : ''}*.@(jar|war|aar|zip)`);
 }
 
-async function getMavenPackageInfo(
-  sha1: string,
-  targetPath: string,
-): Promise<MavenPackageInfo> {
-  const url = `${MAVEN_SEARCH_URL}?q=1:"${sha1}"&wt=json`;
-  return new Promise((resolve, reject) => {
-    needle.request(
-      'get',
-      url,
-      {},
-      { json: true },
-      (err, fullRes, res: MavenCentralResponse) => {
-        if (err) {
-          reject(err);
-        }
-        if (!res || !res.response) {
-          reject(
-            new Error(
-              `Unexpected result querying '${MAVEN_SEARCH_URL}' for sha1 hash '${sha1}'.`,
-            ),
-          );
-        }
-        if (res.response.docs.length === 0) {
-          resolve({
-            g: 'unknown',
-            a: `${targetPath}:${sha1}`,
-            v: 'unknown',
-          });
-        }
-        if (res.response.docs.length > 1) {
-          const sha1Target = path.parse(targetPath).base;
-          debug('Got multiple results for sha1, looking for', sha1Target);
-          const foundPackage = res.response.docs.find(({ g }) =>
-            sha1Target.includes(g),
-          );
-          res.response.docs = [foundPackage || res.response.docs[0]];
-        }
-        resolve(res.response.docs[0]);
-      },
-    );
-  });
-}
-
-function getRootDependency(root: string, targetFile?: string): MavenDependency {
+function getRootDependency(root: string, targetFile?: string): MavenPackage {
   let groupId;
   if (targetFile) {
     groupId = path.dirname(targetFile);

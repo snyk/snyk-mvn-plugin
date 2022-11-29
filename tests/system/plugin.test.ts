@@ -4,6 +4,7 @@ import { legacyPlugin } from '@snyk/cli-interface';
 
 import * as plugin from '../../lib';
 import { readFixtureJSON } from '../helpers/read';
+import { mockSnykSearchClient } from '../helpers/mock-search';
 
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -13,6 +14,8 @@ test('inspect on test-project pom', async (t) => {
   const result = await plugin.inspect(
     '.',
     path.join(testProjectPath, 'pom.xml'),
+    undefined,
+    mockSnykSearchClient,
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
@@ -39,6 +42,7 @@ test('inspect on test-project pom with --dev', async (t) => {
     {
       dev: true,
     },
+    mockSnykSearchClient,
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
@@ -65,6 +69,8 @@ test('inspect on path with spaces pom', async (t) => {
   const result = await plugin.inspect(
     '.',
     path.join(fixturesPath, 'path with spaces', 'pom.xml'),
+    undefined,
+    mockSnykSearchClient,
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
@@ -88,6 +94,8 @@ test('inspect on relative path to test-project pom', async (t) => {
   const result = await plugin.inspect(
     __dirname,
     path.join('..', 'fixtures', 'test-project', 'pom.xml'),
+    undefined,
+    mockSnykSearchClient,
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
@@ -111,6 +119,8 @@ test('inspect on relative path to test-project dir', async (t) => {
   const result = await plugin.inspect(
     __dirname,
     path.join('..', 'fixtures', 'test-project'),
+    undefined,
+    mockSnykSearchClient,
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
@@ -131,7 +141,12 @@ test('inspect on relative path to test-project dir', async (t) => {
 });
 
 test('inspect on root that contains pom.xml and no target file', async (t) => {
-  const result = await plugin.inspect(testProjectPath);
+  const result = await plugin.inspect(
+    testProjectPath,
+    undefined,
+    undefined,
+    mockSnykSearchClient,
+  );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
   }
@@ -152,7 +167,7 @@ test('inspect on root that contains pom.xml and no target file', async (t) => {
 
 test('inspect on root that does not contain a pom.xml and no target file', async (t) => {
   try {
-    await plugin.inspect(__dirname);
+    await plugin.inspect(__dirname, undefined, undefined, mockSnykSearchClient);
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -178,6 +193,7 @@ test('inspect on pom with plugin', async (t) => {
       '.',
       path.join(fixturesPath, 'bad', 'pom.plugin.xml'),
       { dev: true },
+      mockSnykSearchClient,
     );
     t.fail('expected inspect to throw error');
   } catch (err) {
@@ -195,9 +211,14 @@ test('inspect on pom with plugin', async (t) => {
 
 test('inspect on pom with bad dependency', async (t) => {
   try {
-    await plugin.inspect('.', path.join(fixturesPath, 'bad', 'pom.xml'), {
-      dev: true,
-    });
+    await plugin.inspect(
+      '.',
+      path.join(fixturesPath, 'bad', 'pom.xml'),
+      {
+        dev: true,
+      },
+      mockSnykSearchClient,
+    );
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -221,9 +242,14 @@ test('inspect on mvn error', async (t) => {
   const targetFile = path.join(fixturesPath, 'bad', 'pom.xml');
   const fullCommand = `mvn dependency:tree -DoutputType=dot --batch-mode --non-recursive --file="${targetFile}"`;
   try {
-    await plugin.inspect('.', targetFile, {
-      dev: true,
-    });
+    await plugin.inspect(
+      '.',
+      targetFile,
+      {
+        dev: true,
+      },
+      mockSnykSearchClient,
+    );
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -252,9 +278,14 @@ test('inspect on mvn error', async (t) => {
 test('inspect on mvnw error', async (t) => {
   const targetFile = path.join(fixturesPath, 'bad-maven-with-mvnw', 'pom.xml');
   try {
-    await plugin.inspect('.', targetFile, {
-      dev: true,
-    });
+    await plugin.inspect(
+      '.',
+      targetFile,
+      {
+        dev: true,
+      },
+      mockSnykSearchClient,
+    );
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -274,6 +305,9 @@ test('inspect on mvnw error', async (t) => {
 test('inspect on mvnw is successful', async (t) => {
   const result = await plugin.inspect(
     path.join(fixturesPath, 'maven-with-mvnw'),
+    undefined,
+    undefined,
+    mockSnykSearchClient,
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
@@ -297,6 +331,8 @@ test('inspect on mvnw is successful with targetFile', async (t) => {
   const result = await plugin.inspect(
     '.',
     path.join(fixturesPath, 'maven-with-mvnw', 'pom.xml'),
+    undefined,
+    mockSnykSearchClient,
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
@@ -320,6 +356,8 @@ test('inspect on mvnw successful when resides in parent directory with targetFil
   const result = await plugin.inspect(
     path.join(fixturesPath, 'wrapper-at-parent'),
     path.join(fixturesPath, 'wrapper-at-parent', 'project-a', 'pom.xml'),
+    undefined,
+    mockSnykSearchClient,
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
@@ -343,6 +381,8 @@ test('inspect on aggregate project root pom', async (t) => {
   const result = await plugin.inspect(
     path.join(fixturesPath, 'aggregate-project'),
     'pom.xml',
+    undefined,
+    mockSnykSearchClient,
   );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');

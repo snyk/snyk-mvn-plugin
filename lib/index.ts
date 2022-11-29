@@ -14,6 +14,7 @@ import {
 import { formatGenericPluginError } from './error-format';
 import debugModule = require('debug');
 import { parse } from './parse';
+import { SnykHttpClient } from './parse/types';
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
@@ -104,6 +105,7 @@ export async function inspect(
   root: string,
   targetFile?: string,
   options?: MavenOptions,
+  snykHttpClient?: SnykHttpClient,
 ): Promise<legacyPlugin.InspectResult> {
   const targetPath = targetFile
     ? path.resolve(root, targetFile)
@@ -117,7 +119,11 @@ export async function inspect(
 
   if (targetPath && isArchive(targetPath)) {
     debug(`Creating dep-graph from ${targetPath}`);
-    const depGraph = await createDepGraphFromArchive(root, targetPath);
+    const depGraph = await createDepGraphFromArchive(
+      root,
+      targetPath,
+      snykHttpClient,
+    );
     return {
       plugin: {
         name: 'bundled:maven',
@@ -134,7 +140,11 @@ export async function inspect(
     const archives = findArchives(root, recursive);
     if (archives.length > 0) {
       debug(`Creating dep-graph from archives in ${root}`);
-      const depGraph = await createDepGraphFromArchives(root, archives);
+      const depGraph = await createDepGraphFromArchives(
+        root,
+        archives,
+        snykHttpClient,
+      );
       return {
         plugin: {
           name: 'bundled:maven',
