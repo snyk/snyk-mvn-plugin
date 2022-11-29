@@ -1,5 +1,6 @@
 import * as childProcess from 'child_process';
 import { debug } from './index';
+import { quoteAll } from 'shescape';
 
 export function execute(command, args, options): Promise<string> {
   const spawnOptions: {
@@ -8,6 +9,9 @@ export function execute(command, args, options): Promise<string> {
   } = { shell: true };
   if (options && options.cwd) {
     spawnOptions.cwd = options.cwd;
+  }
+  if (args) {
+    args = quoteAll(args, spawnOptions);
   }
 
   return new Promise((resolve, reject) => {
