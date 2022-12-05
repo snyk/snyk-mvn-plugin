@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as test from 'tap-only';
 import * as plugin from '../../lib';
 import { readFixtureJSON } from '../helpers/read';
+import { mockSnykSearchClient } from '../helpers/mock-search';
 
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -24,7 +25,12 @@ test('inspect with aar file', async (t) =>
   }));
 
 test('inspect on altered jar marks package as unknown', async (t) => {
-  const result = await plugin.inspect(badPath, 'jackson-databind-2.9.9.jar');
+  const result = await plugin.inspect(
+    badPath,
+    'jackson-databind-2.9.9.jar',
+    undefined,
+    mockSnykSearchClient,
+  );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
   }
@@ -40,7 +46,12 @@ test('inspect on altered jar marks package as unknown', async (t) => {
 
 test('inspect on non-existent jar', async (t) => {
   try {
-    await plugin.inspect(__dirname, 'nowhere-to-be-found-1.0.jar');
+    await plugin.inspect(
+      __dirname,
+      'nowhere-to-be-found-1.0.jar',
+      undefined,
+      mockSnykSearchClient,
+    );
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -57,7 +68,12 @@ test('inspect on non-existent jar', async (t) => {
 });
 
 test('inspect on user created jar marks package as unknown', async (t) => {
-  const result = await plugin.inspect(badPath, 'mvn-app-1.0-SNAPSHOT.jar');
+  const result = await plugin.inspect(
+    badPath,
+    'mvn-app-1.0-SNAPSHOT.jar',
+    undefined,
+    mockSnykSearchClient,
+  );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
   }
@@ -88,7 +104,12 @@ test('inspect on target pom file in directory with jars and --scan-all-unmanaged
 
 test('inspect in directory with no jars no target file and --scan-all-unmanaged arg', async (t) => {
   try {
-    await plugin.inspect(__dirname, undefined, { scanAllUnmanaged: true });
+    await plugin.inspect(
+      __dirname,
+      undefined,
+      { scanAllUnmanaged: true },
+      mockSnykSearchClient,
+    );
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -105,9 +126,14 @@ test('inspect in directory with no jars no target file and --scan-all-unmanaged 
 
 test('inspect in directory with good and bad jars and --scan-all-unmanaged arg', async (t) => {
   const root = path.join(fixturesPath, 'good-and-bad');
-  const result = await plugin.inspect(root, undefined, {
-    scanAllUnmanaged: true,
-  });
+  const result = await plugin.inspect(
+    root,
+    undefined,
+    {
+      scanAllUnmanaged: true,
+    },
+    mockSnykSearchClient,
+  );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
   }
@@ -156,7 +182,12 @@ async function assertFixture({
   options?: any;
 }) {
   const root = path.join(fixturesPath, fixtureDirectory);
-  const result = await plugin.inspect(root, targetFile, options);
+  const result = await plugin.inspect(
+    root,
+    targetFile,
+    options,
+    mockSnykSearchClient,
+  );
   if (legacyPlugin.isMultiResult(result)) {
     return t.fail('expected single inspect result');
   }

@@ -4,6 +4,7 @@ import { test } from 'tap';
 import { legacyPlugin } from '@snyk/cli-interface';
 import * as plugin from '../../lib';
 import { byPkgName } from '../helpers/sort';
+import { mockSnykSearchClient } from '../helpers/mock-search';
 
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -25,12 +26,17 @@ test('inspect on complex aggregate project using maven reactor', async (t) => {
     {
       mavenAggregateProject: true,
     },
+    mockSnykSearchClient,
   );
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.equal(result.scannedProjects.length, 3, 'should return 3 scanned projects');
-  t.equal(
+  t.strictEqual(
+    result.scannedProjects.length,
+    3,
+    'should return 3 scanned projects',
+  );
+  t.strictEqual(
     getDepPkgs('io.snyk:aggregate-project', result)?.length,
     0,
     'root project has 0 dependencies',
@@ -53,7 +59,7 @@ test('inspect on complex aggregate project using maven reactor', async (t) => {
         name: 'org.apache.logging.log4j:log4j-api',
         version: '2.17.2',
       },
-      // as well as it's own dependencies
+      // as well as its own dependencies
       {
         name: 'org.apache.logging.log4j:log4j-core',
         version: '2.17.2',
