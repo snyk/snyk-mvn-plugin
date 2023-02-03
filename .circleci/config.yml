@@ -165,14 +165,12 @@ jobs:
   release:
     <<: *defaults
     docker:
-      - image: circleci/node:14
+      - image: cimg/node:lts
     steps:
       - checkout
-      - install_deps
-      - run: sudo npm i -g semantic-release @semantic-release/exec pkg
       - run:
           name: Publish to GitHub
-          command: semantic-release
+          command: npx semantic-release
 
 workflows:
   version: 2
