@@ -184,7 +184,7 @@ export async function inspect(
     );
     let parseResult = {};
     if (options.mavenAggregateProject) {
-      parseResult = parse(result);
+      parseResult = parse(result, options.dev);
     } else {
       parseResult = parseTree(result, options.dev);
     }
