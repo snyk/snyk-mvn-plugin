@@ -3,9 +3,12 @@ import type { MavenGraph, MavenGraphNode } from './types';
 import { DepGraph, DepGraphBuilder, PkgInfo } from '@snyk/dep-graph';
 import { parseDependency } from './dependency';
 
-export function buildDepGraph(mavenGraph: MavenGraph): DepGraph {
+export function buildDepGraph(
+  mavenGraph: MavenGraph,
+  includeTestScope = false,
+): DepGraph {
   const { rootId, nodes } = mavenGraph;
-  const root = getPkgInfo(rootId);
+  const { pkgInfo: root } = getPkgInfo(rootId);
   const builder = new DepGraphBuilder({ name: 'maven' }, root);
   const visited: string[] = [];
   const queue: QueueItem[] = [];
@@ -16,7 +19,8 @@ export function buildDepGraph(mavenGraph: MavenGraph): DepGraph {
     const item = queue.shift();
     if (!item) continue;
     const { id, parentId } = item;
-    const pkgInfo = getPkgInfo(id);
+    const { pkgInfo, scope } = getPkgInfo(id);
+    if (!includeTestScope && scope === 'test') continue;
     if (visited.includes(id)) {
       const prunedId = id + ':pruned';
       builder.addPkgNode(pkgInfo, prunedId, { labels: { pruned: 'true' } });
@@ -46,10 +50,13 @@ function getItems(parentId: string, node?: MavenGraphNode): QueueItem[] {
   return items;
 }
 
-function getPkgInfo(value: string): PkgInfo {
-  const { groupId, artifactId, version } = parseDependency(value);
+function getPkgInfo(value: string): { pkgInfo: PkgInfo; scope?: string } {
+  const { groupId, artifactId, version, scope } = parseDependency(value);
   return {
-    name: `${groupId}:${artifactId}`,
-    version,
+    pkgInfo: {
+      name: `${groupId}:${artifactId}`,
+      version,
+    },
+    scope,
   };
 }
