@@ -168,6 +168,7 @@ jobs:
       - image: cimg/node:lts
     steps:
       - checkout
+      - install_deps
       - run:
           name: Publish to GitHub
           command: npx semantic-release
