@@ -26,7 +26,7 @@ const singleProjectDigraph = `digraph "io.snyk:single-project:jar:0.0.1-SNAPSHOT
 "org.springframework:spring-web:jar:5.3.20:compile" -> "org.springframework:spring-beans:jar:5.3.20:compile" ; 
 "org.springframework:spring-web:jar:5.3.20:compile" -> "org.springframework:spring-core:jar:5.3.20:compile" ; 
 "org.springframework:spring-core:jar:5.3.20:compile" -> "org.springframework:spring-jcl:jar:5.3.20:compile" ; 
-}`;
+} `;
 
 test('parseStdout single project', async (t) => {
   const received = parseStdout(singleProjectStdout);
@@ -115,12 +115,12 @@ const multiProjectStdout = `[INFO] Scanning for projects...
 [INFO] ------------------------------------------------------------------------`;
 
 const rootProjectDigraph = `digraph "io.snyk:aggregate-project:pom:1.0.0" { 
-}`;
+} `;
 
 const coreProjectDigraph = `digraph "io.snyk:core:jar:1.0.0" { 
 "io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile" ; 
 "io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-core:jar:2.17.2:compile" ; 
-}`;
+} `;
 
 const webProjectDigraph = `digraph "io.snyk:web:jar:1.0.0" { 
 "io.snyk:web:jar:1.0.0" -> "io.snyk:core:jar:1.0.0:compile" ; 
@@ -130,7 +130,7 @@ const webProjectDigraph = `digraph "io.snyk:web:jar:1.0.0" {
 "org.springframework:spring-web:jar:5.3.21:compile" -> "org.springframework:spring-beans:jar:5.3.21:compile" ; 
 "org.springframework:spring-web:jar:5.3.21:compile" -> "org.springframework:spring-core:jar:5.3.21:compile" ; 
 "org.springframework:spring-core:jar:5.3.21:compile" -> "org.springframework:spring-jcl:jar:5.3.21:compile" ; 
-}`;
+} `;
 
 test('parseStdout multi project', async (t) => {
   const received = parseStdout(multiProjectStdout);

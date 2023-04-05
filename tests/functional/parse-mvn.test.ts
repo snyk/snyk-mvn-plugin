@@ -104,3 +104,18 @@ test('parseVersions from mvn --version', async (t) => {
     t.fail('result.data.dependencies was empty');
   }
 });
+
+test('parse output with WARNINGS and env var', async (t) => {
+  const mavenOutput = await readFixture(
+    'parse-mvn/with-warnings-and-env-var.txt',
+  );
+  const depTree = parseTree(mavenOutput, false);
+  t.ok(
+    depTree.package.dependencies?.['org.apache.poi:poi'],
+    'org.apache.poi:poi is top level dep',
+  );
+  t.ok(
+    depTree.package.dependencies?.['org.apache.poi:poi-ooxml'],
+    'org.apache.poi:poi-ooxml is top level dep',
+  );
+});
