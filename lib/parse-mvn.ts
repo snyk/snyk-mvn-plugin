@@ -1,9 +1,9 @@
 import { legacyCommon } from '@snyk/cli-interface';
+import { parseDigraph } from './parse-digraph';
 import { parseDependency } from './parse/dependency';
 
 const newline = /[\r\n]+/g;
 const logLabel = /^\[\w+\]\s*/gm;
-const digraph = /digraph([\s\S]*?)\}/g;
 const errorLabel = /^\[ERROR\]/gm;
 
 // Parse the output from 'mvn dependency:tree -DoutputType=dot'
@@ -36,7 +36,7 @@ export function parseVersions(text: string): {
 }
 
 function getRootProject(text, withDev) {
-  const projects = text.match(digraph);
+  const projects = parseDigraph(text);
   if (!projects) {
     throw new Error('Cannot find dependency information.');
   }

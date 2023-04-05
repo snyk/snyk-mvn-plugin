@@ -1,0 +1,18 @@
+Scanning for projects...
+
+------------------------------------------------------------------------
+Building Spring Boot Quartz Starter 2.0.0.BUILD-SNAPSHOT
+------------------------------------------------------------------------
+
+--- maven-dependency-plugin:2.10:tree (default-cli) @ spring-boot-starter-quartz ---
+digraph "com.snyk.platform:tester-service:jar:${my.version}" {
+"com.snyk.platform:tester-service:jar:${my.version}" -> "com.snyk.tester:tester-queue:jar:15.0.0:compile" ;
+"com.snyk.platform:tester-service:jar:${my.version}" -> "com.snyk.tester:tester-queue:test-jar:tests:15.0.0:test" ;
+}
+------------------------------------------------------------------------
+BUILD SUCCESS
+------------------------------------------------------------------------
+Total time: 1.956 s
+Finished at: 2017-06-19T14:28:14+03:00
+Final Memory: 23M/331M
+------------------------------------------------------------------------
