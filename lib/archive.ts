@@ -113,10 +113,10 @@ export function isArchive(file: string): boolean {
   return !!file.match(/\.(([jwa]ar)|(zip))$/);
 }
 
-export function findArchives(targetPath: string, recursive = false): string[] {
+export function findArchives(targetPath: string): string[] {
   const stats = fs.statSync(targetPath);
   const dir = stats.isFile() ? path.dirname(targetPath) : targetPath;
-  return glob.sync(`${dir}/${recursive ? '**/' : ''}*.@(jar|war|aar|zip)`);
+  return glob.sync(`${dir}/**/*.@(jar|war|aar|zip)`);
 }
 
 function getRootDependency(root: string, targetFile?: string): MavenPackage {
