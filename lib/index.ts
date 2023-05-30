@@ -136,8 +136,7 @@ export async function inspect(
   }
 
   if (options.scanAllUnmanaged) {
-    const recursive = !!options.allProjects;
-    const archives = findArchives(root, recursive);
+    const archives = findArchives(root);
     if (archives.length > 0) {
       debug(`Creating dep-graph from archives in ${root}`);
       const depGraph = await createDepGraphFromArchives(

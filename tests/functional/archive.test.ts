@@ -33,18 +33,15 @@ test('findArchives', async (t) => {
   [
     { dir: springCorePath, expectedNumOfJars: 1 },
     { dir: badPath, expectedNumOfJars: 2 },
-    { dir: fixturesPath, expectedNumOfJars: 0 },
+    { dir: fixturesPath, expectedNumOfJars: 13 },
     { dir: dummyPath, expectedNumOfJars: 0 },
-    { dir: nestedJarsPath, expectedNumOfJars: 1 },
-    { dir: nestedJarsPath, expectedNumOfJars: 2, recursive: true },
-    { dir: nestedWarsAarsPath, expectedNumOfJars: 2, recursive: true },
-  ].forEach(({ dir, expectedNumOfJars, recursive }) =>
+    { dir: nestedJarsPath, expectedNumOfJars: 2 },
+    { dir: nestedWarsAarsPath, expectedNumOfJars: 2 },
+  ].forEach(({ dir, expectedNumOfJars }) =>
     t.same(
-      findArchives(dir, recursive).length,
+      findArchives(dir).length,
       expectedNumOfJars,
-      `should find ${expectedNumOfJars} jars for "${path.basename(dir)}" ${
-        recursive ? '(recursive)' : ''
-      }`,
+      `should find ${expectedNumOfJars} jars for "${path.basename(dir)}"`,
     ),
   );
 });
