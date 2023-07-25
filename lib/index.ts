@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { parseTree, parseVersions } from './parse-mvn';
+import { parseVersions } from './parse-versions';
 import * as subProcess from './sub-process';
 import {
   createDepGraphFromArchive,
@@ -181,12 +181,7 @@ export async function inspect(
         cwd: mvnWorkingDirectory,
       },
     );
-    let parseResult = {};
-    if (options.mavenAggregateProject) {
-      parseResult = parse(result, options.dev);
-    } else {
-      parseResult = parseTree(result, options.dev);
-    }
+    const parseResult = parse(result, options.dev);
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
     return {
       plugin: {
