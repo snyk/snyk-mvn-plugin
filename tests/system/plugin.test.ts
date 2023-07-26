@@ -4,7 +4,7 @@ import { legacyPlugin } from '@snyk/cli-interface';
 
 import * as plugin from '../../lib';
 import { readFixtureJSON } from '../helpers/read';
-import { mockSnykSearchClient } from '../helpers/mock-search';
+import * as depGraphLib from '@snyk/dep-graph';
 
 const testsPath = path.join(__dirname, '..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -14,25 +14,20 @@ test('inspect on test-project pom', async (t) => {
   const result = await plugin.inspect(
     '.',
     path.join(testProjectPath, 'pom.xml'),
-    undefined,
-    mockSnykSearchClient,
   );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
-  const expected = await readFixtureJSON('test-project', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
+    'test-project',
+    'expected-dep-graph.json',
   );
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
   t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
   );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
 });
 
 test('inspect on test-project pom with --dev', async (t) => {
@@ -42,132 +37,102 @@ test('inspect on test-project pom with --dev', async (t) => {
     {
       dev: true,
     },
-    mockSnykSearchClient,
   );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
-  const expected = await readFixtureJSON(
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
     'test-project',
-    'expected-with-dev.json',
+    'expected-dep-graph-with-dev.json',
   );
-  // result.metadata depends on platform, so no fixture can be provided
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
   t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
   );
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
-  );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
 });
 
 test('inspect on path with spaces pom', async (t) => {
   const result = await plugin.inspect(
     '.',
     path.join(fixturesPath, 'path with spaces', 'pom.xml'),
-    undefined,
-    mockSnykSearchClient,
   );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
-  const expected = await readFixtureJSON('path with spaces', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
+    'path with spaces',
+    'expected-dep-graph.json',
   );
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
   t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
   );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
 });
 
 test('inspect on relative path to test-project pom', async (t) => {
   const result = await plugin.inspect(
     __dirname,
     path.join('..', 'fixtures', 'test-project', 'pom.xml'),
-    undefined,
-    mockSnykSearchClient,
   );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
-  const expected = await readFixtureJSON('test-project', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
+    'test-project',
+    'expected-dep-graph.json',
   );
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
   t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
   );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
 });
 
 test('inspect on relative path to test-project dir', async (t) => {
   const result = await plugin.inspect(
     __dirname,
     path.join('..', 'fixtures', 'test-project'),
-    undefined,
-    mockSnykSearchClient,
   );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
-  const expected = await readFixtureJSON('test-project', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
+    'test-project',
+    'expected-dep-graph.json',
   );
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
   t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
   );
-  // once checked, compare platform-independent properties only
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
 });
 
 test('inspect on root that contains pom.xml and no target file', async (t) => {
-  const result = await plugin.inspect(
-    testProjectPath,
-    undefined,
-    undefined,
-    mockSnykSearchClient,
-  );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  const result = await plugin.inspect(testProjectPath);
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
-  const expected = await readFixtureJSON('test-project', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
+    'test-project',
+    'expected-dep-graph.json',
   );
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
   t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
   );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
 });
 
 test('inspect on root that does not contain a pom.xml and no target file', async (t) => {
   try {
-    await plugin.inspect(__dirname, undefined, undefined, mockSnykSearchClient);
+    await plugin.inspect(__dirname);
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -187,20 +152,19 @@ test('inspect on root that does not contain a pom.xml and no target file', async
   }
 });
 
-test('inspect on pom with plugin', async (t) => {
+test('inspect on pom with dependency plugin version less than 2.2', async (t) => {
   try {
     await plugin.inspect(
       '.',
       path.join(fixturesPath, 'bad', 'pom.plugin.xml'),
       { dev: true },
-      mockSnykSearchClient,
     );
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
       t.match(
         err.message,
-        'Cannot find dependency information.',
+        'Please make sure that Apache Maven Dependency Plugin version 2.2 or above',
         'should throw expected error',
       );
     } else {
@@ -211,14 +175,9 @@ test('inspect on pom with plugin', async (t) => {
 
 test('inspect on pom with bad dependency', async (t) => {
   try {
-    await plugin.inspect(
-      '.',
-      path.join(fixturesPath, 'bad', 'pom.xml'),
-      {
-        dev: true,
-      },
-      mockSnykSearchClient,
-    );
+    await plugin.inspect('.', path.join(fixturesPath, 'bad', 'pom.xml'), {
+      dev: true,
+    });
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -242,14 +201,9 @@ test('inspect on mvn error', async (t) => {
   const targetFile = path.join(fixturesPath, 'bad', 'pom.xml');
   const fullCommand = `mvn dependency:tree -DoutputType=dot --batch-mode --non-recursive --file="${targetFile}"`;
   try {
-    await plugin.inspect(
-      '.',
-      targetFile,
-      {
-        dev: true,
-      },
-      mockSnykSearchClient,
-    );
+    await plugin.inspect('.', targetFile, {
+      dev: true,
+    });
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -278,14 +232,9 @@ test('inspect on mvn error', async (t) => {
 test('inspect on mvnw error', async (t) => {
   const targetFile = path.join(fixturesPath, 'bad-maven-with-mvnw', 'pom.xml');
   try {
-    await plugin.inspect(
-      '.',
-      targetFile,
-      {
-        dev: true,
-      },
-      mockSnykSearchClient,
-    );
+    await plugin.inspect('.', targetFile, {
+      dev: true,
+    });
     t.fail('expected inspect to throw error');
   } catch (err) {
     if (err instanceof Error) {
@@ -305,97 +254,80 @@ test('inspect on mvnw error', async (t) => {
 test('inspect on mvnw is successful', async (t) => {
   const result = await plugin.inspect(
     path.join(fixturesPath, 'maven-with-mvnw'),
-    undefined,
-    undefined,
-    mockSnykSearchClient,
   );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
-  const expected = await readFixtureJSON('maven-with-mvnw', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
+    'test-project',
+    'expected-dep-graph.json',
   );
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
   t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
   );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
 });
 
 test('inspect on mvnw is successful with targetFile', async (t) => {
   const result = await plugin.inspect(
     '.',
     path.join(fixturesPath, 'maven-with-mvnw', 'pom.xml'),
-    undefined,
-    mockSnykSearchClient,
   );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
-  const expected = await readFixtureJSON('maven-with-mvnw', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
+    'test-project',
+    'expected-dep-graph.json',
   );
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
   t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
   );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
 });
 
 test('inspect on mvnw successful when resides in parent directory with targetFile', async (t) => {
   const result = await plugin.inspect(
     path.join(fixturesPath, 'wrapper-at-parent'),
     path.join(fixturesPath, 'wrapper-at-parent', 'project-a', 'pom.xml'),
-    undefined,
-    mockSnykSearchClient,
   );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
-  const expected = await readFixtureJSON('maven-with-mvnw', 'expected.json');
-  // result.metadata depends on platform, so no fixture can be provided
-  t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.javaVersion,
-    'should contain javaVersion key',
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
+    'test-project',
+    'expected-dep-graph.json',
   );
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
   t.ok(
-    result!.plugin!.meta!.versionBuildInfo!.metaBuildVersion!.mavenVersion,
-    'should contain mavenVersion key',
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
   );
-  // therefore, only independent objects are compared
-  delete result.plugin.meta;
-  t.same(result, expected, 'should return expected result');
 });
 
 test('inspect on aggregate project root pom', async (t) => {
   const result = await plugin.inspect(
     path.join(fixturesPath, 'aggregate-project'),
     'pom.xml',
-    undefined,
-    mockSnykSearchClient,
   );
-  if (legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected single inspect result');
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
   }
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
   t.same(
-    result.package,
-    {
-      // root pom has no dependencies
-      dependencies: {},
-      name: 'io.snyk:my-app',
-      packageFormatVersion: 'mvn:0.0.1',
-      version: '1.2.3',
-    },
-    'should return expected result',
+    result.scannedProjects[0].depGraph?.rootPkg,
+    { name: 'io.snyk:my-app', version: '1.2.3' },
+    'has expected root pkg',
+  );
+  console.log(result.scannedProjects[0].depGraph?.rootPkg);
+  t.strictEqual(
+    result.scannedProjects[0].depGraph?.getDepPkgs().length,
+    0,
+    'root has 0 dependencies',
   );
 });
