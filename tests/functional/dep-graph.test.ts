@@ -1,6 +1,126 @@
 import { test } from 'tap';
 import { buildDepGraph } from '../../lib/parse/dep-graph';
 
+/**
+ * Test for the specific case where a test dep followed by a compile dep pull the same transitives at the same level.
+ * mvn dependency:tree won't generate an accurate MavenGraph (compile transitives will go under test dependencies)
+ */
+test('buildDepGraph for compile transitives under test deps', async (t) => {
+  const depGraph = buildDepGraph({
+    rootId: 'test:root:jar:1.2.3',
+    nodes: {
+      'test:root:jar:1.2.3': {
+        dependsOn: ['test:a:jar:1.0.0:test', 'compile:b:jar:1.0.0:compile'],
+      },
+      'test:a:jar:1.0.0:test': {
+        dependsOn: ['compile:c:jar:1.0.0:compile'],
+      },
+      'compile:b:jar:1.0.0:compile': {
+        dependsOn: ['compile:d:jar:1.0.0:compile'],
+      },
+      'compile:c:jar:1.0.0:compile': {
+        dependsOn: [],
+      },
+      'compile:d:jar:1.0.0:compile': {
+        dependsOn: [],
+      },
+    },
+  });
+
+  t.same(
+    depGraph.toJSON(),
+    {
+      schemaVersion: '1.2.0',
+      pkgManager: {
+        name: 'maven',
+      },
+      pkgs: [
+        {
+          id: 'test:root@1.2.3',
+          info: {
+            name: 'test:root',
+            version: '1.2.3',
+          },
+        },
+        {
+          id: 'test:a@1.0.0',
+          info: {
+            name: 'test:a',
+            version: '1.0.0',
+          },
+        },
+        {
+          id: 'compile:b@1.0.0',
+          info: {
+            name: 'compile:b',
+            version: '1.0.0',
+          },
+        },
+        {
+          id: 'compile:c@1.0.0',
+          info: {
+            name: 'compile:c',
+            version: '1.0.0',
+          },
+        },
+        {
+          id: 'compile:d@1.0.0',
+          info: {
+            name: 'compile:d',
+            version: '1.0.0',
+          },
+        },
+      ],
+      graph: {
+        rootNodeId: 'root-node',
+        nodes: [
+          {
+            nodeId: 'root-node',
+            pkgId: 'test:root@1.2.3',
+            deps: [
+              {
+                nodeId: 'test:a:jar:1.0.0:test',
+              },
+              {
+                nodeId: 'compile:b:jar:1.0.0:compile',
+              },
+            ],
+          },
+          {
+            nodeId: 'test:a:jar:1.0.0:test',
+            pkgId: 'test:a@1.0.0',
+            deps: [
+              {
+                nodeId: 'compile:c:jar:1.0.0:compile',
+              },
+            ],
+          },
+          {
+            nodeId: 'compile:b:jar:1.0.0:compile',
+            pkgId: 'compile:b@1.0.0',
+            deps: [
+              {
+                nodeId: 'compile:d:jar:1.0.0:compile',
+              },
+            ],
+          },
+          {
+            nodeId: 'compile:c:jar:1.0.0:compile',
+            pkgId: 'compile:c@1.0.0',
+            deps: [],
+          },
+          {
+            nodeId: 'compile:d:jar:1.0.0:compile',
+            pkgId: 'compile:d@1.0.0',
+            deps: [],
+          },
+        ],
+      },
+    },
+    'contains expected dep-graph',
+  );
+});
+
 test('buildDepGraph', async (t) => {
   const depGraph = buildDepGraph({
     rootId: 'test:root:jar:1.2.3',
