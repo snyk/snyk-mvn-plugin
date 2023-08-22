@@ -18,6 +18,7 @@ export function buildDepGraph(
   const queue: QueueItem[] = [];
   const checkedTestScopes: Set<string> = new Set();
   const positiveTestScopes: Set<string> = new Set();
+  const inProgress: Set<string> = new Set();
   queue.push(...getItems(rootId, nodes[rootId]));
 
   // breadth first search
@@ -37,6 +38,7 @@ export function buildDepGraph(
             nodes,
             checkedTestScopes,
             positiveTestScopes,
+            inProgress,
           )
         ) {
           positiveTestScopes.add(id);
@@ -74,19 +76,23 @@ const peekThroughBranchRecursive = (
   nodes: Record<string, MavenGraphNode>,
   checkedTestScopes: Set<string>,
   positiveTestScopes: Set<string>,
+  inProgress: Set<string>,
 ) => {
-  if (checkedTestScopes.has(id)) {
+  if (checkedTestScopes.has(id) || inProgress.has(id)) {
     return positiveTestScopes.has(id);
   }
+  inProgress.add(id);
 
   const { scope } = getPkgInfo(id);
   const items = getItems(id, nodes[id]);
 
   if (items?.length === 0) {
     if (scope === COMPILE_SCOPE || scope === RUNTIME_SCOPE) {
+      inProgress.delete(id);
       return true;
     }
     checkedTestScopes.add(id);
+    inProgress.delete(id);
     return false;
   }
 
@@ -98,6 +104,7 @@ const peekThroughBranchRecursive = (
         nodes,
         checkedTestScopes,
         positiveTestScopes,
+        inProgress,
       )
     ) {
       isPositive = true;
@@ -110,10 +117,12 @@ const peekThroughBranchRecursive = (
   }
 
   if (scope === COMPILE_SCOPE || scope === RUNTIME_SCOPE) {
+    inProgress.delete(id);
     return true;
   }
 
   checkedTestScopes.add(id);
+  inProgress.delete(id);
   return false;
 };
 

@@ -19,7 +19,7 @@ test('buildDepGraph for compile transitives under test deps', async (t) => {
         dependsOn: ['compile:d:jar:1.0.0:compile'],
       },
       'compile:c:jar:1.0.0:compile': {
-        dependsOn: [],
+        dependsOn: ['test:a:jar:1.0.0:test'],
       },
       'compile:d:jar:1.0.0:compile': {
         dependsOn: [],
@@ -107,12 +107,26 @@ test('buildDepGraph for compile transitives under test deps', async (t) => {
           {
             nodeId: 'compile:c:jar:1.0.0:compile',
             pkgId: 'compile:c@1.0.0',
-            deps: [],
+            deps: [
+              {
+                nodeId: 'test:a:jar:1.0.0:test:pruned'
+              }
+            ],
           },
           {
             nodeId: 'compile:d:jar:1.0.0:compile',
             pkgId: 'compile:d@1.0.0',
             deps: [],
+          },
+          {
+            nodeId: 'test:a:jar:1.0.0:test:pruned',
+            pkgId: 'test:a@1.0.0',
+            deps: [],
+            info: {
+              labels: {
+                pruned: 'true',
+              },
+            },
           },
         ],
       },
