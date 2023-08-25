@@ -1,9 +1,9 @@
 import { test } from 'tap';
 import { parseDigraphs } from '../../lib/parse/digraph';
 
-const core = `digraph "io.snyk:core:jar:1.0.0" { 
-"io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile" ; 
-"io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-core:jar:2.17.2:compile" ; 
+const core = `digraph "io.snyk:core:jar:1.0.0" {
+"io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile" ;
+"io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-core:jar:2.17.2:compile" ;
 }`;
 
 test('parses digraph', async (t) => {
@@ -18,12 +18,18 @@ test('parses digraph', async (t) => {
               'org.apache.logging.log4j:log4j-api:jar:2.17.2:compile',
               'org.apache.logging.log4j:log4j-core:jar:2.17.2:compile',
             ],
+            parents: [],
+            reachesProdDep: true,
           },
           'org.apache.logging.log4j:log4j-api:jar:2.17.2:compile': {
             dependsOn: [],
+            parents: ['io.snyk:core:jar:1.0.0'],
+            reachesProdDep: true,
           },
           'org.apache.logging.log4j:log4j-core:jar:2.17.2:compile': {
             dependsOn: [],
+            parents: ['io.snyk:core:jar:1.0.0'],
+            reachesProdDep: true,
           },
         },
       },
@@ -32,9 +38,9 @@ test('parses digraph', async (t) => {
   );
 });
 
-const badRoot = `digraph bad { 
-  "io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile" ; 
-  "io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-core:jar:2.17.2:compile" ; 
+const badRoot = `digraph bad {
+  "io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile" ;
+  "io.snyk:core:jar:1.0.0" -> "org.apache.logging.log4j:log4j-core:jar:2.17.2:compile" ;
 }`;
 test('could not find root node', async (t) => {
   try {
@@ -53,7 +59,7 @@ test('could not find root node', async (t) => {
   }
 });
 
-const badDependency = `digraph "io.snyk:core:jar:1.0.0" { 
+const badDependency = `digraph "io.snyk:core:jar:1.0.0" {
 bad
 }`;
 

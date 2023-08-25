@@ -7,28 +7,46 @@ export class MavenGraphBuilder {
     this.#graph = {
       rootId,
       nodes: {
-        [rootId]: { dependsOn: [] },
+        [rootId]: { dependsOn: [], parents: [], reachesProdDep: false },
       },
     };
   }
 
-  private add(id: string): void {
-    if (!this.node(id)) {
-      this.#graph.nodes[id] = { dependsOn: [] };
-    }
+  private findOrCreateNode(id: string): MavenGraphNode {
+    return this.findNode(id) || this.createNode(id);
   }
 
-  private node(id: string): MavenGraphNode | undefined {
+  private findNode(id: string): MavenGraphNode | undefined {
     return this.#graph.nodes[id];
   }
 
+  private createNode(id: string): MavenGraphNode {
+    const node = { dependsOn: [], parents: [], reachesProdDep: false };
+    this.#graph.nodes[id] = node;
+    return node;
+  }
+
+  private markNodeProdReachable(id: string) {
+    const node = this.findNode(id);
+    if (node && !node.reachesProdDep) {
+      node.reachesProdDep = true;
+      for (const parentId of node.parents) {
+        this.markNodeProdReachable(parentId);
+      }
+    }
+  }
+
   connect(parentId: string, id: string) {
-    this.add(parentId);
-    this.add(id);
-    const node = this.node(parentId);
-    if (!node) return;
-    if (!node.dependsOn.includes(id)) {
-      node.dependsOn.push(id);
+    const parentNode = this.findOrCreateNode(parentId);
+    const childNode = this.findOrCreateNode(id);
+    if (!childNode.parents.includes(parentId)) {
+      childNode.parents.push(parentId);
+    }
+    if (!parentNode.dependsOn.includes(id)) {
+      parentNode.dependsOn.push(id);
+    }
+    if (!id.endsWith(':test')) {
+      this.markNodeProdReachable(id);
     }
   }
 
