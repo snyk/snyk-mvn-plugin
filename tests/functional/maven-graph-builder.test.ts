@@ -10,6 +10,8 @@ test('default constructor', async (t) => {
       nodes: {
         root: {
           dependsOn: [],
+          parents: [],
+          reachesProdDep: false,
         },
       },
     },
@@ -28,12 +30,18 @@ test('connect nodes', async (t) => {
       nodes: {
         root: {
           dependsOn: ['a'],
+          parents: [],
+          reachesProdDep: true,
         },
         a: {
           dependsOn: ['b'],
+          parents: ['root'],
+          reachesProdDep: true,
         },
         b: {
           dependsOn: [],
+          parents: ['a'],
+          reachesProdDep: true,
         },
       },
     },
@@ -53,9 +61,13 @@ test('skips duplicate connections', async (t) => {
       nodes: {
         root: {
           dependsOn: ['a'],
+          parents: [],
+          reachesProdDep: true,
         },
         a: {
           dependsOn: [],
+          parents: ['root'],
+          reachesProdDep: true,
         },
       },
     },

@@ -56,4 +56,6 @@ export interface GetPackageData {
 
 export interface MavenGraphNode {
   dependsOn: string[];
+  parents: string[];
+  reachesProdDep: boolean;
 }

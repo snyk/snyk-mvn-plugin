@@ -10,7 +10,7 @@ export function buildDepGraph(
   const { rootId, nodes } = mavenGraph;
   const { pkgInfo: root } = getPkgInfo(rootId);
   const builder = new DepGraphBuilder({ name: 'maven' }, root);
-  const visited: string[] = [];
+  const visited: Record<string, boolean> = {};
   const queue: QueueItem[] = [];
   queue.push(...getItems(rootId, nodes[rootId]));
 
@@ -20,8 +20,9 @@ export function buildDepGraph(
     if (!item) continue;
     const { id, parentId } = item;
     const { pkgInfo, scope } = getPkgInfo(id);
-    if (!includeTestScope && scope === 'test') continue;
-    if (visited.includes(id)) {
+    const node = nodes[id];
+    if (!includeTestScope && scope === 'test' && !node.reachesProdDep) continue;
+    if (visited[id]) {
       const prunedId = id + ':pruned';
       builder.addPkgNode(pkgInfo, prunedId, { labels: { pruned: 'true' } });
       builder.connectDep(parentId, prunedId);
@@ -30,8 +31,8 @@ export function buildDepGraph(
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
     builder.addPkgNode(pkgInfo, id);
     builder.connectDep(parentNodeId, id);
-    queue.push(...getItems(id, nodes[id]));
-    visited.push(id);
+    queue.push(...getItems(id, node));
+    visited[id] = true;
   }
 
   return builder.build();
