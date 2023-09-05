@@ -24,17 +24,13 @@ windows_defaults: &windows_defaults
     name: win/default
 
 test_matrix_unix: &test_matrix_unix
-  matrix:
-    parameters:
-      jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca']
-      maven_version: ['3.3.9', '3.6.3', '3.8.4']
-      node_version: ['12', '16']
+  jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca']
+  maven_version: ['3.3.9', '3.6.3', '3.8.4']
+  node_version: ['12', '16']
 test_matrix_win: &test_matrix_win
-  matrix:
-    parameters:
-      jdk_version: ['8', '17']
-      maven_version: ['3.3.9.2', '3.6.3', '3.8.4']
-      node_version: ['12', '16']
+  jdk_version: ['8', '17']
+  maven_version: ['3.3.9.2', '3.6.3', '3.8.4']
+  node_version: ['12', '16']
 
 commands:
   install_deps:
@@ -195,21 +191,30 @@ workflows:
 
       # UNIX tests
       - test-unix:
-          name: Unix Tests for Maven=<<matrix.maven_version>> JDK=<<matrix.jdk_version>> Node=<<matrix.node_version>>
+          matrix:
+            alias: test-unix
+            parameters:
+              <<: *test_matrix_unix
+          name: Unix Tests for Maven=<< matrix.maven_version >> JDK=<< matrix.jdk_version >> Node=<< matrix.node_version >>
           context: nodejs-install
-          <<: *test_matrix_unix
 
       # Windows tests
       - test-windows:
-          name: Windows Tests for Maven=<<matrix.maven_version>> JDK=<<matrix.jdk_version>> Node=<<matrix.node_version>>
+          matrix:
+            alias: test-windows
+            parameters:
+              <<: *test_matrix_win
+          name: Windows Tests for Maven=<< matrix.maven_version >> JDK=<< matrix.jdk_version >> Node=<< matrix.node_version >>
           context: nodejs-install
-          <<: *test_matrix_win
-
+          
       # Release
       - release:
           name: Release
           context: nodejs-app-release
           node_version: '16'
+          requires:
+            - test-windows
+            - test-unix
           filters:
             branches:
               only:
