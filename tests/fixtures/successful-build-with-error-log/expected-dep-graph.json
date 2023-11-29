@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.2.0",
+  "pkgManager": {
+    "name": "maven"
+  },
+  "pkgs": [
+    {
+      "id": "io.snyk.example:test-project@1.0.0-SNAPSHOT",
+      "info": {
+        "name": "io.snyk.example:test-project",
+        "version": "1.0.0-SNAPSHOT"
+      }
+    }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "io.snyk.example:test-project@1.0.0-SNAPSHOT",
+        "deps": []
+      }
+    ]
+  }
+}

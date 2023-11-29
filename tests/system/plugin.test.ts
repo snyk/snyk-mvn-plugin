@@ -197,6 +197,29 @@ test('inspect on pom with bad dependency', async (t) => {
   }
 });
 
+test('inspect on pom that logs an error but succeeds', async (t) => {
+  const result = await plugin.inspect(
+    __dirname,
+    path.join('..', 'fixtures', 'successful-build-with-error-log', 'pom.xml'),
+    {});
+
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
+  }
+
+  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  const expectedJSON = await readFixtureJSON(
+    'successful-build-with-error-log',
+    'expected-dep-graph.json',
+  );
+  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
+  console.log(JSON.stringify(result.scannedProjects[0].depGraph));
+  t.ok(
+    result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+    'returns expected dep-graph',
+  );
+});
+
 test('inspect on mvn error', async (t) => {
   const targetFile = path.join(fixturesPath, 'bad', 'pom.xml');
   const fullCommand = `mvn dependency:tree -DoutputType=dot --batch-mode --non-recursive --file="${targetFile}"`;
