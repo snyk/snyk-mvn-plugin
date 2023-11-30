@@ -145,6 +145,26 @@ const errorStdout = `[INFO] Scanning for projects...
 [ERROR] [ERROR] Some problems were encountered while processing the POMs:
 `;
 
+const buildSuccessErrorLogStdout = `[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< io.snyk.example:test-project >--------------------
+[INFO] Building test-project 1.0.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.4.1:enforce (enforce-error-without-failing-build) @ test-project ---
+[WARNING] Rule 0: org.apache.maven.enforcer.rules.version.RequireMavenVersion failed with message:
+[ERROR] Always ERROR
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ test-project ---
+[INFO] No sources to compile
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.567 s
+[INFO] Finished at: 2023-11-29T15:29:55+02:00
+[INFO] ------------------------------------------------------------------------
+`;
+
 test('output contains errors', async (t) => {
   try {
     parseStdout(errorStdout);
@@ -154,6 +174,23 @@ test('output contains errors', async (t) => {
       t.equals(
         err.message,
         'Maven output contains errors.',
+        'throws expected error',
+      );
+    } else {
+      t.fail('expected err to be instanceof Error');
+    }
+  }
+});
+
+test('output contains error, but succeeds building', async (t) => {
+  try {
+    const received = parseStdout(buildSuccessErrorLogStdout);
+    t.fail('expected error to be thrown');
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      t.equals(
+        err.message,
+        'Cannot find any digraphs.',
         'throws expected error',
       );
     } else {
