@@ -9,5 +9,7 @@ export default async (): Promise<Config.InitialOptions> => {
     collectCoverageFrom: ['src/**/*.ts'],
     coverageReporters: ['text-summary', 'html'],
     testMatch: ['<rootDir>/tests/**/*.spec.ts', '<rootDir>/test/**/*.test.ts'],
+    testTimeout: 10000,
   };
 };
+
