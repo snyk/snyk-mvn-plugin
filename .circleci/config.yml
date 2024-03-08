@@ -107,7 +107,7 @@ commands:
         type: string
         default: ''
     steps:
-      - run: choco install maven --version=<< parameters.maven_version >>
+      - run: choco install maven -y --version=<< parameters.maven_version >>
 
 jobs:
   lint:
