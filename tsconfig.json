@@ -2,10 +2,11 @@
   "compilerOptions": {
     "outDir": "./dist",
     "pretty": true,
-    "target": "es2015",
+    "target": "es2022",
     "lib": [
-      "es2015",
-      "es2016.array.include",
+      "es2019",
+      "DOM",
+      "DOM.Iterable"
     ],
     "module": "commonjs",
     "allowJs": false,
@@ -13,7 +14,8 @@
     "strict": true,
     "declaration": true,
     "importHelpers": true,
-    "noImplicitAny": false // Needed to compile tap and ansi-escapes
+    "noImplicitAny": false, // Needed to compile tap and ansi-escapes
+    "esModuleInterop": true,
   },
   "include": [
       "./lib/**/*"
