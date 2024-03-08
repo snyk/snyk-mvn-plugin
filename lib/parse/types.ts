@@ -59,3 +59,7 @@ export interface MavenGraphNode {
   parents: string[];
   reachesProdDep: boolean;
 }
+export interface ParsedNode {
+  dependency: MavenDependency;
+  children: ParsedNode[];
+}

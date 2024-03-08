@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { parseVersions } from './parse-versions';
+import { parseVersions } from './parse/stdout/parse-versions';
 import * as subProcess from './sub-process';
 import {
   createDepGraphFromArchive,
@@ -179,7 +179,10 @@ export async function inspect(
         cwd: mvnWorkingDirectory,
       },
     );
-    const parseResult = parse(result, options.dev);
+
+    const includesVerboseFlag = mvnArgs.includes('-Dverbose');
+    debug(`IncludesVerboseFlag: ${includesVerboseFlag}`);
+    const parseResult = parse(result, options.dev, includesVerboseFlag);
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
     return {
       plugin: {

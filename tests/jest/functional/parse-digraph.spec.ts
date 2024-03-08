@@ -1,4 +1,5 @@
-import { parseDigraph } from '../../../lib/parse-digraph';
+import * as test from 'tap-only';
+import { parseDigraph } from '../../../lib/parse/stdout/parse-digraph';
 import { readFixture } from '../../helpers/read';
 
 it('parse valid input to expected string', async () => {

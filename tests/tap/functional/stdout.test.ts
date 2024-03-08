@@ -1,7 +1,6 @@
-import tap from 'tap';
-import { parseStdout } from '../../../lib/parse/stdout';
+import * as test from 'tap-only';
+import { parseStdout } from '../../../lib/parse/stdout/index';
 
-const test = tap.test;
 const singleProjectStdout = `[INFO] Scanning for projects...
 [INFO] 
 [INFO] -----------------------< io.snyk:single-project >-----------------------

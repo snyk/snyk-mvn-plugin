@@ -1,5 +1,4 @@
 import type { MavenGraph, MavenGraphNode } from './types';
-
 import { DepGraph, DepGraphBuilder, PkgInfo } from '@snyk/dep-graph';
 import { parseDependency } from './dependency';
 

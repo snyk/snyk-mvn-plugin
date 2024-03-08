@@ -1,6 +1,6 @@
 import * as test from 'tap-only';
 import { readFixture } from '../../helpers/read';
-import { parseVersions } from '../../../lib/parse-versions';
+import { parseVersions } from '../../../lib/parse/stdout/parse-versions';
 
 test('parseVersions from mvn --version', async (t) => {
   const mavenOutput = await readFixture('parse-mvn/maven-versions.txt');

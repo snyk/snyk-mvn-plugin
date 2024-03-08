@@ -9,7 +9,10 @@ const unknownDependency: MavenDependency = {
   version: UNKNOWN,
 };
 
-export function parseDependency(value: unknown): MavenDependency {
+export function parseDependency(
+  value: unknown,
+  versionOverride?: string,
+): MavenDependency {
   if (typeof value !== 'string') return unknownDependency;
   const parts = value.split(':');
   switch (parts.length) {
@@ -21,7 +24,7 @@ export function parseDependency(value: unknown): MavenDependency {
         artifactId: getPart(parts, 1),
         type: getPart(parts, 2),
         classifier: getPart(parts, 3),
-        version: getPart(parts, 4),
+        version: versionOverride || getPart(parts, 4),
         scope: getPart(parts, 5),
       };
     }
@@ -32,7 +35,7 @@ export function parseDependency(value: unknown): MavenDependency {
         groupId: getPart(parts, 0),
         artifactId: getPart(parts, 1),
         type: getPart(parts, 2),
-        version: getPart(parts, 3),
+        version: versionOverride || getPart(parts, 3),
         scope: getPart(parts, 4),
       };
     }
@@ -43,7 +46,7 @@ export function parseDependency(value: unknown): MavenDependency {
         groupId: getPart(parts, 0),
         artifactId: getPart(parts, 1),
         type: getPart(parts, 2),
-        version: getPart(parts, 3),
+        version: versionOverride || getPart(parts, 3),
       };
     }
     default: {
