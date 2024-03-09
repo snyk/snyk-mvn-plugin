@@ -47,7 +47,7 @@
     "@snyk/dep-graph": "^1.23.1",
     "packageurl-js": "^1.0.0",
     "debug": "^4.1.1",
-    "glob": "^7.1.6",
+    "glob": "^9.0.0",
     "shescape": "1.6.1",
     "tslib": "^2.4.0"
   }
