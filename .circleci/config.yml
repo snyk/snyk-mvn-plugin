@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   win: circleci/windows@2.4.0
-  prodsec: snyk/prodsec-orb@1.0
+  prodsec: snyk/prodsec-orb@1.1
 
 defaults: &defaults
   parameters:
@@ -14,7 +14,7 @@ defaults: &defaults
       default: '8'
     node_version:
       type: string
-      default: '16'
+      default: '18.19.1'
   working_directory: ~/snyk-mvn-plugin
 
 windows_defaults: &windows_defaults
@@ -26,11 +26,11 @@ windows_defaults: &windows_defaults
 test_matrix_unix: &test_matrix_unix
   jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca']
   maven_version: ['3.3.9', '3.6.3', '3.8.4']
-  node_version: ['12', '16']
+  node_version: ['18.19.1']
 test_matrix_win: &test_matrix_win
   jdk_version: ['8', '17']
   maven_version: ['3.3.9.2', '3.6.3', '3.8.4']
-  node_version: ['12', '16']
+  node_version: ['18.19.1']
 
 commands:
   install_deps:
@@ -113,7 +113,7 @@ jobs:
   lint:
     <<: *defaults
     docker:
-      - image: circleci/node:<< parameters.node_version >>
+      - image: cimg/node:<< parameters.node_version >>
     steps:
       - checkout
       - install_deps
@@ -142,7 +142,7 @@ jobs:
   test-unix:
     <<: *defaults
     docker:
-      - image: circleci/node:<< parameters.node_version >>
+      - image: cimg/node:<< parameters.node_version >>
     environment:
       MAVEN_VERSION: << parameters.maven_version >>
       JDK: << parameters.jdk_version >>
@@ -206,12 +206,12 @@ workflows:
               <<: *test_matrix_win
           name: Windows Tests for Maven=<< matrix.maven_version >> JDK=<< matrix.jdk_version >> Node=<< matrix.node_version >>
           context: nodejs-install
-          
+
       # Release
       - release:
           name: Release
           context: nodejs-app-release
-          node_version: '16'
+          node_version: '18.19.1'
           requires:
             - test-windows
             - test-unix

@@ -33,9 +33,7 @@ If you are looking to add tasks to your Maven build process you should use our [
 
 | Node | Supported |
 | ---- | --------- |
-| 12   | ✅        |
-| 14   | ✅        |
-| 16   | ✅        |
+| 18   | ✅        |
 
 ## Supported Maven versions
 
