@@ -11,9 +11,13 @@ export function parseStdout(stdout: string, verbose = false): string[] {
     throw new Error('Maven output contains errors.');
   }
   const withoutLabels = stdout.replace(logLabel, '');
-  const parsedOutputs = verbose
-    ? parseTree(withoutLabels)
-    : parseDigraph(withoutLabels);
+  // try parsing digraph first
+  let parsedOutputs = parseDigraph(withoutLabels);
+  // if failed to get a digraph, then we probably have a tree output type
+  if (!parsedOutputs && verbose) {
+    parsedOutputs = parseTree(withoutLabels);
+  }
+
   if (!parsedOutputs) {
     throw new Error(
       verbose ? 'Cannot find any trees.' : 'Cannot find any digraphs.',

@@ -1,13 +1,14 @@
 import type { MavenGraph, MavenGraphNode } from './types';
 import { DepGraph, DepGraphBuilder, PkgInfo } from '@snyk/dep-graph';
-import { parseDependency } from './dependency';
+import {parseDependency, parseOmittedVersion} from './dependency';
 
 export function buildDepGraph(
   mavenGraph: MavenGraph,
   includeTestScope = false,
+  verboseOutput = false,
 ): DepGraph {
   const { rootId, nodes } = mavenGraph;
-  const parsedRoot = parseId(rootId);
+  const parsedRoot = parseId(rootId, verboseOutput);
   const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
   const visitedMap: Record<string, DepInfo> = {};
   const queue: QueueItem[] = [];
@@ -18,7 +19,7 @@ export function buildDepGraph(
     const item = queue.shift();
     if (!item) continue;
     const { id, parentId } = item;
-    const parsed = parseId(id);
+    const parsed = parseId(id, verboseOutput);
     const node = nodes[id];
     if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep)
       continue;
@@ -61,8 +62,8 @@ interface DepInfo {
   scope?: string; // maybe scope
 }
 
-function parseId(id: string): DepInfo {
-  const dep = parseDependency(id);
+function parseId(id: string, verbose = false): DepInfo {
+  const dep = verbose ? parseOmittedVersion(id) : parseDependency(id);
   const maybeClassifier = dep.classifier ? `:${dep.classifier}` : '';
   const name = `${dep.groupId}:${dep.artifactId}`;
   return {

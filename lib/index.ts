@@ -1,4 +1,5 @@
 import { legacyPlugin } from '@snyk/cli-interface';
+import * as semver from 'semver';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -17,6 +18,10 @@ import { parse } from './parse';
 import { SnykHttpClient } from './parse/types';
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
+const DEPENDENCY_PLUGIN = {
+  default: 'dependency:tree',
+  verbose: 'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:tree'
+};
 // To enable debugging output, use `snyk -d`
 let logger: debugModule.Debugger | null = null;
 
@@ -165,25 +170,24 @@ export async function inspect(
     options.args,
     options.mavenAggregateProject,
   );
+  const includesVerboseFlag = mvnArgs.includes('-Dverbose') || mvnArgs.includes('-Dverbose=true');
   let result;
   try {
     debug(`Maven command: ${mavenCommand} ${mvnArgs.join(' ')}`);
     debug(`Maven working directory: ${mvnWorkingDirectory}`);
+    debug(`IncludesVerboseFlag: ${includesVerboseFlag}`);
+
+    const { javaVersion, mavenVersion, mavenFullVersion } = await getEnvironmentMetadata(mavenCommand, mvnWorkingDirectory);
+
+    if (includesVerboseFlag && semver.gte(mavenVersion, '3.2.5')) {
+      mvnArgs[mvnArgs.indexOf(DEPENDENCY_PLUGIN.default)] = DEPENDENCY_PLUGIN.verbose;
+    }
+
     result = await subProcess.execute(mavenCommand, mvnArgs, {
       cwd: mvnWorkingDirectory,
     });
-    const versionResult = await subProcess.execute(
-      `${mavenCommand} --version`,
-      [],
-      {
-        cwd: mvnWorkingDirectory,
-      },
-    );
-
-    const includesVerboseFlag = mvnArgs.includes('-Dverbose');
-    debug(`IncludesVerboseFlag: ${includesVerboseFlag}`);
     const parseResult = parse(result, options.dev, includesVerboseFlag);
-    const { javaVersion, mavenVersion } = parseVersions(versionResult);
+
     return {
       plugin: {
         name: 'bundled:maven',
@@ -191,7 +195,7 @@ export async function inspect(
         meta: {
           versionBuildInfo: {
             metaBuildVersion: {
-              mavenVersion,
+              mavenFullVersion,
               javaVersion,
             },
           },
@@ -227,7 +231,7 @@ export function buildArgs(
 
   // Requires Maven >= 2.2
   args = args.concat([
-    'dependency:tree', // use dependency plugin to display a tree of dependencies
+    DEPENDENCY_PLUGIN.default, // use dependency plugin to display a tree of dependencies
     '-DoutputType=dot', // use 'dot' output format
     '--batch-mode', // clean up output, disables output color and download progress
   ]);
@@ -251,4 +255,16 @@ export function buildArgs(
   }
 
   return args;
+}
+
+async function getEnvironmentMetadata(mavenCommand: string, mvnWorkingDirectory: string) {
+  const versionResult = await subProcess.execute(
+    `${mavenCommand} --version`,
+    [],
+    {
+      cwd: mvnWorkingDirectory,
+    },
+  );
+
+  return parseVersions(versionResult);
 }

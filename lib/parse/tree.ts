@@ -1,5 +1,5 @@
 import { DepGraphBuilder } from '@snyk/dep-graph';
-import { parseDependency } from './dependency';
+import { parseOmittedVersion } from './dependency';
 import { MavenDependency } from './types';
 import { ScannedProject } from '@snyk/cli-interface/legacy/common';
 
@@ -130,17 +130,7 @@ class TreeParser {
     if (!cleanedUpLineMatch)
       throw new Error('error parsing mvn -Dverbose output');
     line = cleanedUpLineMatch[0];
-    // omitted reasons:
-    // https://github.com/apache/maven/blob/ab6ec5bd74af20ab429509eb56fc8e3dff4c7fc7/maven-core/src/main/java/org/apache/maven/internal/impl/DefaultNode.java#L113
-    if (line.indexOf('omitted for conflict with') > -1) {
-      const omittedParts = line.split(' - omitted for conflict with ');
-      return parseDependency(omittedParts[0], omittedParts[1]);
-    }
-    if (line.indexOf('omitted for duplicate') > -1) {
-      const omittedParts = line.split(' - omitted for duplicate');
-      return parseDependency(omittedParts[0]);
-    }
-    return parseDependency(line);
+    return parseOmittedVersion(line);
   }
 
   private computeDepth(line: string): number {

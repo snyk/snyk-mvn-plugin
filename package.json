@@ -56,6 +56,7 @@
     "debug": "^4.3.4",
     "glob": "^7.1.6",
     "packageurl-js": "^1.0.0",
+    "semver": "^7.6.0",
     "shescape": "1.6.1",
     "tslib": "^2.4.0"
   }
