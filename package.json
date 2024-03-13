@@ -48,7 +48,7 @@
     "debug": "^4.1.1",
     "glob": "^7.1.6",
     "packageurl-js": "^1.0.0",
-    "shescape": "1.6.1",
+    "shescape": "2.1.0",
     "tslib": "^2.4.0"
   }
 }
