@@ -26,11 +26,11 @@ windows_defaults: &windows_defaults
 test_matrix_unix: &test_matrix_unix
   jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca']
   maven_version: ['3.3.9', '3.6.3', '3.8.4']
-  node_version: ['12', '16']
+  node_version: ['18.19.1']
 test_matrix_win: &test_matrix_win
   jdk_version: ['8', '17']
   maven_version: ['3.3.9.2', '3.6.3', '3.8.4']
-  node_version: ['12', '16']
+  node_version: ['18.19.1']
 
 commands:
   install_deps:
@@ -211,7 +211,7 @@ workflows:
       - release:
           name: Release
           context: nodejs-app-release
-          node_version: '16'
+          node_version: '18.19.1'
           requires:
             - test-windows
             - test-unix
