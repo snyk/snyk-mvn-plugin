@@ -1,12 +1,11 @@
 import * as path from 'path';
-import { test } from 'tap';
-import { getCommand } from '../../lib';
+import { getCommand } from '../../../lib';
 import * as os from 'os';
 
 it("should return 'mvn' when no mvnw present in path", async () => {
   const cmd = getCommand(
     '.',
-    path.join(__dirname, '..', 'fixtures/path with spaces', 'pom.xml'),
+    path.join(__dirname, '../..', 'fixtures/path with spaces', 'pom.xml'),
   );
 
   expect(cmd).toBe('mvn');
@@ -15,7 +14,7 @@ it("should return 'mvn' when no mvnw present in path", async () => {
 it("should return 'mvnw' when 'mvnw' present in path", async () => {
   const cmd = getCommand(
     '.',
-    path.join(__dirname, '..', 'fixtures/maven-with-mvnw', 'pom.xml'),
+    path.join(__dirname, '../..', 'fixtures/maven-with-mvnw', 'pom.xml'),
   );
 
   const isWinLocal = /^win/.test(os.platform());

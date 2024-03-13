@@ -1,6 +1,6 @@
 import * as test from 'tap-only';
 import * as path from 'path';
-import { findArchives, isArchive } from '../../lib/archive';
+import { findArchives, isArchive } from '../../../lib/archive';
 
 test('isArchive', async (t) => {
   [
@@ -22,7 +22,7 @@ test('isArchive', async (t) => {
   ].forEach((i) => t.notOk(isArchive(i), 'should be false for ' + i));
 });
 
-const fixturesPath = path.join(__dirname, '..', 'fixtures');
+const fixturesPath = path.join(__dirname, '../..', 'fixtures');
 const springCorePath = path.join(fixturesPath, 'spring-core');
 const badPath = path.join(fixturesPath, 'bad');
 const dummyPath = path.join(fixturesPath, 'dummy');

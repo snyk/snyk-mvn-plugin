@@ -1,6 +1,8 @@
-import { test } from 'tap';
-import { parseDigraphs } from '../../lib/parse/digraph';
-import { buildDepGraph } from '../../lib/parse/dep-graph';
+import tap from 'tap';
+import { parseDigraphs } from '../../../lib/parse/digraph';
+import { buildDepGraph } from '../../../lib/parse/dep-graph';
+
+const test = tap.test;
 
 test('buildDepGraph', async (t) => {
   // input:

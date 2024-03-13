@@ -1,5 +1,5 @@
 import * as test from 'tap-only';
-import * as plugin from '../../lib';
+import * as plugin from '../../../lib';
 
 test('buildArgs with array', async (t) => {
   const result = plugin.buildArgs('.', '.', undefined, ['-Paxis', '-Pjaxen']);

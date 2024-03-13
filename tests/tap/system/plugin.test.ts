@@ -2,11 +2,11 @@ import * as path from 'path';
 import * as test from 'tap-only';
 import { legacyPlugin } from '@snyk/cli-interface';
 
-import * as plugin from '../../lib';
-import { readFixtureJSON } from '../helpers/read';
+import * as plugin from '../../../lib';
+import { readFixtureJSON } from '../../helpers/read';
 import * as depGraphLib from '@snyk/dep-graph';
 
-const testsPath = path.join(__dirname, '..');
+const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
 const testProjectPath = path.join(fixturesPath, 'test-project');
 
@@ -18,7 +18,7 @@ test('inspect on test-project pom', async (t) => {
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'test-project',
     'expected-dep-graph.json',
@@ -41,7 +41,7 @@ test('inspect on test-project pom with --dev', async (t) => {
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'test-project',
     'expected-dep-graph-with-dev.json',
@@ -61,7 +61,7 @@ test('inspect on path with spaces pom', async (t) => {
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'path with spaces',
     'expected-dep-graph.json',
@@ -76,12 +76,12 @@ test('inspect on path with spaces pom', async (t) => {
 test('inspect on relative path to test-project pom', async (t) => {
   const result = await plugin.inspect(
     __dirname,
-    path.join('..', 'fixtures', 'test-project', 'pom.xml'),
+    path.join('../..', 'fixtures', 'test-project', 'pom.xml'),
   );
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'test-project',
     'expected-dep-graph.json',
@@ -96,12 +96,12 @@ test('inspect on relative path to test-project pom', async (t) => {
 test('inspect on relative path to test-project dir', async (t) => {
   const result = await plugin.inspect(
     __dirname,
-    path.join('..', 'fixtures', 'test-project'),
+    path.join('../..', 'fixtures', 'test-project'),
   );
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'test-project',
     'expected-dep-graph.json',
@@ -118,7 +118,7 @@ test('inspect on root that contains pom.xml and no target file', async (t) => {
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'test-project',
     'expected-dep-graph.json',
@@ -200,14 +200,14 @@ test('inspect on pom with bad dependency', async (t) => {
 test('inspect on pom that logs an error but succeeds', async (t) => {
   const result = await plugin.inspect(
     __dirname,
-    path.join('..', 'fixtures', 'successful-build-with-error-log', 'pom.xml'),
+    path.join('../..', 'fixtures', 'successful-build-with-error-log', 'pom.xml'),
     {});
 
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
 
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'successful-build-with-error-log',
     'expected-dep-graph.json',
@@ -281,7 +281,7 @@ test('inspect on mvnw is successful', async (t) => {
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'test-project',
     'expected-dep-graph.json',
@@ -301,7 +301,7 @@ test('inspect on mvnw is successful with targetFile', async (t) => {
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'test-project',
     'expected-dep-graph.json',
@@ -321,7 +321,7 @@ test('inspect on mvnw successful when resides in parent directory with targetFil
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   const expectedJSON = await readFixtureJSON(
     'test-project',
     'expected-dep-graph.json',
@@ -341,14 +341,14 @@ test('inspect on aggregate project root pom', async (t) => {
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(result.scannedProjects.length, 1, 'returns 1 scanned project');
+  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   t.same(
     result.scannedProjects[0].depGraph?.rootPkg,
     { name: 'io.snyk:my-app', version: '1.2.3' },
     'has expected root pkg',
   );
   console.log(result.scannedProjects[0].depGraph?.rootPkg);
-  t.strictEqual(
+  t.equal(
     result.scannedProjects[0].depGraph?.getDepPkgs().length,
     0,
     'root has 0 dependencies',

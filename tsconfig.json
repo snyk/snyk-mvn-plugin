@@ -1,20 +1,29 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": ".",
     "pretty": true,
-    "target": "es2022",  // Updated to ES2022 for Node 18 compatibility
-    "lib": ["ES2022"],     // Updated to include all libraries up to ES2022
-    "module": "ES2022",   // Updated to use ES Modules (stable in Node 18)
-    "moduleResolution": "node",  // Use Node's module resolution for ES Modules
-    "allowSyntheticDefaultImports": true,  // Allow importing CommonJS with default import
-    "allowJs": false,
+    "moduleResolution": "node",
+    // https://github.com/tsconfig/bases#node-12-tsconfigjson
+    "target": "es2019",
+    "lib": [
+      "es2019",
+      "es2020.promise",
+      "es2020.bigint",
+      "es2020.string",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "commonjs",
+    "allowJs": true,
     "sourceMap": true,
+    "resolveJsonModule": true,
     "strict": true,
-    "declaration": true,
-    "importHelpers": true,
-    "noImplicitAny": false // Needed to compile tap and ansi-escapes
+    "noImplicitAny": false, // Needed to compile tap and ansi-escapes
+    "composite": true,
+    "useUnknownInCatchVariables": false,
   },
   "include": [
-      "./lib/**/*"
+    "./lib/**/*"
   ]
 }

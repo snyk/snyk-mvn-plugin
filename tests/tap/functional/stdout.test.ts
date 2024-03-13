@@ -1,6 +1,7 @@
-import { test } from 'tap';
-import { parseStdout } from '../../lib/parse/stdout';
+import tap from 'tap';
+import { parseStdout } from '../../../lib/parse/stdout';
 
+const test = tap.test;
 const singleProjectStdout = `[INFO] Scanning for projects...
 [INFO] 
 [INFO] -----------------------< io.snyk:single-project >-----------------------
@@ -171,7 +172,7 @@ test('output contains errors', async (t) => {
     t.fail('expected error to be thrown');
   } catch (err: unknown) {
     if (err instanceof Error) {
-      t.equals(
+      t.equal(
         err.message,
         'Maven output contains errors.',
         'throws expected error',
@@ -188,7 +189,7 @@ test('output contains error, but succeeds building', async (t) => {
     t.fail('expected error to be thrown');
   } catch (err: unknown) {
     if (err instanceof Error) {
-      t.equals(
+      t.equal(
         err.message,
         'Cannot find any digraphs.',
         'throws expected error',
@@ -205,7 +206,7 @@ test('output does not contain digraph', async (t) => {
     t.fail('expected error to be thrown');
   } catch (err: unknown) {
     if (err instanceof Error) {
-      t.equals(
+      t.equal(
         err.message,
         'Cannot find any digraphs.',
         'throws expected error',

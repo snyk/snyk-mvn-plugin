@@ -1,5 +1,7 @@
-import { test } from 'tap';
-import { MavenGraphBuilder } from '../../lib/parse/maven-graph-builder';
+import tap from 'tap';
+import { MavenGraphBuilder } from '../../../lib/parse/maven-graph-builder';
+
+const test = tap.test;
 
 test('default constructor', async (t) => {
   const builder = new MavenGraphBuilder('root');
