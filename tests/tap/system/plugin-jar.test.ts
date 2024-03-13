@@ -2,11 +2,11 @@ import { legacyPlugin } from '@snyk/cli-interface';
 import * as depGraphLib from '@snyk/dep-graph';
 import * as path from 'path';
 import * as test from 'tap-only';
-import * as plugin from '../../lib';
-import { readFixtureJSON } from '../helpers/read';
-import { mockSnykSearchClient } from '../helpers/mock-search';
+import * as plugin from '../../../lib';
+import { readFixtureJSON } from '../../helpers/read';
+import { mockSnykSearchClient } from '../../helpers/mock-search';
 
-const testsPath = path.join(__dirname, '..');
+const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
 const badPath = path.join(fixturesPath, 'bad');
 

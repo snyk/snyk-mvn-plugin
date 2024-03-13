@@ -1,5 +1,7 @@
-import { test } from 'tap';
-import { parseDependency } from '../../lib/parse/dependency';
+import tap from 'tap';
+import { parseDependency } from '../../../lib/parse/dependency';
+
+const test = tap.test;
 
 test('parseDependency returns expected object', async (t) => {
   t.same(

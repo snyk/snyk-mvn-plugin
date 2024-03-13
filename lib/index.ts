@@ -12,7 +12,7 @@ import {
   isArchive,
 } from './archive';
 import { formatGenericPluginError } from './error-format';
-import debugModule = require('debug');
+import * as debugModule from 'debug';
 import { parse } from './parse';
 import { SnykHttpClient } from './parse/types';
 

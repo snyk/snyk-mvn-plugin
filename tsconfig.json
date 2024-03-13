@@ -1,21 +1,29 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": ".",
     "pretty": true,
-    "target": "es2015",
+    "moduleResolution": "node",
+    // https://github.com/tsconfig/bases#node-12-tsconfigjson
+    "target": "es2019",
     "lib": [
-      "es2015",
-      "es2016.array.include",
+      "es2019",
+      "es2020.promise",
+      "es2020.bigint",
+      "es2020.string",
+      "DOM",
+      "DOM.Iterable"
     ],
     "module": "commonjs",
-    "allowJs": false,
+    "allowJs": true,
     "sourceMap": true,
+    "resolveJsonModule": true,
     "strict": true,
-    "declaration": true,
-    "importHelpers": true,
-    "noImplicitAny": false // Needed to compile tap and ansi-escapes
+    "noImplicitAny": false, // Needed to compile tap and ansi-escapes
+    "composite": true,
+    "useUnknownInCatchVariables": false,
   },
   "include": [
-      "./lib/**/*"
+    "./lib/**/*"
   ]
 }

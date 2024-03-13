@@ -1,11 +1,13 @@
 import type { PkgInfo } from '@snyk/dep-graph';
 import * as path from 'path';
-import { test } from 'tap';
+import tap from 'tap';
 import { legacyPlugin } from '@snyk/cli-interface';
-import * as plugin from '../../lib';
-import { byPkgName } from '../helpers/sort';
+import * as plugin from '../../../lib';
+import { byPkgName } from '../../helpers/sort';
 
-const testsPath = path.join(__dirname, '..');
+const test = tap.test;
+
+const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
 
 function getDepPkgs(
@@ -29,12 +31,8 @@ test('inspect on complex aggregate project using maven reactor', async (t) => {
   if (!legacyPlugin.isMultiResult(result)) {
     return t.fail('expected multi inspect result');
   }
-  t.strictEqual(
-    result.scannedProjects.length,
-    3,
-    'should return 3 scanned projects',
-  );
-  t.strictEqual(
+  t.equal(result.scannedProjects.length, 3, 'should return 3 scanned projects');
+  t.equal(
     getDepPkgs('io.snyk:aggregate-project', result)?.length,
     0,
     'root project has 0 dependencies',
