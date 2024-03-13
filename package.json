@@ -28,7 +28,7 @@
   "author": "snyk.io",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/node": "11.13.8",
+    "@types/node": "^18.19.23",
     "@types/sinon": "^7.5.2",
     "@typescript-eslint/eslint-plugin": "^5.31.0",
     "@typescript-eslint/parser": "^5.31.0",
@@ -45,9 +45,9 @@
   "dependencies": {
     "@snyk/cli-interface": "2.11.3",
     "@snyk/dep-graph": "^1.23.1",
-    "packageurl-js": "^1.0.0",
     "debug": "^4.1.1",
     "glob": "^7.1.6",
+    "packageurl-js": "^1.0.0",
     "shescape": "1.6.1",
     "tslib": "^2.4.0"
   }
