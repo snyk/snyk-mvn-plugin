@@ -1301,7 +1301,7 @@ export const smallVerboseDepGraphNewMvnPlugin = {
         pkgId: "commons-discovery:commons-discovery@0.2",
         deps: [
           {
-            nodeId: "commons-logging:commons-logging:jar:1.0.4:runtime:pruned"
+            nodeId: "commons-logging:commons-logging:jar:1.0.4:runtime"
           }
         ]
       },
@@ -1309,16 +1309,6 @@ export const smallVerboseDepGraphNewMvnPlugin = {
         nodeId: "org.hamcrest:hamcrest-core:jar:1.1:test",
         pkgId: "org.hamcrest:hamcrest-core@1.1",
         deps: []
-      },
-      {
-        nodeId: "commons-logging:commons-logging:jar:1.0.4:runtime:pruned",
-        pkgId: "commons-logging:commons-logging@1.0.4",
-        deps: [],
-        info: {
-          labels: {
-            pruned: "true"
-          }
-        }
       }
     ]
   }

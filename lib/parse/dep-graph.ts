@@ -21,10 +21,10 @@ export function buildDepGraph(
     const { id, parentId } = item;
     const parsed = parseId(id, verboseOutput);
     const node = nodes[id];
-    if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep)
+    if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep && !verboseOutput)
       continue;
     const visited = visitedMap[parsed.key];
-    if (visited) {
+    if (visited && !verboseOutput) {
       const prunedId = visited.id + ':pruned';
       builder.addPkgNode(visited.pkgInfo, prunedId, {
         labels: { pruned: 'true' },

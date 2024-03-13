@@ -12,4 +12,3 @@ export default async (): Promise<Config.InitialOptions> => {
     testTimeout: 10000,
   };
 };
-
