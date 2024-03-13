@@ -4,6 +4,7 @@ import tap from 'tap';
 import { legacyPlugin } from '@snyk/cli-interface';
 import * as plugin from '../../../lib';
 import { byPkgName } from '../../helpers/sort';
+import { readFixtureJSON } from '../../helpers/read';
 
 const test = tap.test;
 
@@ -152,4 +153,26 @@ test('inspect on complex aggregate project using maven reactor include test scop
     ].sort(byPkgName),
     'web project has own dependencies, another modules and test dependencies',
   );
+});
+
+test('inspect on complex aggregate project using maven reactor and verbose enabled', async (t) => {
+  const result = await plugin.inspect(
+    path.join(fixturesPath, 'complex-aggregate-project'),
+    'pom.xml',
+    {
+      mavenAggregateProject: true,
+      args: ['-Dverbose']
+    },
+  );
+  if (!legacyPlugin.isMultiResult(result)) {
+    return t.fail('expected multi inspect result');
+  }
+  const expectedJSON = await readFixtureJSON(
+    'complex-aggregate-project',
+    'verbose-scan-result.json',
+  );
+  t.equal(result.scannedProjects.length, 3, 'should return 3 scanned projects');
+  t.same(result.scannedProjects[0].depGraph?.toJSON(), expectedJSON.scannedProjects[0].depGraph, 'should return expected scan result');
+  t.same(result.scannedProjects[1].depGraph?.toJSON(), expectedJSON.scannedProjects[1].depGraph, 'should return expected scan result');
+  t.same(result.scannedProjects[2].depGraph?.toJSON(), expectedJSON.scannedProjects[2].depGraph, 'should return expected scan result');
 });

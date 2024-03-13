@@ -7,12 +7,17 @@ import { buildDepGraph } from './dep-graph';
 export function parse(
   stdout: string,
   includeTestScope = false,
+  verboseEnabled = false,
 ): { scannedProjects: ScannedProject[] } {
   const digraphs = parseStdout(stdout);
   const mavenGraphs = parseDigraphs(digraphs);
   const scannedProjects: ScannedProject[] = [];
   for (const mavenGraph of mavenGraphs) {
-    const depGraph = buildDepGraph(mavenGraph, includeTestScope);
+    const depGraph = buildDepGraph(
+      mavenGraph,
+      includeTestScope,
+      verboseEnabled,
+    );
     scannedProjects.push({ depGraph });
   }
   return {

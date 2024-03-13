@@ -158,17 +158,22 @@ export async function inspect(
 
   const mavenCommand = getCommand(root, targetFile);
   const mvnWorkingDirectory = findWrapper(mavenCommand, root, targetPath);
+  const args = options.args || [];
+  const verboseEnabled =
+    args.includes('-Dverbose') || args.includes('-Dverbose=true');
   const mvnArgs = buildArgs(
     root,
     mvnWorkingDirectory,
     targetFile,
     options.args,
     options.mavenAggregateProject,
+    verboseEnabled,
   );
   let result;
   try {
     debug(`Maven command: ${mavenCommand} ${mvnArgs.join(' ')}`);
     debug(`Maven working directory: ${mvnWorkingDirectory}`);
+    debug(`Verbose enabled: ${verboseEnabled}`);
     result = await subProcess.execute(mavenCommand, mvnArgs, {
       cwd: mvnWorkingDirectory,
     });
@@ -179,7 +184,7 @@ export async function inspect(
         cwd: mvnWorkingDirectory,
       },
     );
-    const parseResult = parse(result, options.dev);
+    const parseResult = parse(result, options.dev, verboseEnabled);
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
     return {
       plugin: {
@@ -212,6 +217,7 @@ export function buildArgs(
   targetFile?: string,
   mavenArgs?: string[] | undefined,
   mavenAggregateProject = false,
+  verboseEnabled = false,
 ) {
   let args: string[] = [];
 
@@ -222,9 +228,15 @@ export function buildArgs(
     args = args.concat('test-compile');
   }
 
+  // when using verbose ensure maven-dependency-plugin version 3 is used
+  // lower versions do not work with -DoutputType=dot
+  const mavenDependencyPlugin = verboseEnabled
+    ? 'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:tree'
+    : 'dependency:tree';
+
   // Requires Maven >= 2.2
   args = args.concat([
-    'dependency:tree', // use dependency plugin to display a tree of dependencies
+    mavenDependencyPlugin, // use dependency plugin to display a tree of dependencies
     '-DoutputType=dot', // use 'dot' output format
     '--batch-mode', // clean up output, disables output color and download progress
   ]);
