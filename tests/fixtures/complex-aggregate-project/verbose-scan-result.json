@@ -1,0 +1,238 @@
+{
+    "scannedProjects": [
+      {
+        "depGraph": {
+          "schemaVersion": "1.2.0",
+          "pkgManager": {
+            "name": "maven"
+          },
+          "pkgs": [
+            {
+              "id": "io.snyk:aggregate-project@1.0.0",
+              "info": {
+                "name": "io.snyk:aggregate-project",
+                "version": "1.0.0"
+              }
+            }
+          ],
+          "graph": {
+            "rootNodeId": "root-node",
+            "nodes": [
+              {
+                "nodeId": "root-node",
+                "pkgId": "io.snyk:aggregate-project@1.0.0",
+                "deps": []
+              }
+            ]
+          }
+        }
+      },
+      {
+        "depGraph": {
+          "schemaVersion": "1.2.0",
+          "pkgManager": {
+            "name": "maven"
+          },
+          "pkgs": [
+            {
+              "id": "io.snyk:core@1.0.0",
+              "info": {
+                "name": "io.snyk:core",
+                "version": "1.0.0"
+              }
+            },
+            {
+              "id": "org.apache.logging.log4j:log4j-api@2.17.2",
+              "info": {
+                "name": "org.apache.logging.log4j:log4j-api",
+                "version": "2.17.2"
+              }
+            },
+            {
+              "id": "org.apache.logging.log4j:log4j-core@2.17.2",
+              "info": {
+                "name": "org.apache.logging.log4j:log4j-core",
+                "version": "2.17.2"
+              }
+            }
+          ],
+          "graph": {
+            "rootNodeId": "root-node",
+            "nodes": [
+              {
+                "nodeId": "root-node",
+                "pkgId": "io.snyk:core@1.0.0",
+                "deps": [
+                  {
+                    "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile"
+                  },
+                  {
+                    "nodeId": "org.apache.logging.log4j:log4j-core:jar:2.17.2:compile"
+                  }
+                ]
+              },
+              {
+                "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile",
+                "pkgId": "org.apache.logging.log4j:log4j-api@2.17.2",
+                "deps": []
+              },
+              {
+                "nodeId": "org.apache.logging.log4j:log4j-core:jar:2.17.2:compile",
+                "pkgId": "org.apache.logging.log4j:log4j-core@2.17.2",
+                "deps": [
+                  {
+                    "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "depGraph": {
+          "schemaVersion": "1.2.0",
+          "pkgManager": {
+            "name": "maven"
+          },
+          "pkgs": [
+            {
+              "id": "io.snyk:web@1.0.0",
+              "info": {
+                "name": "io.snyk:web",
+                "version": "1.0.0"
+              }
+            },
+            {
+              "id": "io.snyk:core@1.0.0",
+              "info": {
+                "name": "io.snyk:core",
+                "version": "1.0.0"
+              }
+            },
+            {
+              "id": "org.springframework:spring-web@5.3.21",
+              "info": {
+                "name": "org.springframework:spring-web",
+                "version": "5.3.21"
+              }
+            },
+            {
+              "id": "org.apache.logging.log4j:log4j-api@2.17.2",
+              "info": {
+                "name": "org.apache.logging.log4j:log4j-api",
+                "version": "2.17.2"
+              }
+            },
+            {
+              "id": "org.apache.logging.log4j:log4j-core@2.17.2",
+              "info": {
+                "name": "org.apache.logging.log4j:log4j-core",
+                "version": "2.17.2"
+              }
+            },
+            {
+              "id": "org.springframework:spring-beans@5.3.21",
+              "info": {
+                "name": "org.springframework:spring-beans",
+                "version": "5.3.21"
+              }
+            },
+            {
+              "id": "org.springframework:spring-core@5.3.21",
+              "info": {
+                "name": "org.springframework:spring-core",
+                "version": "5.3.21"
+              }
+            },
+            {
+              "id": "org.springframework:spring-jcl@5.3.21",
+              "info": {
+                "name": "org.springframework:spring-jcl",
+                "version": "5.3.21"
+              }
+            }
+          ],
+          "graph": {
+            "rootNodeId": "root-node",
+            "nodes": [
+              {
+                "nodeId": "root-node",
+                "pkgId": "io.snyk:web@1.0.0",
+                "deps": [
+                  {
+                    "nodeId": "io.snyk:core:jar:1.0.0:compile"
+                  },
+                  {
+                    "nodeId": "org.springframework:spring-web:jar:5.3.21:compile"
+                  }
+                ]
+              },
+              {
+                "nodeId": "io.snyk:core:jar:1.0.0:compile",
+                "pkgId": "io.snyk:core@1.0.0",
+                "deps": [
+                  {
+                    "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile"
+                  },
+                  {
+                    "nodeId": "org.apache.logging.log4j:log4j-core:jar:2.17.2:compile"
+                  }
+                ]
+              },
+              {
+                "nodeId": "org.springframework:spring-web:jar:5.3.21:compile",
+                "pkgId": "org.springframework:spring-web@5.3.21",
+                "deps": [
+                  {
+                    "nodeId": "org.springframework:spring-beans:jar:5.3.21:compile"
+                  },
+                  {
+                    "nodeId": "org.springframework:spring-core:jar:5.3.21:compile"
+                  }
+                ]
+              },
+              {
+                "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile",
+                "pkgId": "org.apache.logging.log4j:log4j-api@2.17.2",
+                "deps": []
+              },
+              {
+                "nodeId": "org.apache.logging.log4j:log4j-core:jar:2.17.2:compile",
+                "pkgId": "org.apache.logging.log4j:log4j-core@2.17.2",
+                "deps": [
+                  {
+                    "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile"
+                  }
+                ]
+              },
+              {
+                "nodeId": "org.springframework:spring-beans:jar:5.3.21:compile",
+                "pkgId": "org.springframework:spring-beans@5.3.21",
+                "deps": [
+                  {
+                    "nodeId": "org.springframework:spring-core:jar:5.3.21:compile"
+                  }
+                ]
+              },
+              {
+                "nodeId": "org.springframework:spring-core:jar:5.3.21:compile",
+                "pkgId": "org.springframework:spring-core@5.3.21",
+                "deps": [
+                  {
+                    "nodeId": "org.springframework:spring-jcl:jar:5.3.21:compile"
+                  }
+                ]
+              },
+              {
+                "nodeId": "org.springframework:spring-jcl:jar:5.3.21:compile",
+                "pkgId": "org.springframework:spring-jcl@5.3.21",
+                "deps": []
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+  

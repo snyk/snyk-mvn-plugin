@@ -6,6 +6,7 @@ import { parseDependency } from './dependency';
 export function buildDepGraph(
   mavenGraph: MavenGraph,
   includeTestScope = false,
+  verboseEnabled = false,
 ): DepGraph {
   const { rootId, nodes } = mavenGraph;
   const parsedRoot = parseId(rootId);
@@ -21,10 +22,11 @@ export function buildDepGraph(
     const { id, parentId } = item;
     const parsed = parseId(id);
     const node = nodes[id];
-    if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep)
+    if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep) {
       continue;
+    }
     const visited = visitedMap[parsed.key];
-    if (visited) {
+    if (!verboseEnabled && visited) {
       const prunedId = visited.id + ':pruned';
       builder.addPkgNode(visited.pkgInfo, prunedId, {
         labels: { pruned: 'true' },
@@ -33,10 +35,16 @@ export function buildDepGraph(
       continue; // don't queue any more children
     }
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
-    builder.addPkgNode(parsed.pkgInfo, id);
-    builder.connectDep(parentNodeId, id);
+    if (verboseEnabled && visited) {
+      // use visited node when omited dependencies found (verbose)
+      builder.addPkgNode(visited.pkgInfo, visited.id);
+      builder.connectDep(parentNodeId, visited.id);
+    } else {
+      builder.addPkgNode(parsed.pkgInfo, id);
+      builder.connectDep(parentNodeId, id);
+      visitedMap[parsed.key] = parsed;
+    }
     queue.push(...getItems(id, node));
-    visitedMap[parsed.key] = parsed;
   }
 
   return builder.build();
