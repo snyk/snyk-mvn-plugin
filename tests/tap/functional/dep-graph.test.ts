@@ -1,4 +1,4 @@
-import tap from 'tap';
+import * as tap from 'tap';
 import { parseDigraphs } from '../../../lib/parse/digraph';
 import { buildDepGraph } from '../../../lib/parse/dep-graph';
 
@@ -19,7 +19,7 @@ test('buildDepGraph', async (t) => {
     "test:root:jar:1.2.3" -> "test:d:jar:1.0.0" ;
     "test:a:jar:1.0.0" -> "test:b:jar:1.0.0" ;
     "test:b:jar:1.0.0" -> "test:a:jar:1.0.0" ; // pruned (cyclic)
-    "test:c:jar:1.0.0" -> "test:d:jar:1.0.0" ; // pruned (first seen at top level)
+    "test:c:jar:1.0.0" -> "test:d:jar:1.0.3" ; // pruned (first seen at top level)
   }`;
   const mavenGraph = parseDigraphs([diGraph])[0];
   const depGraph = buildDepGraph(mavenGraph);

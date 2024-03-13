@@ -8,9 +8,9 @@ export function buildDepGraph(
   includeTestScope = false,
 ): DepGraph {
   const { rootId, nodes } = mavenGraph;
-  const { pkgInfo: root } = getPkgInfo(rootId);
-  const builder = new DepGraphBuilder({ name: 'maven' }, root);
-  const visited: Record<string, boolean> = {};
+  const parsedRoot = parseId(rootId);
+  const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
+  const visitedMap: Record<string, DepInfo> = {};
   const queue: QueueItem[] = [];
   queue.push(...getItems(rootId, nodes[rootId]));
 
@@ -19,20 +19,24 @@ export function buildDepGraph(
     const item = queue.shift();
     if (!item) continue;
     const { id, parentId } = item;
-    const { pkgInfo, scope } = getPkgInfo(id);
+    const parsed = parseId(id);
     const node = nodes[id];
-    if (!includeTestScope && scope === 'test' && !node.reachesProdDep) continue;
-    if (visited[id]) {
-      const prunedId = id + ':pruned';
-      builder.addPkgNode(pkgInfo, prunedId, { labels: { pruned: 'true' } });
+    if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep)
+      continue;
+    const visited = visitedMap[parsed.key];
+    if (visited) {
+      const prunedId = visited.id + ':pruned';
+      builder.addPkgNode(visited.pkgInfo, prunedId, {
+        labels: { pruned: 'true' },
+      });
       builder.connectDep(parentId, prunedId);
       continue; // don't queue any more children
     }
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
-    builder.addPkgNode(pkgInfo, id);
+    builder.addPkgNode(parsed.pkgInfo, id);
     builder.connectDep(parentNodeId, id);
     queue.push(...getItems(id, node));
-    visited[id] = true;
+    visitedMap[parsed.key] = parsed;
   }
 
   return builder.build();
@@ -51,13 +55,24 @@ function getItems(parentId: string, node?: MavenGraphNode): QueueItem[] {
   return items;
 }
 
-function getPkgInfo(value: string): { pkgInfo: PkgInfo; scope?: string } {
-  const { groupId, artifactId, version, scope } = parseDependency(value);
+interface DepInfo {
+  id: string; // maven graph id
+  key: string; // maven dependency groupId:artifactId:type:classifier
+  pkgInfo: PkgInfo; // dep-graph name and version
+  scope?: string; // maybe scope
+}
+
+function parseId(id: string): DepInfo {
+  const dep = parseDependency(id);
+  const maybeClassifier = dep.classifier ? `:${dep.classifier}` : '';
+  const name = `${dep.groupId}:${dep.artifactId}`;
   return {
+    id,
+    key: `${name}:${dep.type}${maybeClassifier}`,
     pkgInfo: {
-      name: `${groupId}:${artifactId}`,
-      version,
+      name,
+      version: dep.version,
     },
-    scope,
+    scope: dep.scope,
   };
 }
