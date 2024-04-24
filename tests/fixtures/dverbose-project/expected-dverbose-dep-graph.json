@@ -1,0 +1,552 @@
+{
+  "schemaVersion": "1.2.0",
+  "pkgManager": {
+    "name": "maven"
+  },
+  "pkgs": [
+    {
+      "id": "com.example:my-java-project@1.0-SNAPSHOT",
+      "info": {
+        "name": "com.example:my-java-project",
+        "version": "1.0-SNAPSHOT"
+      }
+    },
+    {
+      "id": "org.apache.zookeeper:zookeeper@3.9.2",
+      "info": {
+        "name": "org.apache.zookeeper:zookeeper",
+        "version": "3.9.2"
+      }
+    },
+    {
+      "id": "org.apache.zookeeper:zookeeper-jute@3.9.2",
+      "info": {
+        "name": "org.apache.zookeeper:zookeeper-jute",
+        "version": "3.9.2"
+      }
+    },
+    {
+      "id": "org.apache.yetus:audience-annotations@0.12.0",
+      "info": {
+        "name": "org.apache.yetus:audience-annotations",
+        "version": "0.12.0"
+      }
+    },
+    {
+      "id": "io.netty:netty-handler@4.1.105.Final",
+      "info": {
+        "name": "io.netty:netty-handler",
+        "version": "4.1.105.Final"
+      }
+    },
+    {
+      "id": "io.netty:netty-transport-native-epoll@4.1.105.Final",
+      "info": {
+        "name": "io.netty:netty-transport-native-epoll",
+        "version": "4.1.105.Final"
+      }
+    },
+    {
+      "id": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+      "info": {
+        "name": "io.netty:netty-tcnative-boringssl-static",
+        "version": "2.0.61.Final"
+      }
+    },
+    {
+      "id": "org.slf4j:slf4j-api@1.7.30",
+      "info": {
+        "name": "org.slf4j:slf4j-api",
+        "version": "1.7.30"
+      }
+    },
+    {
+      "id": "commons-io:commons-io@2.11.0",
+      "info": {
+        "name": "commons-io:commons-io",
+        "version": "2.11.0"
+      }
+    },
+    {
+      "id": "io.netty:netty-common@4.1.105.Final",
+      "info": {
+        "name": "io.netty:netty-common",
+        "version": "4.1.105.Final"
+      }
+    },
+    {
+      "id": "io.netty:netty-resolver@4.1.105.Final",
+      "info": {
+        "name": "io.netty:netty-resolver",
+        "version": "4.1.105.Final"
+      }
+    },
+    {
+      "id": "io.netty:netty-buffer@4.1.105.Final",
+      "info": {
+        "name": "io.netty:netty-buffer",
+        "version": "4.1.105.Final"
+      }
+    },
+    {
+      "id": "io.netty:netty-transport@4.1.105.Final",
+      "info": {
+        "name": "io.netty:netty-transport",
+        "version": "4.1.105.Final"
+      }
+    },
+    {
+      "id": "io.netty:netty-transport-native-unix-common@4.1.105.Final",
+      "info": {
+        "name": "io.netty:netty-transport-native-unix-common",
+        "version": "4.1.105.Final"
+      }
+    },
+    {
+      "id": "io.netty:netty-codec@4.1.105.Final",
+      "info": {
+        "name": "io.netty:netty-codec",
+        "version": "4.1.105.Final"
+      }
+    },
+    {
+      "id": "io.netty:netty-transport-classes-epoll@4.1.105.Final",
+      "info": {
+        "name": "io.netty:netty-transport-classes-epoll",
+        "version": "4.1.105.Final"
+      }
+    },
+    {
+      "id": "io.netty:netty-tcnative-classes@2.0.61.Final",
+      "info": {
+        "name": "io.netty:netty-tcnative-classes",
+        "version": "2.0.61.Final"
+      }
+    }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "com.example:my-java-project@1.0-SNAPSHOT",
+        "deps": [
+          {
+            "nodeId": "org.apache.zookeeper:zookeeper:jar:3.9.2:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.apache.zookeeper:zookeeper:jar:3.9.2:compile",
+        "pkgId": "org.apache.zookeeper:zookeeper@3.9.2",
+        "deps": [
+          {
+            "nodeId": "org.apache.zookeeper:zookeeper-jute:jar:3.9.2:compile"
+          },
+          {
+            "nodeId": "org.apache.yetus:audience-annotations:jar:0.12.0:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-handler:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport-native-epoll:jar:linux-x86_64:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "org.slf4j:slf4j-api:jar:1.7.30:compile"
+          },
+          {
+            "nodeId": "commons-io:commons-io:jar:2.11.0:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.apache.zookeeper:zookeeper-jute:jar:3.9.2:compile",
+        "pkgId": "org.apache.zookeeper:zookeeper-jute@3.9.2",
+        "deps": [
+          {
+            "nodeId": "org.apache.yetus:audience-annotations:jar:0.12.0:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.apache.yetus:audience-annotations:jar:0.12.0:compile",
+        "pkgId": "org.apache.yetus:audience-annotations@0.12.0",
+        "deps": []
+      },
+      {
+        "nodeId": "io.netty:netty-handler:jar:4.1.105.Final:compile",
+        "pkgId": "io.netty:netty-handler@4.1.105.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-common:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-resolver:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-buffer:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport-native-unix-common:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-codec:jar:4.1.105.Final:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-transport-native-epoll:jar:linux-x86_64:4.1.105.Final:compile",
+        "pkgId": "io.netty:netty-transport-native-epoll@4.1.105.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-common:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-buffer:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport-native-unix-common:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport-classes-epoll:jar:4.1.105.Final:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:2.0.61.Final:compile",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-tcnative-classes:jar:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.slf4j:slf4j-api:jar:1.7.30:compile",
+        "pkgId": "org.slf4j:slf4j-api@1.7.30",
+        "deps": []
+      },
+      {
+        "nodeId": "commons-io:commons-io:jar:2.11.0:compile",
+        "pkgId": "commons-io:commons-io@2.11.0",
+        "deps": []
+      },
+      {
+        "nodeId": "io.netty:netty-common:jar:4.1.105.Final:compile",
+        "pkgId": "io.netty:netty-common@4.1.105.Final",
+        "deps": []
+      },
+      {
+        "nodeId": "io.netty:netty-resolver:jar:4.1.105.Final:compile",
+        "pkgId": "io.netty:netty-resolver@4.1.105.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-common:jar:4.1.105.Final:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-buffer:jar:4.1.105.Final:compile",
+        "pkgId": "io.netty:netty-buffer@4.1.105.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-common:jar:4.1.105.Final:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-transport:jar:4.1.105.Final:compile",
+        "pkgId": "io.netty:netty-transport@4.1.105.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-common:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-buffer:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-resolver:jar:4.1.105.Final:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-transport-native-unix-common:jar:4.1.105.Final:compile",
+        "pkgId": "io.netty:netty-transport-native-unix-common@4.1.105.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-common:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-buffer:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport:jar:4.1.105.Final:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-codec:jar:4.1.105.Final:compile",
+        "pkgId": "io.netty:netty-codec@4.1.105.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-common:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-buffer:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport:jar:4.1.105.Final:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-transport-classes-epoll:jar:4.1.105.Final:compile",
+        "pkgId": "io.netty:netty-transport-classes-epoll@4.1.105.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-common:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-buffer:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport:jar:4.1.105.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-transport-native-unix-common:jar:4.1.105.Final:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-classes:jar:2.0.61.Final:compile",
+        "pkgId": "io.netty:netty-tcnative-classes@2.0.61.Final",
+        "deps": []
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile:pruned-cycle"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile:pruned-cycle"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile:pruned-cycle"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile:pruned-cycle"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile:pruned-cycle"
+          },
+          {
+            "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile:pruned-cycle"
+          }
+        ]
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-x86_64:2.0.61.Final:compile:pruned-cycle",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [],
+        "info": {
+          "labels": {
+            "pruned": "cyclic"
+          }
+        }
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:linux-aarch_64:2.0.61.Final:compile:pruned-cycle",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [],
+        "info": {
+          "labels": {
+            "pruned": "cyclic"
+          }
+        }
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-x86_64:2.0.61.Final:compile:pruned-cycle",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [],
+        "info": {
+          "labels": {
+            "pruned": "cyclic"
+          }
+        }
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:osx-aarch_64:2.0.61.Final:compile:pruned-cycle",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [],
+        "info": {
+          "labels": {
+            "pruned": "cyclic"
+          }
+        }
+      },
+      {
+        "nodeId": "io.netty:netty-tcnative-boringssl-static:jar:windows-x86_64:2.0.61.Final:compile:pruned-cycle",
+        "pkgId": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
+        "deps": [],
+        "info": {
+          "labels": {
+            "pruned": "cyclic"
+          }
+        }
+      }
+    ]
+  }
+}
