@@ -13,13 +13,14 @@ export function buildDepGraph(
   const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
   const visitedMap: Record<string, DepInfo> = {};
   const queue: QueueItem[] = [];
-  queue.push(...getItems(rootId, nodes[rootId]));
+  queue.push(...getItems(rootId, [], nodes[rootId]));
 
   // breadth first search
   while (queue.length > 0) {
     const item = queue.shift();
+
     if (!item) continue;
-    const { id, parentId } = item;
+    const { id, ancestry, parentId } = item;
     const parsed = parseId(id);
     const node = nodes[id];
     if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep) {
@@ -34,6 +35,18 @@ export function buildDepGraph(
       builder.connectDep(parentId, prunedId);
       continue; // don't queue any more children
     }
+
+    // If verbose is enabled and our ancestry includes ourselves
+    // we are cyclic and should be pruned :)
+    if (verboseEnabled && ancestry.includes(id)) {
+      const prunedId = visited.id + ':pruned-cycle';
+      builder.addPkgNode(visited.pkgInfo, prunedId, {
+        labels: { pruned: 'cyclic' },
+      });
+      builder.connectDep(parentId, prunedId);
+      continue; // don't queue any more children
+    }
+
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
     if (verboseEnabled && visited) {
       // use visited node when omited dependencies found (verbose)
@@ -44,7 +57,8 @@ export function buildDepGraph(
       builder.connectDep(parentNodeId, id);
       visitedMap[parsed.key] = parsed;
     }
-    queue.push(...getItems(id, node));
+    // Remember to push updated ancestry here
+    queue.push(...getItems(id, [...ancestry, id], node));
   }
 
   return builder.build();
@@ -52,13 +66,18 @@ export function buildDepGraph(
 
 interface QueueItem {
   id: string;
+  ancestry: string[]; // This is an easy trick to maintain ancestry at cost of space
   parentId: string;
 }
 
-function getItems(parentId: string, node?: MavenGraphNode): QueueItem[] {
+function getItems(
+  parentId: string,
+  ancestry: string[],
+  node?: MavenGraphNode,
+): QueueItem[] {
   const items: QueueItem[] = [];
   for (const id of node?.dependsOn || []) {
-    items.push({ id, parentId });
+    items.push({ id, ancestry, parentId });
   }
   return items;
 }
