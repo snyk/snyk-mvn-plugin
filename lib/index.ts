@@ -34,7 +34,6 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   scanAllUnmanaged?: boolean;
   allProjects?: boolean;
   mavenAggregateProject?: boolean;
-  unpruned?: boolean;
 }
 
 export function getCommand(root: string, targetFile: string | undefined) {
@@ -159,7 +158,9 @@ export async function inspect(
 
   const mavenCommand = getCommand(root, targetFile);
   const mvnWorkingDirectory = findWrapper(mavenCommand, root, targetPath);
-  const verboseEnabled = handleVerbose(options);
+  const args = options.args || [];
+  const verboseEnabled =
+    args.includes('-Dverbose') || args.includes('-Dverbose=true');
   const mvnArgs = buildArgs(
     root,
     mvnWorkingDirectory,
@@ -259,15 +260,4 @@ export function buildArgs(
   }
 
   return args;
-}
-
-function handleVerbose(options): boolean {
-  const args = options.args || [];
-  const verboseFlag =
-    args.includes('-Dverbose') || args.includes('-Dverbose=true');
-  if (options.unpruned && !verboseFlag) {
-    args.push('-Dverbose');
-    options.args = args;
-  }
-  return verboseFlag || options.unpruned;
 }
