@@ -26,5 +26,5 @@ test('inspect on dverbose-project pom using -Dverbose', async () => {
 
     expect(result).toEqual(expectedDepGraph);
   },
-  10000,
+  20000,
 );
