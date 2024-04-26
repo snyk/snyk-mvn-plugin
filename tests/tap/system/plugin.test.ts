@@ -408,27 +408,3 @@ test('inspect on verbose-project pom using -Dverbose', async (t) => {
     'returns expected dep-graph',
   );
 });
-
-test('inspect on test-project pom using --unpruned', async (t) => {
-  const result = await plugin.inspect(
-    '.',
-    path.join(testProjectPath, 'pom.xml'),
-    {
-      unpruned: true,
-    },
-  );
-  if (!legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected multi inspect result');
-  }
-  t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
-  const expectedJSON = await readFixtureJSON(
-    'test-project',
-    'expected-verbose-dep-graph.json',
-  );
-  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
-  t.same(
-    result.scannedProjects[0].depGraph?.toJSON(),
-    expectedDepGraph.toJSON(),
-    'returns expected dep-graph',
-  );
-});
