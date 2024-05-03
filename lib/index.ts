@@ -31,6 +31,7 @@ export function debug(...messages: string[]) {
 }
 
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
+  'print-graph'?: boolean;
   scanAllUnmanaged?: boolean;
   allProjects?: boolean;
   mavenAggregateProject?: boolean;
@@ -112,7 +113,7 @@ export async function inspect(
     throw new Error('Could not find file or directory ' + targetPath);
   }
   if (!options) {
-    options = { dev: false, scanAllUnmanaged: false };
+    options = { dev: false, scanAllUnmanaged: false, 'print-graph': false };
   }
 
   if (targetPath && isArchive(targetPath)) {
@@ -159,13 +160,17 @@ export async function inspect(
   const mavenCommand = getCommand(root, targetFile);
   const mvnWorkingDirectory = findWrapper(mavenCommand, root, targetPath);
   const args = options.args || [];
+
   const verboseEnabled =
-    args.includes('-Dverbose') || args.includes('-Dverbose=true');
+    args.includes('-Dverbose') ||
+    args.includes('-Dverbose=true') ||
+    !!options['print-graph'];
+
   const mvnArgs = buildArgs(
     root,
     mvnWorkingDirectory,
     targetFile,
-    options.args,
+    args,
     options.mavenAggregateProject,
     verboseEnabled,
   );
@@ -214,8 +219,8 @@ export async function inspect(
 export function buildArgs(
   rootPath: string,
   executionPath: string,
-  targetFile?: string,
-  mavenArgs?: string[] | undefined,
+  targetFile: string | undefined,
+  mavenArgs: string[],
   mavenAggregateProject = false,
   verboseEnabled = false,
 ) {
@@ -255,9 +260,15 @@ export function buildArgs(
     }
   }
 
-  if (mavenArgs) {
-    args = args.concat(mavenArgs);
+  if (
+    verboseEnabled &&
+    !mavenArgs.includes('-Dverbose') &&
+    !mavenArgs.includes('-Dverbose=true')
+  ) {
+    args = args.concat('-Dverbose');
   }
+
+  args = args.concat(mavenArgs);
 
   return args;
 }
