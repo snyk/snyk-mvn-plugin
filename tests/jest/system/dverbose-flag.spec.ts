@@ -28,3 +28,24 @@ test('inspect on dverbose-project pom using -Dverbose', async () => {
   },
   20000,
 );
+
+test('inspect on dverbose-project pom using --print-graph', async () => {
+    let result: Record<string, any> = await plugin.inspect(
+      '.',
+      path.join(testProjectPath, 'pom.xml'),
+      {
+        'print-graph': true
+      },
+    );
+
+    const expectedJSON = await readFixtureJSON(
+      'dverbose-project',
+      'expected-dverbose-dep-graph.json',
+    );
+    const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON).toJSON();
+    result = result.scannedProjects[0].depGraph?.toJSON();
+
+    expect(result).toEqual(expectedDepGraph);
+  },
+  20000,
+);
