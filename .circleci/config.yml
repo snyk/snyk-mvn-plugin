@@ -118,9 +118,6 @@ jobs:
     steps:
       - checkout
       - install_deps
-#      - run:
-#          name: Generate package-lock.json (Required for snyk OS scanning)
-#          command: npm install --package-lock
       - show_node_version
       - prodsec/security_scans:
           mode: auto
