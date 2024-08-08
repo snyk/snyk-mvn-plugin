@@ -44,19 +44,28 @@ function findQuotedContents(value?: string): string | null {
   if (!value) return null;
   const start = value.indexOf('"') + 1;
   const end = value.lastIndexOf('"');
+
+  if (isVerbose(value)) {
+    const [left] = value
+      .substring(start + (value[start] == '(' ? 1 : 0), end)
+      .split(/ [-(]/);
+    return left;
+  }
+
+  return value.substring(start, end);
+}
+
+function isVerbose(value: string): boolean {
+  // clear string of leading and trailing non letters
   // when using -Dverbose ensure omitted reasons are parsed correctly
   // https://github.com/apache/maven/blob/ab6ec5bd74af20ab429509eb56fc8e3dff4c7fc7/maven-core/src/main/java/org/apache/maven/internal/impl/DefaultNode.java#L113
-  if (value.indexOf('omitted for conflict with') > -1) {
-    const [left] = value
-      .substring(start + 1, end)
-      .split(' - omitted for conflict with ');
-    return left;
+  const dverboseReasons = [
+    'version managed from',
+    'omitted for conflict with',
+    'omitted for duplicate',
+  ];
+  for (const dverboseReason of dverboseReasons) {
+    if (value.includes(dverboseReason)) return true;
   }
-  if (value.indexOf('omitted for duplicate') > -1) {
-    const [left] = value
-      .substring(start + 1, end)
-      .split(' - omitted for duplicate');
-    return left;
-  }
-  return value.substring(start, end);
+  return false;
 }
