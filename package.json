@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsc",
     "format:check": "prettier --check '{lib,test}/**/*.{js,ts,json,yml}'",
-    "format": "prettier --write '{lib,test}/**/*.{js,ts,json,yml}'",
+    "format": "prettier --write '{lib,tests}/**/*.{js,ts,json,yml}'",
     "lint": "npm run format:check && npm run lint:eslint",
     "lint:eslint": "eslint --color --cache 'lib/**/*.{js,ts}'",
     "prepare": "npm run build",
