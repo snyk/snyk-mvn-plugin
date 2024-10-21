@@ -59,3 +59,12 @@ export interface MavenGraphNode {
   parents: string[];
   reachesProdDep: boolean;
 }
+
+export interface ShaSearchError {
+  status: string;
+  title: string;
+  detail: string;
+  meta: {
+    links: string[];
+  };
+}
