@@ -3,6 +3,7 @@ import {
   PackageResource,
   MavenPackage,
   SnykHttpClient,
+  ShaSearchError,
 } from './parse/types';
 import { PackageURL } from 'packageurl-js';
 import * as debugLib from 'debug';
@@ -55,8 +56,18 @@ async function searchMavenPackageByChecksum(
     },
   });
 
-  if (!res?.statusCode || res?.statusCode >= 400 || !body) {
-    debug(`Failed to resolve ${targetPath} using sha1 ${sha1}.`);
+  if (
+    !res?.statusCode ||
+    res?.statusCode >= 400 ||
+    !body ||
+    (body as any).errors
+  ) {
+    debug(`Failed to resolve ${targetPath}.`);
+    if (body && (body as any).errors) {
+      const catalogError = (body as any).errors[0] as ShaSearchError;
+      debug(catalogError.detail);
+      debug(catalogError.meta.links[0]);
+    }
     return [];
   }
 

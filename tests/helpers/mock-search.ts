@@ -2,13 +2,14 @@ import {
   GetPackageData,
   HttpClientResponse,
   RequestInfo,
+  ShaSearchError,
 } from '../../lib/parse/types';
 
 const FIXTURES: Map<
   String,
   {
     res: HttpClientResponse;
-    body: GetPackageData;
+    body: GetPackageData | { errors: ShaSearchError[] };
   }
 > = new Map(
   Object.entries({
@@ -78,13 +79,33 @@ export async function mockSnykSearchClient(requestInfo: RequestInfo): Promise<{
   res: HttpClientResponse;
   body: any;
 }> {
+  const sha1 = requestInfo.qs?.package_sha1 || '';
+
   if (requestInfo.method == 'get' || requestInfo.path == '/packages') {
-    const sha1 = requestInfo.qs?.package_sha1 || '';
     const packageInfo = FIXTURES.get(sha1);
 
     if (packageInfo) {
       return packageInfo;
     }
+
+    return {
+      // result with 404 from maven
+      res: { statusCode: 200 },
+      body: {
+        errors: [
+          {
+            status: '404',
+            title: 'SHA1 not found',
+            detail: `SHA1 ${sha1} was not found`,
+            meta: {
+              links: [
+                'https://docs.snyk.io/snyk-cli/test-for-vulnerabilities/scan-all-unmanaged-jar-files',
+              ],
+            },
+          },
+        ],
+      },
+    };
   }
 
   return { res: { statusCode: 404 }, body: undefined };
