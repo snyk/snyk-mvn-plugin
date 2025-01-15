@@ -226,10 +226,11 @@ export function buildArgs(
 ) {
   let args: string[] = [];
 
-  if (mavenAggregateProject) {
+  if (mavenAggregateProject && !verboseEnabled) {
     // to workaround an issue in maven-dependency-tree plugin
     // when unpublished artifacts do not exist in either a local or remote repository
     // see https://stackoverflow.com/questions/1677473/maven-doesnt-recognize-sibling-modules-when-running-mvn-dependencytree
+    // addendum: if verboseEnabled we are already forcing a newer maven-dependency-plugin, so this is not required
     args = args.concat('test-compile');
   }
 

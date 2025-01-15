@@ -3,7 +3,6 @@ import * as path from 'path';
 import { readFixtureJSON } from '../../helpers/read';
 import * as depGraphLib from '@snyk/dep-graph';
 import * as subProcess from '../../../lib/sub-process';
-import { getCommand } from '../../../lib';
 
 const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -12,9 +11,10 @@ const testManagedProjectPath = path.join(
   fixturesPath,
   'dverbose-dependency-management',
 );
+const complexProjectPath = path.join(fixturesPath, 'complex-aggregate-project');
 
 test('inspect on dverbose-project pom using -Dverbose', async () => {
-  let result: Record<string, any> = await plugin.inspect(
+  let res: Record<string, any> = await plugin.inspect(
     '.',
     path.join(testProjectPath, 'pom.xml'),
     {
@@ -27,7 +27,7 @@ test('inspect on dverbose-project pom using -Dverbose', async () => {
     'expected-dverbose-dep-graph.json',
   );
   const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON).toJSON();
-  result = result.scannedProjects[0].depGraph?.toJSON();
+  const result = res.scannedProjects[0].depGraph?.toJSON();
 
   expect(result).toEqual(expectedDepGraph);
 }, 20000);
@@ -50,6 +50,7 @@ test('inspect on dverbose-dependency-management pom using -Dverbose', async () =
 
   expect(result).toEqual(expectedDepGraph);
 }, 20000);
+
 test('inspect on dverbose-dependency-management pom using -Dverbose and --dev deps', async () => {
   let result: Record<string, any> = await plugin.inspect(
     '.',
@@ -61,11 +62,7 @@ test('inspect on dverbose-dependency-management pom using -Dverbose and --dev de
   );
 
   // if running windows with an older version of maven 3.3.9.2 - one of the deps will be omitted
-  const mavenVersion = await subProcess.execute(
-    `mvn --version`,
-    [],
-    {},
-  );
+  const mavenVersion = await subProcess.execute(`mvn --version`, [], {});
   let expectedJSON = await readFixtureJSON(
     'dverbose-dependency-management',
     mavenVersion.includes('3.3.9') && mavenVersion.includes('C:')
@@ -77,6 +74,34 @@ test('inspect on dverbose-dependency-management pom using -Dverbose and --dev de
   result = result.scannedProjects[0].depGraph?.toJSON();
 
   expect(result).toEqual(expectedDepGraph);
+}, 20000);
+
+test('inspect on complext-aggregate-project using -Dverbose and --mavenAggregateProject deps', async () => {
+  let result: Record<string, any> = await plugin.inspect(
+    complexProjectPath,
+    'pom.xml',
+    {
+      args: ['-Dverbose'],
+      mavenAggregateProject: true,
+    },
+  );
+
+  let expectedJSON = await readFixtureJSON(
+    'complex-aggregate-project',
+    'verbose-scan-result.json',
+  );
+
+  expect(result.scannedProjects.length).toEqual(
+    expectedJSON.scannedProjects.length,
+  );
+  for (let i = 0; i < result.scannedProjects.length; i++) {
+    const expectedDepGraph = depGraphLib
+      .createFromJSON(expectedJSON.scannedProjects[i].depGraph)
+      .toJSON();
+    const depGraph = result.scannedProjects[i].depGraph?.toJSON();
+
+    expect(depGraph).toEqual(expectedDepGraph);
+  }
 }, 20000);
 
 test('inspect on dverbose-project pom using --print-graph', async () => {
