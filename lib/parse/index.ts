@@ -1,15 +1,16 @@
 import type { ScannedProject } from '@snyk/cli-interface/legacy/common';
 
-import { parseStdout } from './stdout';
+import { parseDigraphsFromStdout } from './stdout';
 import { parseDigraphs } from './digraph';
 import { buildDepGraph } from './dep-graph';
+export { parsePluginVersionFromStdout } from './stdout';
 
 export function parse(
   stdout: string,
   includeTestScope = false,
   verboseEnabled = false,
 ): { scannedProjects: ScannedProject[] } {
-  const digraphs = parseStdout(stdout);
+  const digraphs = parseDigraphsFromStdout(stdout);
   const mavenGraphs = parseDigraphs(digraphs);
   const scannedProjects: ScannedProject[] = [];
   for (const mavenGraph of mavenGraphs) {

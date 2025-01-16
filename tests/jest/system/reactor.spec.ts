@@ -70,7 +70,11 @@ test('inspect on complex aggregate project using maven reactor', async () => {
       },
     ].sort(byPkgName),
   );
-});
+
+  expect(
+    result.plugin.meta!.versionBuildInfo!.metaBuildVersion.mavenPluginVersion,
+  ).toEqual('2.8');
+}, 20000);
 
 test('inspect on complex aggregate project using maven reactor include test scope', async () => {
   const res = await plugin.inspect(
@@ -142,7 +146,7 @@ test('inspect on complex aggregate project using maven reactor include test scop
       },
     ].sort(byPkgName),
   );
-});
+}, 20000);
 
 test('inspect on complex aggregate project using maven reactor and verbose enabled', async () => {
   const res = await plugin.inspect(
@@ -171,4 +175,4 @@ test('inspect on complex aggregate project using maven reactor and verbose enabl
   expect(result.scannedProjects[2].depGraph?.toJSON()).toEqual(
     expectedJSON.scannedProjects[2].depGraph,
   );
-});
+}, 20000);

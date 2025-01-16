@@ -1,7 +1,5 @@
-import tap from 'tap';
-import { parseStdout } from '../../../lib/parse/stdout';
+import { parseDigraphsFromStdout } from '../../../lib/parse/stdout';
 
-const test = tap.test;
 const singleProjectStdout = `[INFO] Scanning for projects...
 [INFO] 
 [INFO] -----------------------< io.snyk:single-project >-----------------------
@@ -29,9 +27,9 @@ const singleProjectDigraph = `digraph "io.snyk:single-project:jar:0.0.1-SNAPSHOT
 "org.springframework:spring-core:jar:5.3.20:compile" -> "org.springframework:spring-jcl:jar:5.3.20:compile" ; 
 } `;
 
-test('parseStdout single project', async (t) => {
-  const received = parseStdout(singleProjectStdout);
-  t.same(received, [singleProjectDigraph], 'contains single digraph');
+test('parseStdout single project', async () => {
+  const received = parseDigraphsFromStdout(singleProjectStdout);
+  expect(received).toEqual([singleProjectDigraph]);
 });
 
 const multiProjectStdout = `[INFO] Scanning for projects...
@@ -133,13 +131,13 @@ const webProjectDigraph = `digraph "io.snyk:web:jar:1.0.0" {
 "org.springframework:spring-core:jar:5.3.21:compile" -> "org.springframework:spring-jcl:jar:5.3.21:compile" ; 
 } `;
 
-test('parseStdout multi project', async (t) => {
-  const received = parseStdout(multiProjectStdout);
-  t.same(
-    received,
-    [rootProjectDigraph, coreProjectDigraph, webProjectDigraph],
-    'contains multiple digraphs',
-  );
+test('parseStdout multi project', async () => {
+  const received = parseDigraphsFromStdout(multiProjectStdout);
+  expect(received).toEqual([
+    rootProjectDigraph,
+    coreProjectDigraph,
+    webProjectDigraph,
+  ]);
 });
 
 const errorStdout = `[INFO] Scanning for projects...
@@ -166,53 +164,28 @@ const buildSuccessErrorLogStdout = `[INFO] Scanning for projects...
 [INFO] ------------------------------------------------------------------------
 `;
 
-test('output contains errors', async (t) => {
-  try {
-    parseStdout(errorStdout);
-    t.fail('expected error to be thrown');
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      t.equal(
-        err.message,
-        'Maven output contains errors.',
-        'throws expected error',
-      );
-    } else {
-      t.fail('expected err to be instanceof Error');
-    }
-  }
+test('output contains errors', async () => {
+  expect(() => parseDigraphsFromStdout(errorStdout)).toThrowError(
+    expect.objectContaining({
+      message: expect.stringMatching('Maven output contains errors.'),
+    }),
+  );
 });
 
-test('output contains error, but succeeds building', async (t) => {
-  try {
-    const received = parseStdout(buildSuccessErrorLogStdout);
-    t.fail('expected error to be thrown');
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      t.equal(
-        err.message,
-        'Cannot find any digraphs.',
-        'throws expected error',
-      );
-    } else {
-      t.fail('expected err to be instanceof Error');
-    }
-  }
+test('output contains error, but succeeds building', async () => {
+  expect(() =>
+    parseDigraphsFromStdout(buildSuccessErrorLogStdout),
+  ).toThrowError(
+    expect.objectContaining({
+      message: expect.stringMatching('Cannot find any digraphs.'),
+    }),
+  );
 });
 
-test('output does not contain digraph', async (t) => {
-  try {
-    parseStdout('bad text');
-    t.fail('expected error to be thrown');
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      t.equal(
-        err.message,
-        'Cannot find any digraphs.',
-        'throws expected error',
-      );
-    } else {
-      t.fail('expected err to be instanceof Error');
-    }
-  }
+test('output does not contain digraph', async () => {
+  expect(() => parseDigraphsFromStdout('bad text')).toThrowError(
+    expect.objectContaining({
+      message: expect.stringMatching('Cannot find any digraphs.'),
+    }),
+  );
 });

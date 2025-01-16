@@ -13,7 +13,7 @@ import {
 } from './archive';
 import { formatGenericPluginError } from './error-format';
 import * as debugModule from 'debug';
-import { parse } from './parse';
+import { parse, parsePluginVersionFromStdout } from './parse';
 import { SnykHttpClient } from './parse/types';
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
@@ -191,6 +191,7 @@ export async function inspect(
     );
     const parseResult = parse(result, options.dev, verboseEnabled);
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
+    const mavenPluginVersion = parsePluginVersionFromStdout(result);
     return {
       plugin: {
         name: 'bundled:maven',
@@ -200,6 +201,7 @@ export async function inspect(
             metaBuildVersion: {
               mavenVersion,
               javaVersion,
+              mavenPluginVersion,
             },
           },
         },

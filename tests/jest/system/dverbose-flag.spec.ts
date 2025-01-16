@@ -30,6 +30,9 @@ test('inspect on dverbose-project pom using -Dverbose', async () => {
   const result = res.scannedProjects[0].depGraph?.toJSON();
 
   expect(result).toEqual(expectedDepGraph);
+  expect(
+    res.plugin.meta.versionBuildInfo.metaBuildVersion.mavenPluginVersion,
+  ).toEqual('3.6.1');
 }, 20000);
 
 test('inspect on dverbose-dependency-management pom using -Dverbose', async () => {
