@@ -1,12 +1,10 @@
 import type { PkgInfo } from '@snyk/dep-graph';
 import * as path from 'path';
-import tap from 'tap';
 import { legacyPlugin } from '@snyk/cli-interface';
 import * as plugin from '../../../lib';
 import { byPkgName } from '../../helpers/sort';
 import { readFixtureJSON } from '../../helpers/read';
-
-const test = tap.test;
+import { MultiProjectResult } from '@snyk/cli-interface/legacy/plugin';
 
 const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -21,33 +19,26 @@ function getDepPkgs(
   return project?.depGraph?.getDepPkgs();
 }
 
-test('inspect on complex aggregate project using maven reactor', async (t) => {
-  const result = await plugin.inspect(
+test('inspect on complex aggregate project using maven reactor', async () => {
+  const res = await plugin.inspect(
     path.join(fixturesPath, 'complex-aggregate-project'),
     'pom.xml',
     {
       mavenAggregateProject: true,
     },
   );
-  if (!legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected multi inspect result');
-  }
-  t.equal(result.scannedProjects.length, 3, 'should return 3 scanned projects');
-  t.equal(
-    getDepPkgs('io.snyk:aggregate-project', result)?.length,
-    0,
-    'root project has 0 dependencies',
-  );
-  t.same(
-    getDepPkgs('io.snyk:core', result)?.sort(byPkgName),
+  expect(legacyPlugin.isMultiResult(res)).toBeTruthy();
+  const result: MultiProjectResult = res as any;
+
+  expect(result.scannedProjects.length).toEqual(3);
+  expect(getDepPkgs('io.snyk:aggregate-project', result)?.length).toEqual(0);
+  expect(getDepPkgs('io.snyk:core', result)?.sort(byPkgName)).toEqual(
     [
       { name: 'org.apache.logging.log4j:log4j-api', version: '2.17.2' },
       { name: 'org.apache.logging.log4j:log4j-core', version: '2.17.2' },
     ].sort(byPkgName),
-    'core project has 2 dependencies',
   );
-  t.same(
-    getDepPkgs('io.snyk:web', result)?.sort(byPkgName),
+  expect(getDepPkgs('io.snyk:web', result)?.sort(byPkgName)).toEqual(
     [
       // depends on another module
       { name: 'io.snyk:core', version: '1.0.0' },
@@ -78,12 +69,15 @@ test('inspect on complex aggregate project using maven reactor', async (t) => {
         version: '5.3.21',
       },
     ].sort(byPkgName),
-    'web project has own dependencies and another modules',
   );
-});
 
-test('inspect on complex aggregate project using maven reactor include test scope', async (t) => {
-  const result = await plugin.inspect(
+  expect(
+    result.plugin.meta!.versionBuildInfo!.metaBuildVersion.mavenPluginVersion,
+  ).toEqual('2.8');
+}, 20000);
+
+test('inspect on complex aggregate project using maven reactor include test scope', async () => {
+  const res = await plugin.inspect(
     path.join(fixturesPath, 'complex-aggregate-project'),
     'pom.xml',
     {
@@ -91,11 +85,11 @@ test('inspect on complex aggregate project using maven reactor include test scop
       dev: true,
     },
   );
-  if (!legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected multi inspect result');
-  }
-  t.same(
-    getDepPkgs('io.snyk:web', result)?.sort(byPkgName),
+
+  expect(legacyPlugin.isMultiResult(res)).toBeTruthy();
+  const result: MultiProjectResult = res as any;
+
+  expect(getDepPkgs('io.snyk:web', result)?.sort(byPkgName)).toEqual(
     [
       // depends on another module
       { name: 'io.snyk:core', version: '1.0.0' },
@@ -151,28 +145,34 @@ test('inspect on complex aggregate project using maven reactor include test scop
         version: '1.2.0',
       },
     ].sort(byPkgName),
-    'web project has own dependencies, another modules and test dependencies',
   );
-});
+}, 20000);
 
-test('inspect on complex aggregate project using maven reactor and verbose enabled', async (t) => {
-  const result = await plugin.inspect(
+test('inspect on complex aggregate project using maven reactor and verbose enabled', async () => {
+  const res = await plugin.inspect(
     path.join(fixturesPath, 'complex-aggregate-project'),
     'pom.xml',
     {
       mavenAggregateProject: true,
-      args: ['-Dverbose']
+      args: ['-Dverbose'],
     },
   );
-  if (!legacyPlugin.isMultiResult(result)) {
-    return t.fail('expected multi inspect result');
-  }
+
+  expect(legacyPlugin.isMultiResult(res)).toBeTruthy();
+  const result: MultiProjectResult = res as any;
+
   const expectedJSON = await readFixtureJSON(
     'complex-aggregate-project',
     'verbose-scan-result.json',
   );
-  t.equal(result.scannedProjects.length, 3, 'should return 3 scanned projects');
-  t.same(result.scannedProjects[0].depGraph?.toJSON(), expectedJSON.scannedProjects[0].depGraph, 'should return expected scan result');
-  t.same(result.scannedProjects[1].depGraph?.toJSON(), expectedJSON.scannedProjects[1].depGraph, 'should return expected scan result');
-  t.same(result.scannedProjects[2].depGraph?.toJSON(), expectedJSON.scannedProjects[2].depGraph, 'should return expected scan result');
-});
+  expect(result.scannedProjects.length).toEqual(3);
+  expect(result.scannedProjects[0].depGraph?.toJSON()).toEqual(
+    expectedJSON.scannedProjects[0].depGraph,
+  );
+  expect(result.scannedProjects[1].depGraph?.toJSON()).toEqual(
+    expectedJSON.scannedProjects[1].depGraph,
+  );
+  expect(result.scannedProjects[2].depGraph?.toJSON()).toEqual(
+    expectedJSON.scannedProjects[2].depGraph,
+  );
+}, 20000);

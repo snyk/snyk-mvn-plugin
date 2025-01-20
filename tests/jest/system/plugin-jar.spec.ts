@@ -51,9 +51,7 @@ test('inspect on non-existent jar', async () => {
     ),
   ).rejects.toThrow(
     expect.objectContaining({
-      message: expect.stringMatching(
-        'Could not find file or directory ',
-      ),
+      message: expect.stringMatching('Could not find file or directory '),
     }),
   );
 });

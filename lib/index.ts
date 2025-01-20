@@ -13,7 +13,7 @@ import {
 } from './archive';
 import { formatGenericPluginError } from './error-format';
 import * as debugModule from 'debug';
-import { parse } from './parse';
+import { parse, parsePluginVersionFromStdout } from './parse';
 import { SnykHttpClient } from './parse/types';
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
@@ -191,6 +191,7 @@ export async function inspect(
     );
     const parseResult = parse(result, options.dev, verboseEnabled);
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
+    const mavenPluginVersion = parsePluginVersionFromStdout(result);
     return {
       plugin: {
         name: 'bundled:maven',
@@ -200,6 +201,7 @@ export async function inspect(
             metaBuildVersion: {
               mavenVersion,
               javaVersion,
+              mavenPluginVersion,
             },
           },
         },
@@ -226,10 +228,11 @@ export function buildArgs(
 ) {
   let args: string[] = [];
 
-  if (mavenAggregateProject) {
+  if (mavenAggregateProject && !verboseEnabled) {
     // to workaround an issue in maven-dependency-tree plugin
     // when unpublished artifacts do not exist in either a local or remote repository
     // see https://stackoverflow.com/questions/1677473/maven-doesnt-recognize-sibling-modules-when-running-mvn-dependencytree
+    // addendum: if verboseEnabled we are already forcing a newer maven-dependency-plugin, so this is not required
     args = args.concat('test-compile');
   }
 
