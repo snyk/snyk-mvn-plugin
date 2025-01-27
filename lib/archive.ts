@@ -16,10 +16,10 @@ function getSha1(buf: Buffer) {
   return crypto.createHash(ALGORITHM).update(buf).digest(DIGEST);
 }
 
-async function getMavenDependency(
+async function getMavenPackages(
   targetPath: string,
   snykHttpClient: SnykHttpClient,
-): Promise<MavenPackage> {
+): Promise<MavenPackage[]> {
   const contents = fs.readFileSync(targetPath);
   const sha1 = getSha1(contents);
   return getMavenPackageInfo(sha1, targetPath, snykHttpClient);
@@ -29,11 +29,11 @@ async function getDependencies(
   paths: string[],
   snykHttpClient: SnykHttpClient,
 ): Promise<MavenPackage[]> {
-  const dependencies: MavenPackage[] = [];
+  let dependencies: MavenPackage[] = [];
   for (const p of paths) {
     try {
-      const dependency = await getMavenDependency(p, snykHttpClient);
-      dependencies.push(dependency);
+      const mavenPackages = await getMavenPackages(p, snykHttpClient);
+      dependencies = dependencies.concat(mavenPackages);
     } catch (err) {
       // log error and continue with other paths
       if (err instanceof Error) {

@@ -19,26 +19,34 @@ export async function getMavenPackageInfo(
   sha1: string,
   targetPath: string,
   snykHttpClient: SnykHttpClient,
-): Promise<MavenPackage> {
+): Promise<MavenPackage[]> {
   const searchResults = await searchMavenPackageByChecksum(
     sha1,
     targetPath,
     snykHttpClient,
   );
   if (searchResults.length == 0) {
-    return fallbackPackageInfo(sha1, targetPath);
+    return [fallbackPackageInfo(sha1, targetPath)];
   }
 
-  let foundPackage: MavenPackage | undefined;
+  // try to find a specific package based on file name
+  const matchingSearchResults: MavenPackage[] = [];
   if (searchResults.length > 1) {
     const sha1Target = path.parse(targetPath).base;
-    debug(`Got multiple results for ${sha1}, looking for ${sha1Target}`);
-    foundPackage = searchResults.find((result) =>
-      sha1Target.includes(result.groupId),
+    debug(
+      `Got multiple results for ${sha1}, looking for match on ${sha1Target}`,
     );
+    searchResults.forEach((result) => {
+      if (sha1Target.includes(result.groupId)) {
+        matchingSearchResults.push(result);
+      }
+    });
   }
 
-  return foundPackage || searchResults[0];
+  // if nothing matches found return all search results
+  return matchingSearchResults.length === 0
+    ? searchResults
+    : matchingSearchResults;
 }
 
 async function searchMavenPackageByChecksum(

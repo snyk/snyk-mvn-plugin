@@ -15,6 +15,13 @@
         "name": "org.netbeans.external:org-apache-commons-io",
         "version": "RELEASE113"
       }
+    },
+    {
+      "id": "commons-io:commons-io@2.6",
+      "info": {
+        "name": "commons-io:commons-io",
+        "version": "2.6"
+      }
     }
   ],
   "graph": {
@@ -26,12 +33,20 @@
         "deps": [
           {
             "nodeId": "org.netbeans.external:org-apache-commons-io@RELEASE113"
+          },
+          {
+            "nodeId": "commons-io:commons-io@2.6"
           }
         ]
       },
       {
         "nodeId": "org.netbeans.external:org-apache-commons-io@RELEASE113",
         "pkgId": "org.netbeans.external:org-apache-commons-io@RELEASE113",
+        "deps": []
+      },
+      {
+        "nodeId": "commons-io:commons-io@2.6",
+        "pkgId": "commons-io:commons-io@2.6",
         "deps": []
       }
     ]
