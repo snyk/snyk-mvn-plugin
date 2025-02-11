@@ -72,6 +72,25 @@ const FIXTURES: Map<
         ],
       },
     },
+    '59eb84ee0d616332ff44aba065f3888cf002cd2d': {
+      res: { statusCode: 200 },
+      body: {
+        data: [
+          {
+            id: 'pkg:maven/one.gfw/jakarta.annotation-api@1.3.5',
+            type: 'package',
+          },
+          {
+            id: 'pkg:maven/jakarta.annotation/jakarta.annotation-api@1.3.5',
+            type: 'package',
+          },
+          {
+            id: 'pkg:maven/unrelated.name/jakarta.annotation-api@1.3.5',
+            type: 'package',
+          },
+        ],
+      },
+    },
   }),
 );
 

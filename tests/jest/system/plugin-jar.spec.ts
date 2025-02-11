@@ -82,6 +82,12 @@ test('inspect in directory with jars no target file and --scan-all-unmanaged arg
     options: { scanAllUnmanaged: true },
   }));
 
+test('inspect in directory with jar that resolves to three packages with only two matching no target file and --scan-all-unmanaged arg', async () =>
+  assertFixture({
+    fixtureDirectory: 'two-package-jar',
+    options: { scanAllUnmanaged: true },
+  }));
+
 test('inspect on target pom file in directory with jars and --scan-all-unmanaged arg', async () =>
   assertFixture({
     fixtureDirectory: 'jars',
@@ -136,7 +142,7 @@ test('inspect in directory with good and bad jars and --scan-all-unmanaged arg',
   expect(doesNotExist?.version).toEqual('unknown');
 });
 
-test('inspect in directory with jar with wrong package name and --scan-all-unmanaged arg', async () =>
+test('inspect in directory with jar with mismatched package name and --scan-all-unmanaged arg', async () =>
   assertFixture({
     fixtureDirectory: 'jar-wrong-package-name',
     options: { scanAllUnmanaged: true },
