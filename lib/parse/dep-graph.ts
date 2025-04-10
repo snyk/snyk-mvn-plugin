@@ -52,6 +52,9 @@ export function buildDepGraph(
       // use visited node when omited dependencies found (verbose)
       builder.addPkgNode(visited.pkgInfo, visited.id);
       builder.connectDep(parentNodeId, visited.id);
+      // If visited we have already added children to the queue to
+      // be processed no need to add again
+      continue;
     } else {
       builder.addPkgNode(parsed.pkgInfo, id);
       builder.connectDep(parentNodeId, id);
