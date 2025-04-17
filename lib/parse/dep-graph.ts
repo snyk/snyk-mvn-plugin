@@ -49,15 +49,18 @@ export function buildDepGraph(
 
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
     if (verboseEnabled && visited) {
-      // use visited node when omited dependencies found (verbose)
       builder.addPkgNode(visited.pkgInfo, visited.id);
       builder.connectDep(parentNodeId, visited.id);
+      // use visited node when omited dependencies found (verbose)
+
+      // Remember to push updated ancestry here
+      // queue.push(...getItems(visited.id, [...ancestry, visited.id], node));
     } else {
       builder.addPkgNode(parsed.pkgInfo, id);
       builder.connectDep(parentNodeId, id);
       visitedMap[parsed.key] = parsed;
+      // Remember to push updated ancestry here
     }
-    // Remember to push updated ancestry here
     queue.push(...getItems(id, [...ancestry, id], node));
   }
 
@@ -95,7 +98,7 @@ function parseId(id: string): DepInfo {
   const name = `${dep.groupId}:${dep.artifactId}`;
   return {
     id,
-    key: `${name}:${dep.type}${maybeClassifier}`,
+    key: `${name}:${dep.type}${maybeClassifier}:${dep.scope}`,
     pkgInfo: {
       name,
       version: dep.version,
