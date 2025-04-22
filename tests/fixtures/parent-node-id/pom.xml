@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example.scopetest</groupId>
+    <artifactId>scope-collision-test</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Scope Key Collision Test</name>
+    <description>
+        Tests scenario where the same dependency is reached via paths
+        with different scopes (compile vs runtime). An older key generation
+        (without scope) might incorrectly prune or misidentify nodes.
+    </description>
+
+    <properties>
+        <java.version>11</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- Dependency A: Direct compile dependency -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.30</version>
+            <scope>compile</scope> <!-- Explicit Compile Scope -->
+        </dependency>
+
+        <!-- Dependency B: Runtime dependency that transitively requires Dependency A -->
+        <!-- Logback-classic depends on slf4j-api (usually compile scope relative to logback) -->
+        <!-- but logback-classic itself is added here with runtime scope -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <!-- Using a version known to depend on slf4j-api 1.7.x -->
+            <version>1.2.10</version>
+            <scope>runtime</scope> <!-- Explicit Runtime Scope -->
+        </dependency>
+
+        <!-- Add another simple dependency just to make the graph slightly less trivial -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>
