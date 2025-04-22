@@ -54,7 +54,7 @@ export function buildDepGraph(
       // use visited node when omited dependencies found (verbose)
 
       // Remember to push updated ancestry here
-      // queue.push(...getItems(visited.id, [...ancestry, visited.id], node));
+      queue.push(...getItems(visited.id, [...ancestry, visited.id], node));
     } else {
       builder.addPkgNode(parsed.pkgInfo, id);
       builder.connectDep(parentNodeId, id);
