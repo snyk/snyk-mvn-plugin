@@ -60,8 +60,8 @@ export function buildDepGraph(
       builder.connectDep(parentNodeId, id);
       visitedMap[parsed.key] = parsed;
       // Remember to push updated ancestry here
+      queue.push(...getItems(id, [...ancestry, id], node));
     }
-    queue.push(...getItems(id, [...ancestry, id], node));
   }
 
   return builder.build();
