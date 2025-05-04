@@ -51,7 +51,7 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
-    "@snyk/cli-interface": "2.11.3",
+    "@snyk/cli-interface": "2.12.0",
     "@snyk/dep-graph": "^1.23.1",
     "debug": "^4.3.4",
     "glob": "^7.1.6",
