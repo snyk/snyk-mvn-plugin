@@ -64,6 +64,7 @@ function isVerbose(value: string): boolean {
     'omitted for conflict with',
     'omitted for duplicate',
     'scope not updated to compile',
+    'scope not updated to runtime',
     'scope not updated to test',
   ];
   for (const dverboseReason of dverboseReasons) {

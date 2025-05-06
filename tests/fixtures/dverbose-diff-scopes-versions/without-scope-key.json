@@ -38,13 +38,6 @@
         "name": "ch.qos.logback:logback-core",
         "version": "1.2.10"
       }
-    },
-    {
-      "id": "org.slf4j:slf4j-api@1.7.32",
-      "info": {
-        "name": "org.slf4j:slf4j-api",
-        "version": "1.7.32"
-      }
     }
   ],
   "graph": {
@@ -78,7 +71,7 @@
             "nodeId": "ch.qos.logback:logback-core:jar:1.2.10:runtime"
           },
           {
-            "nodeId": "org.slf4j:slf4j-api:jar:1.7.32:runtime"
+            "nodeId": "org.slf4j:slf4j-api:jar:1.7.30:compile"
           }
         ]
       },
@@ -90,11 +83,6 @@
       {
         "nodeId": "ch.qos.logback:logback-core:jar:1.2.10:runtime",
         "pkgId": "ch.qos.logback:logback-core@1.2.10",
-        "deps": []
-      },
-      {
-        "nodeId": "org.slf4j:slf4j-api:jar:1.7.32:runtime",
-        "pkgId": "org.slf4j:slf4j-api@1.7.32",
         "deps": []
       }
     ]

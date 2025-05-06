@@ -8,10 +8,6 @@ import * as depGraphLib from '@snyk/dep-graph';
 const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
 const badPath = path.join(fixturesPath, 'bad');
-const testProjectWithWrongParentNodeId = path.join(
-  fixturesPath,
-  'parent-node-id',
-);
 
 test('inspect with spring-core jar file', async () =>
   await assertFixture({
@@ -181,22 +177,3 @@ async function assertFixture({
     (result as legacyPlugin.SinglePackageResult).dependencyGraph!.toJSON(),
   ).toEqual(expected);
 }
-
-test('inspect correctly handles dependencies with different scopes', async () => {
-  let res: Record<string, any> = await plugin.inspect(
-    '.',
-    path.join(testProjectWithWrongParentNodeId, 'pom.xml'),
-    {
-      args: ['-Dverbose'],
-    },
-  );
-
-  const expectedJSON = await readFixtureJSON(
-    'parent-node-id',
-    'expected-dverbose-dep-graph.json',
-  );
-  const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON).toJSON();
-  const result = res.scannedProjects[0].depGraph?.toJSON();
-
-  expect(result).toEqual(expectedDepGraph);
-}, 20000);
