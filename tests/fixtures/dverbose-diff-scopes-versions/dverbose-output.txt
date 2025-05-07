@@ -1,0 +1,7 @@
+[INFO] digraph "com.example.scopetest:scope-collision-test:jar:1.0.0" { 
+[INFO]  "com.example.scopetest:scope-collision-test:jar:1.0.0" -> "org.slf4j:slf4j-api:jar:1.7.30:compile" ; 
+[INFO]  "com.example.scopetest:scope-collision-test:jar:1.0.0" -> "ch.qos.logback:logback-classic:jar:1.2.10:runtime" ; 
+[INFO]  "com.example.scopetest:scope-collision-test:jar:1.0.0" -> "commons-io:commons-io:jar:2.11.0:compile" ; 
+[INFO]  "ch.qos.logback:logback-classic:jar:1.2.10:runtime" -> "ch.qos.logback:logback-core:jar:1.2.10:runtime" ; 
+[INFO]  "ch.qos.logback:logback-classic:jar:1.2.10:runtime" -> "(org.slf4j:slf4j-api:jar:1.7.32:runtime - omitted for conflict with 1.7.30)" ; 
+[INFO]  }

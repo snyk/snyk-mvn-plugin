@@ -9,25 +9,36 @@ export function buildDepGraph(
   verboseEnabled = false,
 ): DepGraph {
   const { rootId, nodes } = mavenGraph;
+
+  return verboseEnabled
+    ? buildWithVerbose(rootId, nodes, includeTestScope)
+    : buildWithoutVerbose(rootId, nodes, includeTestScope);
+}
+
+export function buildWithoutVerbose(
+  rootId: string,
+  nodes: Record<string, MavenGraphNode>,
+  includeTestScope = false,
+): DepGraph {
   const parsedRoot = parseId(rootId);
   const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
   const visitedMap: Record<string, DepInfo> = {};
   const queue: QueueItem[] = [];
-  queue.push(...getItems(rootId, [], nodes[rootId]));
+  queue.push(...getItems(rootId, nodes[rootId]));
 
   // breadth first search
   while (queue.length > 0) {
     const item = queue.shift();
 
     if (!item) continue;
-    const { id, ancestry, parentId } = item;
+    const { id, parentId } = item;
     const parsed = parseId(id);
     const node = nodes[id];
     if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep) {
       continue;
     }
     const visited = visitedMap[parsed.key];
-    if (!verboseEnabled && visited) {
+    if (visited) {
       const prunedId = visited.id + ':pruned';
       builder.addPkgNode(visited.pkgInfo, prunedId, {
         labels: { pruned: 'true' },
@@ -36,9 +47,44 @@ export function buildDepGraph(
       continue; // don't queue any more children
     }
 
+    const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
+
+    builder.addPkgNode(parsed.pkgInfo, id);
+    builder.connectDep(parentNodeId, id);
+    visitedMap[parsed.key] = parsed;
+    queue.push(...getItems(id, node));
+  }
+
+  return builder.build();
+}
+
+export function buildWithVerbose(
+  rootId: string,
+  nodes: Record<string, MavenGraphNode>,
+  includeTestScope = false,
+): DepGraph {
+  const parsedRoot = parseId(rootId);
+  const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
+  const visitedMap: Record<string, DepInfo> = {};
+  const queue: QueueItemVerbose[] = [];
+  queue.push(...getVerboseItems(rootId, [], nodes[rootId]));
+
+  // breadth first search
+  while (queue.length > 0) {
+    const item = queue.shift();
+
+    if (!item) continue;
+    const { id, ancestry, parentId } = item;
+    const parsed = parseId(id, true);
+    const node = nodes[id];
+    if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep) {
+      continue;
+    }
+    const visited = visitedMap[parsed.key];
+
     // If verbose is enabled and our ancestry includes ourselves
     // we are cyclic and should be pruned :)
-    if (verboseEnabled && ancestry.includes(id)) {
+    if (ancestry.includes(id)) {
       const prunedId = visited.id + ':pruned-cycle';
       builder.addPkgNode(visited.pkgInfo, prunedId, {
         labels: { pruned: 'cyclic' },
@@ -48,19 +94,20 @@ export function buildDepGraph(
     }
 
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
-    if (verboseEnabled && visited) {
+    if (visited) {
       builder.addPkgNode(visited.pkgInfo, visited.id);
       builder.connectDep(parentNodeId, visited.id);
-      // use visited node when omited dependencies found (verbose)
 
-      // Remember to push updated ancestry here
-      queue.push(...getItems(visited.id, [...ancestry, visited.id], node));
+      // use visited node when omited dependencies found (verbose)
+      queue.push(
+        ...getVerboseItems(visited.id, [...ancestry, visited.id], node),
+      );
     } else {
       builder.addPkgNode(parsed.pkgInfo, id);
       builder.connectDep(parentNodeId, id);
       visitedMap[parsed.key] = parsed;
       // Remember to push updated ancestry here
-      queue.push(...getItems(id, [...ancestry, id], node));
+      queue.push(...getVerboseItems(id, [...ancestry, id], node));
     }
   }
 
@@ -69,16 +116,27 @@ export function buildDepGraph(
 
 interface QueueItem {
   id: string;
-  ancestry: string[]; // This is an easy trick to maintain ancestry at cost of space
   parentId: string;
 }
 
-function getItems(
+interface QueueItemVerbose extends QueueItem {
+  ancestry: string[]; // This is an easy trick to maintain ancestry at cost of space for the verbose algorithm
+}
+
+function getItems(parentId: string, node?: MavenGraphNode): QueueItem[] {
+  const items: QueueItem[] = [];
+  for (const id of node?.dependsOn || []) {
+    items.push({ id, parentId });
+  }
+  return items;
+}
+
+function getVerboseItems(
   parentId: string,
   ancestry: string[],
   node?: MavenGraphNode,
-): QueueItem[] {
-  const items: QueueItem[] = [];
+): QueueItemVerbose[] {
+  const items: QueueItemVerbose[] = [];
   for (const id of node?.dependsOn || []) {
     items.push({ id, ancestry, parentId });
   }
@@ -92,13 +150,15 @@ interface DepInfo {
   scope?: string; // maybe scope
 }
 
-function parseId(id: string): DepInfo {
+function parseId(id: string, verboseEnabled = false): DepInfo {
   const dep = parseDependency(id);
   const maybeClassifier = dep.classifier ? `:${dep.classifier}` : '';
   const name = `${dep.groupId}:${dep.artifactId}`;
   return {
     id,
-    key: `${name}:${dep.type}${maybeClassifier}:${dep.scope}`,
+    key: verboseEnabled
+      ? `${name}:${dep.type}${maybeClassifier}:${dep.scope}`
+      : `${name}:${dep.type}${maybeClassifier}`,
     pkgInfo: {
       name,
       version: dep.version,
