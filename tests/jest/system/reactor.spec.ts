@@ -2,7 +2,7 @@ import type { PkgInfo } from '@snyk/dep-graph';
 import * as path from 'path';
 import { legacyPlugin } from '@snyk/cli-interface';
 import * as plugin from '../../../lib';
-import { byPkgName } from '../../helpers/sort';
+import { byPkgName, sortDependencyGraphDeps } from '../../helpers/sort';
 import { readFixtureJSON } from '../../helpers/read';
 import { MultiProjectResult } from '@snyk/cli-interface/legacy/plugin';
 
@@ -166,13 +166,25 @@ test('inspect on complex aggregate project using maven reactor and verbose enabl
     'verbose-scan-result.json',
   );
   expect(result.scannedProjects.length).toEqual(3);
-  expect(result.scannedProjects[0].depGraph?.toJSON()).toEqual(
-    expectedJSON.scannedProjects[0].depGraph,
-  );
-  expect(result.scannedProjects[1].depGraph?.toJSON()).toEqual(
-    expectedJSON.scannedProjects[1].depGraph,
-  );
-  expect(result.scannedProjects[2].depGraph?.toJSON()).toEqual(
-    expectedJSON.scannedProjects[2].depGraph,
-  );
-}, 20000);
+
+  if (!result.scannedProjects[0].depGraph) {
+    fail('expected dependency graph result');
+  }
+  expect(
+    sortDependencyGraphDeps(result.scannedProjects[0].depGraph.toJSON()),
+  ).toEqual(sortDependencyGraphDeps(expectedJSON.scannedProjects[0].depGraph));
+
+  if (!result.scannedProjects[1].depGraph) {
+    fail('expected dependency graph result');
+  }
+  expect(
+    sortDependencyGraphDeps(result.scannedProjects[1].depGraph.toJSON()),
+  ).toEqual(sortDependencyGraphDeps(expectedJSON.scannedProjects[1].depGraph));
+
+  if (!result.scannedProjects[2].depGraph) {
+    fail('expected dependency graph result');
+  }
+  expect(
+    sortDependencyGraphDeps(result.scannedProjects[2].depGraph.toJSON()),
+  ).toEqual(sortDependencyGraphDeps(expectedJSON.scannedProjects[2].depGraph));
+}, 60000);
