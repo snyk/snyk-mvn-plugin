@@ -1,102 +1,95 @@
 {
-    "schemaVersion": "1.2.0",
-    "pkgManager": {
-      "name": "maven"
-    },
-    "pkgs": [
-      {
-        "id": "com.example.scopetest:scope-collision-test@1.0.0",
-        "info": {
-          "name": "com.example.scopetest:scope-collision-test",
-          "version": "1.0.0"
-        }
-      },
-      {
-        "id": "org.slf4j:slf4j-api@1.7.30",
-        "info": {
-          "name": "org.slf4j:slf4j-api",
-          "version": "1.7.30"
-        }
-      },
-      {
-        "id": "ch.qos.logback:logback-classic@1.2.10",
-        "info": {
-          "name": "ch.qos.logback:logback-classic",
-          "version": "1.2.10"
-        }
-      },
-      {
-        "id": "commons-io:commons-io@2.11.0",
-        "info": {
-          "name": "commons-io:commons-io",
-          "version": "2.11.0"
-        }
-      },
-      {
-        "id": "ch.qos.logback:logback-core@1.2.10",
-        "info": {
-          "name": "ch.qos.logback:logback-core",
-          "version": "1.2.10"
-        }
-      },
-      {
-        "id": "org.slf4j:slf4j-api@1.7.32",
-        "info": {
-          "name": "org.slf4j:slf4j-api",
-          "version": "1.7.32"
-        }
+  "schemaVersion": "1.2.0",
+  "pkgManager": {
+    "name": "maven"
+  },
+  "pkgs": [
+    {
+      "id": "com.example.scopetest:scope-collision-test@1.0.0",
+      "info": {
+        "name": "com.example.scopetest:scope-collision-test",
+        "version": "1.0.0"
       }
-    ],
-    "graph": {
-      "rootNodeId": "root-node",
-      "nodes": [
-        {
-          "nodeId": "root-node",
-          "pkgId": "com.example.scopetest:scope-collision-test@1.0.0",
-          "deps": [
-            {
-              "nodeId": "org.slf4j:slf4j-api:jar:1.7.30:compile"
-            },
-            {
-              "nodeId": "ch.qos.logback:logback-classic:jar:1.2.10:runtime"
-            },
-            {
-              "nodeId": "commons-io:commons-io:jar:2.11.0:compile"
-            }
-          ]
-        },
-        {
-          "nodeId": "org.slf4j:slf4j-api:jar:1.7.30:compile",
-          "pkgId": "org.slf4j:slf4j-api@1.7.30",
-          "deps": []
-        },
-        {
-          "nodeId": "ch.qos.logback:logback-classic:jar:1.2.10:runtime",
-          "pkgId": "ch.qos.logback:logback-classic@1.2.10",
-          "deps": [
-            {
-              "nodeId": "ch.qos.logback:logback-core:jar:1.2.10:runtime"
-            },
-            {
-              "nodeId": "org.slf4j:slf4j-api:jar:1.7.32:runtime"
-            }
-          ]
-        },
-        {
-          "nodeId": "commons-io:commons-io:jar:2.11.0:compile",
-          "pkgId": "commons-io:commons-io@2.11.0",
-          "deps": []
-        },
-        {
-          "nodeId": "ch.qos.logback:logback-core:jar:1.2.10:runtime",
-          "pkgId": "ch.qos.logback:logback-core@1.2.10",
-          "deps": []
-        },
-        {
-          "nodeId": "org.slf4j:slf4j-api:jar:1.7.32:runtime",
-          "pkgId": "org.slf4j:slf4j-api@1.7.32",
-          "deps": []
-        }
-      ]
+    },
+    {
+      "id": "org.slf4j:slf4j-api@1.7.30",
+      "info": {
+        "name": "org.slf4j:slf4j-api",
+        "version": "1.7.30"
+      }
+    },
+    {
+      "id": "ch.qos.logback:logback-classic@1.2.10",
+      "info": {
+        "name": "ch.qos.logback:logback-classic",
+        "version": "1.2.10"
+      }
+    },
+    {
+      "id": "commons-io:commons-io@2.11.0",
+      "info": {
+        "name": "commons-io:commons-io",
+        "version": "2.11.0"
+      }
+    },
+    {
+      "id": "ch.qos.logback:logback-core@1.2.10",
+      "info": {
+        "name": "ch.qos.logback:logback-core",
+        "version": "1.2.10"
+      }
     }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "com.example.scopetest:scope-collision-test@1.0.0",
+        "deps": [
+          {
+            "nodeId": "org.slf4j:slf4j-api:jar:1.7.30:compile"
+          },
+          {
+            "nodeId": "ch.qos.logback:logback-classic:jar:1.2.10:runtime"
+          },
+          {
+            "nodeId": "commons-io:commons-io:jar:2.11.0:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.slf4j:slf4j-api:jar:1.7.30:compile",
+        "pkgId": "org.slf4j:slf4j-api@1.7.30",
+        "deps": []
+      },
+      {
+        "nodeId": "org.slf4j:slf4j-api:jar:1.7.30:runtime",
+        "pkgId": "org.slf4j:slf4j-api@1.7.30",
+        "deps": []
+      },
+      {
+        "nodeId": "ch.qos.logback:logback-classic:jar:1.2.10:runtime",
+        "pkgId": "ch.qos.logback:logback-classic@1.2.10",
+        "deps": [
+          {
+            "nodeId": "ch.qos.logback:logback-core:jar:1.2.10:runtime"
+          },
+          {
+            "nodeId": "org.slf4j:slf4j-api:jar:1.7.30:runtime"
+          }
+        ]
+      },
+      {
+        "nodeId": "commons-io:commons-io:jar:2.11.0:compile",
+        "pkgId": "commons-io:commons-io@2.11.0",
+        "deps": []
+      },
+      {
+        "nodeId": "ch.qos.logback:logback-core:jar:1.2.10:runtime",
+        "pkgId": "ch.qos.logback:logback-core@1.2.10",
+        "deps": []
+      }
+    ]
   }
+}

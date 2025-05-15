@@ -1,5 +1,6 @@
-import type { MavenGraph } from './types';
+import type { MavenDependency, MavenGraph } from './types';
 import { MavenGraphBuilder } from './maven-graph-builder';
+import { buildDependencyString, parseDependency } from './dependency';
 
 const newLine = /[\r\n]+/g;
 
@@ -45,6 +46,21 @@ function findQuotedContents(value?: string): string | null {
   const start = value.indexOf('"') + 1;
   const end = value.lastIndexOf('"');
 
+  if (isVerboseVersionOmitted(value)) {
+    const [ommitedDep, conflictString] = value
+      .substring(start + (value[start] == '(' ? 1 : 0), end)
+      .split(/ [-(]/);
+    const resolvedVersion = conflictString
+      .split('omitted for conflict with ')[1]
+      .split(')')[0];
+    const parsedDep = parseDependency(ommitedDep);
+    const resolvedDep: MavenDependency = {
+      ...parsedDep,
+      version: resolvedVersion,
+    };
+    return buildDependencyString(resolvedDep);
+  }
+
   if (isVerbose(value)) {
     const [left] = value
       .substring(start + (value[start] == '(' ? 1 : 0), end)
@@ -61,12 +77,19 @@ function isVerbose(value: string): boolean {
   // https://github.com/apache/maven/blob/ab6ec5bd74af20ab429509eb56fc8e3dff4c7fc7/maven-core/src/main/java/org/apache/maven/internal/impl/DefaultNode.java#L113
   const dverboseReasons = [
     'version managed from',
-    'omitted for conflict with',
     'omitted for duplicate',
     'scope not updated to compile',
     'scope not updated to runtime',
     'scope not updated to test',
   ];
+  for (const dverboseReason of dverboseReasons) {
+    if (value.includes(dverboseReason)) return true;
+  }
+  return false;
+}
+
+function isVerboseVersionOmitted(value: string): boolean {
+  const dverboseReasons = ['omitted for conflict with'];
   for (const dverboseReason of dverboseReasons) {
     if (value.includes(dverboseReason)) return true;
   }

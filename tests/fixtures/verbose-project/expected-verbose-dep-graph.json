@@ -12,9 +12,107 @@
       }
     },
     {
+      "id": "axis:axis@1.4",
+      "info": {
+        "name": "axis:axis",
+        "version": "1.4"
+      }
+    },
+    {
+      "id": "org.springframework.boot:spring-boot-starter@2.7.15",
+      "info": {
+        "name": "org.springframework.boot:spring-boot-starter",
+        "version": "2.7.15"
+      }
+    },
+    {
       "id": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml@2.14.2",
       "info": {
         "name": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
+        "version": "2.14.2"
+      }
+    },
+    {
+      "id": "org.apache.axis:axis-jaxrpc@1.4",
+      "info": {
+        "name": "org.apache.axis:axis-jaxrpc",
+        "version": "1.4"
+      }
+    },
+    {
+      "id": "org.apache.axis:axis-saaj@1.4",
+      "info": {
+        "name": "org.apache.axis:axis-saaj",
+        "version": "1.4"
+      }
+    },
+    {
+      "id": "axis:axis-wsdl4j@1.5.1",
+      "info": {
+        "name": "axis:axis-wsdl4j",
+        "version": "1.5.1"
+      }
+    },
+    {
+      "id": "commons-logging:commons-logging@1.0.4",
+      "info": {
+        "name": "commons-logging:commons-logging",
+        "version": "1.0.4"
+      }
+    },
+    {
+      "id": "commons-discovery:commons-discovery@0.2",
+      "info": {
+        "name": "commons-discovery:commons-discovery",
+        "version": "0.2"
+      }
+    },
+    {
+      "id": "org.springframework.boot:spring-boot@2.7.15",
+      "info": {
+        "name": "org.springframework.boot:spring-boot",
+        "version": "2.7.15"
+      }
+    },
+    {
+      "id": "org.springframework.boot:spring-boot-autoconfigure@2.7.15",
+      "info": {
+        "name": "org.springframework.boot:spring-boot-autoconfigure",
+        "version": "2.7.15"
+      }
+    },
+    {
+      "id": "org.springframework.boot:spring-boot-starter-logging@2.7.15",
+      "info": {
+        "name": "org.springframework.boot:spring-boot-starter-logging",
+        "version": "2.7.15"
+      }
+    },
+    {
+      "id": "jakarta.annotation:jakarta.annotation-api@1.3.5",
+      "info": {
+        "name": "jakarta.annotation:jakarta.annotation-api",
+        "version": "1.3.5"
+      }
+    },
+    {
+      "id": "org.springframework:spring-core@5.3.29",
+      "info": {
+        "name": "org.springframework:spring-core",
+        "version": "5.3.29"
+      }
+    },
+    {
+      "id": "org.yaml:snakeyaml@1.30",
+      "info": {
+        "name": "org.yaml:snakeyaml",
+        "version": "1.30"
+      }
+    },
+    {
+      "id": "com.fasterxml.jackson.core:jackson-databind@2.14.2",
+      "info": {
+        "name": "com.fasterxml.jackson.core:jackson-databind",
         "version": "2.14.2"
       }
     },
@@ -26,101 +124,10 @@
       }
     },
     {
-      "id": "org.yaml:snakeyaml@1.33",
+      "id": "org.springframework:spring-context@5.3.29",
       "info": {
-        "name": "org.yaml:snakeyaml",
-        "version": "1.33"
-      }
-    },
-    {
-      "id": "com.fasterxml.jackson.core:jackson-databind@2.14.2",
-      "info": {
-        "name": "com.fasterxml.jackson.core:jackson-databind",
-        "version": "2.14.2"
-      }
-    },
-    {
-      "id": "com.fasterxml.jackson.core:jackson-annotations@2.14.2",
-      "info": {
-        "name": "com.fasterxml.jackson.core:jackson-annotations",
-        "version": "2.14.2"
-      }
-    },
-    {
-      "id": "org.springframework.boot:spring-boot-starter@2.7.15",
-      "info": {
-        "name": "org.springframework.boot:spring-boot-starter",
-        "version": "2.7.15"
-      }
-    },
-    {
-      "id": "org.yaml:snakeyaml@1.30",
-      "info": {
-        "name": "org.yaml:snakeyaml",
-        "version": "1.30"
-      }
-    },
-    {
-      "id": "org.springframework:spring-core@5.3.29",
-      "info": {
-        "name": "org.springframework:spring-core",
+        "name": "org.springframework:spring-context",
         "version": "5.3.29"
-      }
-    },
-    {
-      "id": "org.springframework:spring-jcl@5.3.29",
-      "info": {
-        "name": "org.springframework:spring-jcl",
-        "version": "5.3.29"
-      }
-    },
-    {
-      "id": "jakarta.annotation:jakarta.annotation-api@1.3.5",
-      "info": {
-        "name": "jakarta.annotation:jakarta.annotation-api",
-        "version": "1.3.5"
-      }
-    },
-    {
-      "id": "org.springframework.boot:spring-boot-starter-logging@2.7.15",
-      "info": {
-        "name": "org.springframework.boot:spring-boot-starter-logging",
-        "version": "2.7.15"
-      }
-    },
-    {
-      "id": "org.slf4j:jul-to-slf4j@1.7.36",
-      "info": {
-        "name": "org.slf4j:jul-to-slf4j",
-        "version": "1.7.36"
-      }
-    },
-    {
-      "id": "org.slf4j:slf4j-api@1.7.36",
-      "info": {
-        "name": "org.slf4j:slf4j-api",
-        "version": "1.7.36"
-      }
-    },
-    {
-      "id": "org.apache.logging.log4j:log4j-to-slf4j@2.17.2",
-      "info": {
-        "name": "org.apache.logging.log4j:log4j-to-slf4j",
-        "version": "2.17.2"
-      }
-    },
-    {
-      "id": "org.apache.logging.log4j:log4j-api@2.17.2",
-      "info": {
-        "name": "org.apache.logging.log4j:log4j-api",
-        "version": "2.17.2"
-      }
-    },
-    {
-      "id": "org.slf4j:slf4j-api@1.7.35",
-      "info": {
-        "name": "org.slf4j:slf4j-api",
-        "version": "1.7.35"
       }
     },
     {
@@ -131,44 +138,37 @@
       }
     },
     {
-      "id": "org.slf4j:slf4j-api@1.7.32",
+      "id": "org.apache.logging.log4j:log4j-to-slf4j@2.17.2",
       "info": {
-        "name": "org.slf4j:slf4j-api",
-        "version": "1.7.32"
+        "name": "org.apache.logging.log4j:log4j-to-slf4j",
+        "version": "2.17.2"
       }
     },
     {
-      "id": "ch.qos.logback:logback-core@1.2.12",
+      "id": "org.slf4j:jul-to-slf4j@1.7.36",
       "info": {
-        "name": "ch.qos.logback:logback-core",
-        "version": "1.2.12"
+        "name": "org.slf4j:jul-to-slf4j",
+        "version": "1.7.36"
       }
     },
     {
-      "id": "org.springframework.boot:spring-boot-autoconfigure@2.7.15",
+      "id": "org.springframework:spring-jcl@5.3.29",
       "info": {
-        "name": "org.springframework.boot:spring-boot-autoconfigure",
-        "version": "2.7.15"
-      }
-    },
-    {
-      "id": "org.springframework.boot:spring-boot@2.7.15",
-      "info": {
-        "name": "org.springframework.boot:spring-boot",
-        "version": "2.7.15"
-      }
-    },
-    {
-      "id": "org.springframework:spring-context@5.3.29",
-      "info": {
-        "name": "org.springframework:spring-context",
+        "name": "org.springframework:spring-jcl",
         "version": "5.3.29"
       }
     },
     {
-      "id": "org.springframework:spring-expression@5.3.29",
+      "id": "com.fasterxml.jackson.core:jackson-annotations@2.14.2",
       "info": {
-        "name": "org.springframework:spring-expression",
+        "name": "com.fasterxml.jackson.core:jackson-annotations",
+        "version": "2.14.2"
+      }
+    },
+    {
+      "id": "org.springframework:spring-aop@5.3.29",
+      "info": {
+        "name": "org.springframework:spring-aop",
         "version": "5.3.29"
       }
     },
@@ -180,59 +180,31 @@
       }
     },
     {
-      "id": "org.springframework:spring-aop@5.3.29",
+      "id": "org.springframework:spring-expression@5.3.29",
       "info": {
-        "name": "org.springframework:spring-aop",
+        "name": "org.springframework:spring-expression",
         "version": "5.3.29"
       }
     },
     {
-      "id": "axis:axis@1.4",
+      "id": "ch.qos.logback:logback-core@1.2.12",
       "info": {
-        "name": "axis:axis",
-        "version": "1.4"
+        "name": "ch.qos.logback:logback-core",
+        "version": "1.2.12"
       }
     },
     {
-      "id": "commons-discovery:commons-discovery@0.2",
+      "id": "org.slf4j:slf4j-api@1.7.32",
       "info": {
-        "name": "commons-discovery:commons-discovery",
-        "version": "0.2"
+        "name": "org.slf4j:slf4j-api",
+        "version": "1.7.32"
       }
     },
     {
-      "id": "commons-logging:commons-logging@1.0.3",
+      "id": "org.apache.logging.log4j:log4j-api@2.17.2",
       "info": {
-        "name": "commons-logging:commons-logging",
-        "version": "1.0.3"
-      }
-    },
-    {
-      "id": "commons-logging:commons-logging@1.0.4",
-      "info": {
-        "name": "commons-logging:commons-logging",
-        "version": "1.0.4"
-      }
-    },
-    {
-      "id": "axis:axis-wsdl4j@1.5.1",
-      "info": {
-        "name": "axis:axis-wsdl4j",
-        "version": "1.5.1"
-      }
-    },
-    {
-      "id": "org.apache.axis:axis-saaj@1.4",
-      "info": {
-        "name": "org.apache.axis:axis-saaj",
-        "version": "1.4"
-      }
-    },
-    {
-      "id": "org.apache.axis:axis-jaxrpc@1.4",
-      "info": {
-        "name": "org.apache.axis:axis-jaxrpc",
-        "version": "1.4"
+        "name": "org.apache.logging.log4j:log4j-api",
+        "version": "2.17.2"
       }
     }
   ],
@@ -244,13 +216,58 @@
         "pkgId": "io.snyk.example:verbose-project@1.0-SNAPSHOT",
         "deps": [
           {
-            "nodeId": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.14.2:compile"
+            "nodeId": "axis:axis:jar:1.4:compile"
           },
           {
             "nodeId": "org.springframework.boot:spring-boot-starter:jar:2.7.15:compile"
           },
           {
-            "nodeId": "axis:axis:jar:1.4:compile"
+            "nodeId": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.14.2:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "axis:axis:jar:1.4:compile",
+        "pkgId": "axis:axis@1.4",
+        "deps": [
+          {
+            "nodeId": "org.apache.axis:axis-jaxrpc:jar:1.4:compile"
+          },
+          {
+            "nodeId": "org.apache.axis:axis-saaj:jar:1.4:compile"
+          },
+          {
+            "nodeId": "axis:axis-wsdl4j:jar:1.5.1:runtime"
+          },
+          {
+            "nodeId": "commons-logging:commons-logging:jar:1.0.4:runtime"
+          },
+          {
+            "nodeId": "commons-discovery:commons-discovery:jar:0.2:runtime"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.springframework.boot:spring-boot-starter:jar:2.7.15:compile",
+        "pkgId": "org.springframework.boot:spring-boot-starter@2.7.15",
+        "deps": [
+          {
+            "nodeId": "org.springframework.boot:spring-boot:jar:2.7.15:compile"
+          },
+          {
+            "nodeId": "org.springframework.boot:spring-boot-autoconfigure:jar:2.7.15:compile"
+          },
+          {
+            "nodeId": "org.springframework.boot:spring-boot-starter-logging:jar:2.7.15:compile"
+          },
+          {
+            "nodeId": "jakarta.annotation:jakarta.annotation-api:jar:1.3.5:compile"
+          },
+          {
+            "nodeId": "org.springframework:spring-core:jar:5.3.29:compile"
+          },
+          {
+            "nodeId": "org.yaml:snakeyaml:jar:1.30:compile"
           }
         ]
       },
@@ -259,70 +276,84 @@
         "pkgId": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml@2.14.2",
         "deps": [
           {
-            "nodeId": "com.fasterxml.jackson.core:jackson-core:jar:2.14.2:compile"
-          },
-          {
-            "nodeId": "org.yaml:snakeyaml:jar:1.33:compile"
-          },
-          {
             "nodeId": "com.fasterxml.jackson.core:jackson-databind:jar:2.14.2:compile"
-          }
-        ]
-      },
-      {
-        "nodeId": "com.fasterxml.jackson.core:jackson-core:jar:2.14.2:compile",
-        "pkgId": "com.fasterxml.jackson.core:jackson-core@2.14.2",
-        "deps": []
-      },
-      {
-        "nodeId": "org.yaml:snakeyaml:jar:1.33:compile",
-        "pkgId": "org.yaml:snakeyaml@1.33",
-        "deps": []
-      },
-      {
-        "nodeId": "com.fasterxml.jackson.core:jackson-databind:jar:2.14.2:compile",
-        "pkgId": "com.fasterxml.jackson.core:jackson-databind@2.14.2",
-        "deps": [
-          {
-            "nodeId": "com.fasterxml.jackson.core:jackson-core:jar:2.14.2:compile"
           },
-          {
-            "nodeId": "com.fasterxml.jackson.core:jackson-annotations:jar:2.14.2:compile"
-          }
-        ]
-      },
-      {
-        "nodeId": "com.fasterxml.jackson.core:jackson-annotations:jar:2.14.2:compile",
-        "pkgId": "com.fasterxml.jackson.core:jackson-annotations@2.14.2",
-        "deps": []
-      },
-      {
-        "nodeId": "org.springframework.boot:spring-boot-starter:jar:2.7.15:compile",
-        "pkgId": "org.springframework.boot:spring-boot-starter@2.7.15",
-        "deps": [
           {
             "nodeId": "org.yaml:snakeyaml:jar:1.30:compile"
           },
           {
+            "nodeId": "com.fasterxml.jackson.core:jackson-core:jar:2.14.2:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.apache.axis:axis-jaxrpc:jar:1.4:compile",
+        "pkgId": "org.apache.axis:axis-jaxrpc@1.4",
+        "deps": []
+      },
+      {
+        "nodeId": "org.apache.axis:axis-saaj:jar:1.4:compile",
+        "pkgId": "org.apache.axis:axis-saaj@1.4",
+        "deps": []
+      },
+      {
+        "nodeId": "axis:axis-wsdl4j:jar:1.5.1:runtime",
+        "pkgId": "axis:axis-wsdl4j@1.5.1",
+        "deps": []
+      },
+      {
+        "nodeId": "commons-logging:commons-logging:jar:1.0.4:runtime",
+        "pkgId": "commons-logging:commons-logging@1.0.4",
+        "deps": []
+      },
+      {
+        "nodeId": "commons-discovery:commons-discovery:jar:0.2:runtime",
+        "pkgId": "commons-discovery:commons-discovery@0.2",
+        "deps": [
+          {
+            "nodeId": "commons-logging:commons-logging:jar:1.0.4:runtime"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.springframework.boot:spring-boot:jar:2.7.15:compile",
+        "pkgId": "org.springframework.boot:spring-boot@2.7.15",
+        "deps": [
+          {
             "nodeId": "org.springframework:spring-core:jar:5.3.29:compile"
           },
           {
-            "nodeId": "jakarta.annotation:jakarta.annotation-api:jar:1.3.5:compile"
-          },
-          {
-            "nodeId": "org.springframework.boot:spring-boot-starter-logging:jar:2.7.15:compile"
-          },
-          {
-            "nodeId": "org.springframework.boot:spring-boot-autoconfigure:jar:2.7.15:compile"
-          },
+            "nodeId": "org.springframework:spring-context:jar:5.3.29:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.springframework.boot:spring-boot-autoconfigure:jar:2.7.15:compile",
+        "pkgId": "org.springframework.boot:spring-boot-autoconfigure@2.7.15",
+        "deps": [
           {
             "nodeId": "org.springframework.boot:spring-boot:jar:2.7.15:compile"
           }
         ]
       },
       {
-        "nodeId": "org.yaml:snakeyaml:jar:1.30:compile",
-        "pkgId": "org.yaml:snakeyaml@1.30",
+        "nodeId": "org.springframework.boot:spring-boot-starter-logging:jar:2.7.15:compile",
+        "pkgId": "org.springframework.boot:spring-boot-starter-logging@2.7.15",
+        "deps": [
+          {
+            "nodeId": "ch.qos.logback:logback-classic:jar:1.2.12:compile"
+          },
+          {
+            "nodeId": "org.apache.logging.log4j:log4j-to-slf4j:jar:2.17.2:compile"
+          },
+          {
+            "nodeId": "org.slf4j:jul-to-slf4j:jar:1.7.36:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "jakarta.annotation:jakarta.annotation-api:jar:1.3.5:compile",
+        "pkgId": "jakarta.annotation:jakarta.annotation-api@1.3.5",
         "deps": []
       },
       {
@@ -335,27 +366,66 @@
         ]
       },
       {
-        "nodeId": "org.springframework:spring-jcl:jar:5.3.29:compile",
-        "pkgId": "org.springframework:spring-jcl@5.3.29",
+        "nodeId": "org.yaml:snakeyaml:jar:1.30:compile",
+        "pkgId": "org.yaml:snakeyaml@1.30",
         "deps": []
       },
       {
-        "nodeId": "jakarta.annotation:jakarta.annotation-api:jar:1.3.5:compile",
-        "pkgId": "jakarta.annotation:jakarta.annotation-api@1.3.5",
-        "deps": []
-      },
-      {
-        "nodeId": "org.springframework.boot:spring-boot-starter-logging:jar:2.7.15:compile",
-        "pkgId": "org.springframework.boot:spring-boot-starter-logging@2.7.15",
+        "nodeId": "com.fasterxml.jackson.core:jackson-databind:jar:2.14.2:compile",
+        "pkgId": "com.fasterxml.jackson.core:jackson-databind@2.14.2",
         "deps": [
           {
-            "nodeId": "org.slf4j:jul-to-slf4j:jar:1.7.36:compile"
+            "nodeId": "com.fasterxml.jackson.core:jackson-annotations:jar:2.14.2:compile"
           },
           {
-            "nodeId": "org.apache.logging.log4j:log4j-to-slf4j:jar:2.17.2:compile"
+            "nodeId": "com.fasterxml.jackson.core:jackson-core:jar:2.14.2:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "com.fasterxml.jackson.core:jackson-core:jar:2.14.2:compile",
+        "pkgId": "com.fasterxml.jackson.core:jackson-core@2.14.2",
+        "deps": []
+      },
+      {
+        "nodeId": "org.springframework:spring-context:jar:5.3.29:compile",
+        "pkgId": "org.springframework:spring-context@5.3.29",
+        "deps": [
+          {
+            "nodeId": "org.springframework:spring-aop:jar:5.3.29:compile"
           },
           {
-            "nodeId": "ch.qos.logback:logback-classic:jar:1.2.12:compile"
+            "nodeId": "org.springframework:spring-beans:jar:5.3.29:compile"
+          },
+          {
+            "nodeId": "org.springframework:spring-core:jar:5.3.29:compile"
+          },
+          {
+            "nodeId": "org.springframework:spring-expression:jar:5.3.29:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "ch.qos.logback:logback-classic:jar:1.2.12:compile",
+        "pkgId": "ch.qos.logback:logback-classic@1.2.12",
+        "deps": [
+          {
+            "nodeId": "ch.qos.logback:logback-core:jar:1.2.12:compile"
+          },
+          {
+            "nodeId": "org.slf4j:slf4j-api:jar:1.7.32:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.apache.logging.log4j:log4j-to-slf4j:jar:2.17.2:compile",
+        "pkgId": "org.apache.logging.log4j:log4j-to-slf4j@2.17.2",
+        "deps": [
+          {
+            "nodeId": "org.slf4j:slf4j-api:jar:1.7.32:compile"
+          },
+          {
+            "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile"
           }
         ]
       },
@@ -364,102 +434,27 @@
         "pkgId": "org.slf4j:jul-to-slf4j@1.7.36",
         "deps": [
           {
-            "nodeId": "org.slf4j:slf4j-api:jar:1.7.36:compile"
-          }
-        ]
-      },
-      {
-        "nodeId": "org.slf4j:slf4j-api:jar:1.7.36:compile",
-        "pkgId": "org.slf4j:slf4j-api@1.7.36",
-        "deps": []
-      },
-      {
-        "nodeId": "org.apache.logging.log4j:log4j-to-slf4j:jar:2.17.2:compile",
-        "pkgId": "org.apache.logging.log4j:log4j-to-slf4j@2.17.2",
-        "deps": [
-          {
-            "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile"
-          },
-          {
-            "nodeId": "org.slf4j:slf4j-api:jar:1.7.35:compile"
-          }
-        ]
-      },
-      {
-        "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile",
-        "pkgId": "org.apache.logging.log4j:log4j-api@2.17.2",
-        "deps": []
-      },
-      {
-        "nodeId": "org.slf4j:slf4j-api:jar:1.7.35:compile",
-        "pkgId": "org.slf4j:slf4j-api@1.7.35",
-        "deps": []
-      },
-      {
-        "nodeId": "ch.qos.logback:logback-classic:jar:1.2.12:compile",
-        "pkgId": "ch.qos.logback:logback-classic@1.2.12",
-        "deps": [
-          {
             "nodeId": "org.slf4j:slf4j-api:jar:1.7.32:compile"
-          },
-          {
-            "nodeId": "ch.qos.logback:logback-core:jar:1.2.12:compile"
           }
         ]
       },
       {
-        "nodeId": "org.slf4j:slf4j-api:jar:1.7.32:compile",
-        "pkgId": "org.slf4j:slf4j-api@1.7.32",
+        "nodeId": "org.springframework:spring-jcl:jar:5.3.29:compile",
+        "pkgId": "org.springframework:spring-jcl@5.3.29",
         "deps": []
       },
       {
-        "nodeId": "ch.qos.logback:logback-core:jar:1.2.12:compile",
-        "pkgId": "ch.qos.logback:logback-core@1.2.12",
+        "nodeId": "com.fasterxml.jackson.core:jackson-annotations:jar:2.14.2:compile",
+        "pkgId": "com.fasterxml.jackson.core:jackson-annotations@2.14.2",
         "deps": []
       },
       {
-        "nodeId": "org.springframework.boot:spring-boot-autoconfigure:jar:2.7.15:compile",
-        "pkgId": "org.springframework.boot:spring-boot-autoconfigure@2.7.15",
+        "nodeId": "org.springframework:spring-aop:jar:5.3.29:compile",
+        "pkgId": "org.springframework:spring-aop@5.3.29",
         "deps": [
-          {
-            "nodeId": "org.springframework.boot:spring-boot:jar:2.7.15:compile"
-          }
-        ]
-      },
-      {
-        "nodeId": "org.springframework.boot:spring-boot:jar:2.7.15:compile",
-        "pkgId": "org.springframework.boot:spring-boot@2.7.15",
-        "deps": [
-          {
-            "nodeId": "org.springframework:spring-context:jar:5.3.29:compile"
-          },
-          {
-            "nodeId": "org.springframework:spring-core:jar:5.3.29:compile"
-          }
-        ]
-      },
-      {
-        "nodeId": "org.springframework:spring-context:jar:5.3.29:compile",
-        "pkgId": "org.springframework:spring-context@5.3.29",
-        "deps": [
-          {
-            "nodeId": "org.springframework:spring-expression:jar:5.3.29:compile"
-          },
-          {
-            "nodeId": "org.springframework:spring-core:jar:5.3.29:compile"
-          },
           {
             "nodeId": "org.springframework:spring-beans:jar:5.3.29:compile"
           },
-          {
-            "nodeId": "org.springframework:spring-aop:jar:5.3.29:compile"
-          }
-        ]
-      },
-      {
-        "nodeId": "org.springframework:spring-expression:jar:5.3.29:compile",
-        "pkgId": "org.springframework:spring-expression@5.3.29",
-        "deps": [
           {
             "nodeId": "org.springframework:spring-core:jar:5.3.29:compile"
           }
@@ -475,70 +470,27 @@
         ]
       },
       {
-        "nodeId": "org.springframework:spring-aop:jar:5.3.29:compile",
-        "pkgId": "org.springframework:spring-aop@5.3.29",
+        "nodeId": "org.springframework:spring-expression:jar:5.3.29:compile",
+        "pkgId": "org.springframework:spring-expression@5.3.29",
         "deps": [
           {
             "nodeId": "org.springframework:spring-core:jar:5.3.29:compile"
-          },
-          {
-            "nodeId": "org.springframework:spring-beans:jar:5.3.29:compile"
           }
         ]
       },
       {
-        "nodeId": "axis:axis:jar:1.4:compile",
-        "pkgId": "axis:axis@1.4",
-        "deps": [
-          {
-            "nodeId": "commons-discovery:commons-discovery:jar:0.2:runtime"
-          },
-          {
-            "nodeId": "commons-logging:commons-logging:jar:1.0.4:runtime"
-          },
-          {
-            "nodeId": "axis:axis-wsdl4j:jar:1.5.1:runtime"
-          },
-          {
-            "nodeId": "org.apache.axis:axis-saaj:jar:1.4:compile"
-          },
-          {
-            "nodeId": "org.apache.axis:axis-jaxrpc:jar:1.4:compile"
-          }
-        ]
-      },
-      {
-        "nodeId": "commons-discovery:commons-discovery:jar:0.2:runtime",
-        "pkgId": "commons-discovery:commons-discovery@0.2",
-        "deps": [
-          {
-            "nodeId": "commons-logging:commons-logging:jar:1.0.3:runtime"
-          }
-        ]
-      },
-      {
-        "nodeId": "commons-logging:commons-logging:jar:1.0.3:runtime",
-        "pkgId": "commons-logging:commons-logging@1.0.3",
+        "nodeId": "ch.qos.logback:logback-core:jar:1.2.12:compile",
+        "pkgId": "ch.qos.logback:logback-core@1.2.12",
         "deps": []
       },
       {
-        "nodeId": "commons-logging:commons-logging:jar:1.0.4:runtime",
-        "pkgId": "commons-logging:commons-logging@1.0.4",
+        "nodeId": "org.slf4j:slf4j-api:jar:1.7.32:compile",
+        "pkgId": "org.slf4j:slf4j-api@1.7.32",
         "deps": []
       },
       {
-        "nodeId": "axis:axis-wsdl4j:jar:1.5.1:runtime",
-        "pkgId": "axis:axis-wsdl4j@1.5.1",
-        "deps": []
-      },
-      {
-        "nodeId": "org.apache.axis:axis-saaj:jar:1.4:compile",
-        "pkgId": "org.apache.axis:axis-saaj@1.4",
-        "deps": []
-      },
-      {
-        "nodeId": "org.apache.axis:axis-jaxrpc:jar:1.4:compile",
-        "pkgId": "org.apache.axis:axis-jaxrpc@1.4",
+        "nodeId": "org.apache.logging.log4j:log4j-api:jar:2.17.2:compile",
+        "pkgId": "org.apache.logging.log4j:log4j-api@2.17.2",
         "deps": []
       }
     ]

@@ -52,6 +52,28 @@ export function parseDependency(value: unknown): MavenDependency {
   }
 }
 
+export function buildDependencyString(dependency: MavenDependency): string {
+  const parts: string[] = [
+    formatMavenPart(dependency.groupId),
+    formatMavenPart(dependency.artifactId),
+    formatMavenPart(dependency.type),
+    formatMavenPart(dependency.version),
+  ];
+
+  if (dependency.scope) {
+    parts.push(formatMavenPart(dependency.scope));
+  }
+  if (dependency.classifier) {
+    parts.splice(3, 0, formatMavenPart(dependency.classifier));
+  }
+
+  return parts.join(':');
+}
+
 function getPart(parts: string[], index: number): string {
   return parts[index] || UNKNOWN;
+}
+
+function formatMavenPart(part: string): string {
+  return part == UNKNOWN ? '' : part;
 }

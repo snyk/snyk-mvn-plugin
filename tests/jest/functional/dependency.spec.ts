@@ -1,4 +1,8 @@
-import { parseDependency } from '../../../lib/parse/dependency';
+import {
+  buildDependencyString,
+  parseDependency,
+} from '../../../lib/parse/dependency';
+import { MavenDependency } from '../../../lib/parse/types';
 
 test('parseDependency returns expected object when input has 4 parts', async () => {
   expect(parseDependency('com.example:my-app:jar:1.2.3')).toEqual({
@@ -68,5 +72,66 @@ test('parseDependency returns unknown when input is not a string', async () => {
     artifactId: 'unknown',
     type: 'unknown',
     version: 'unknown',
+  });
+});
+
+describe('buildDependencyString', () => {
+  it('should build a string with groupId, artifactId, type, and version', () => {
+    const dependency: MavenDependency = {
+      groupId: 'com.example',
+      artifactId: 'my-app',
+      type: 'jar',
+      version: '1.2.3',
+    };
+    const result = buildDependencyString(dependency);
+    expect(result).toEqual('com.example:my-app:jar:1.2.3');
+  });
+
+  it('should include scope if provided', () => {
+    const dependency: MavenDependency = {
+      groupId: 'com.example',
+      artifactId: 'my-app',
+      type: 'jar',
+      version: '1.2.3',
+      scope: 'compile',
+    };
+    const result = buildDependencyString(dependency);
+    expect(result).toEqual('com.example:my-app:jar:1.2.3:compile');
+  });
+
+  it('should include classifier before version if provided', () => {
+    const dependency: MavenDependency = {
+      groupId: 'com.example',
+      artifactId: 'my-app',
+      type: 'jar',
+      version: '1.2.3',
+      classifier: 'jdk8',
+    };
+    const result = buildDependencyString(dependency);
+    expect(result).toEqual('com.example:my-app:jar:jdk8:1.2.3');
+  });
+
+  it('should include both classifier and scope if provided', () => {
+    const dependency: MavenDependency = {
+      groupId: 'com.example',
+      artifactId: 'my-app',
+      type: 'jar',
+      version: '1.2.3',
+      classifier: 'jdk8',
+      scope: 'compile',
+    };
+    const result = buildDependencyString(dependency);
+    expect(result).toEqual('com.example:my-app:jar:jdk8:1.2.3:compile');
+  });
+
+  it('should handle unknown fields and only valid vaersion', () => {
+    const dependency: MavenDependency = {
+      groupId: 'unknown',
+      artifactId: 'unknown',
+      type: 'unknown',
+      version: '1.2.3',
+    };
+    const result = buildDependencyString(dependency);
+    expect(result).toEqual(':::1.2.3');
   });
 });
