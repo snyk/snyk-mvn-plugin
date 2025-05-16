@@ -26,13 +26,6 @@
       }
     },
     {
-      "id": "commons-logging:commons-logging@1.0.3",
-      "info": {
-        "name": "commons-logging:commons-logging",
-        "version": "1.0.3"
-      }
-    },
-    {
       "id": "commons-logging:commons-logging@1.0.4",
       "info": {
         "name": "commons-logging:commons-logging",
@@ -99,14 +92,9 @@
         "pkgId": "commons-discovery:commons-discovery@0.2",
         "deps": [
           {
-            "nodeId": "commons-logging:commons-logging:jar:1.0.3:runtime"
+            "nodeId": "commons-logging:commons-logging:jar:1.0.4:runtime"
           }
         ]
-      },
-      {
-        "nodeId": "commons-logging:commons-logging:jar:1.0.3:runtime",
-        "pkgId": "commons-logging:commons-logging@1.0.3",
-        "deps": []
       },
       {
         "nodeId": "commons-logging:commons-logging:jar:1.0.4:runtime",
