@@ -14,7 +14,7 @@
     "dist"
   ],
   "engines": {
-    "node": "^18"
+    "node": "^20"
   },
   "scripts": {
     "build": "tsc",
@@ -56,7 +56,7 @@
     "debug": "^4.3.4",
     "glob": "^7.1.6",
     "packageurl-js": "^1.0.0",
-    "shescape": "1.6.1",
+    "shescape": "2.1.2",
     "tslib": "^2.4.0"
   }
 }

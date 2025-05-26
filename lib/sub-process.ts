@@ -1,6 +1,6 @@
 import * as childProcess from 'child_process';
 import { debug } from './index';
-import { quoteAll } from 'shescape';
+import { quoteAll } from 'shescape/stateless';
 
 export function execute(command, args, options): Promise<string> {
   const spawnOptions: {
@@ -12,7 +12,7 @@ export function execute(command, args, options): Promise<string> {
     spawnOptions.cwd = options.cwd;
   }
   if (args) {
-    args = quoteAll(args, spawnOptions);
+    args = quoteAll(args, { ...spawnOptions, flagProtection: false });
   }
 
   // Before spawning an external process, we look if we need to restore the system proxy configuration,
