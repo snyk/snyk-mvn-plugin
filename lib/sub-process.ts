@@ -12,21 +12,11 @@ export function execute(command, args, options): Promise<string> {
     spawnOptions.cwd = options.cwd;
   }
   if (args) {
-    args = quoteAll(args, { ...spawnOptions, flagProtection: false });
-
-    // From version 1.7.2 shescape started adding backslashes to PowerShell quotes, and later also caret-escapes (^),
-    // both confuses newer versions (3.6.3+) of Maven, and causes it to fail hard, where earlier versions didn't mind.
-    // This should not be done on --file arguments and is therefore explicitly removed here.
-    // See this commit for more details: https://github.com/ericcornelissen/shescape/releases/tag/v1.7.2
-    // It's quite possible this will have to be extended to other arguments, but so far in my investigation
-    // only the --file argument has caused Maven to complain.
-    args = args.map((s: string) =>
-      s.startsWith('--file=') ? s.replace(/\\\^/g, '') : s,
-    );
+    args = quoteAll(args, { flagProtection: false });
   }
 
   // Before spawning an external process, we look if we need to restore the system proxy configuration,
-  // which overides the cli internal proxy configuration.
+  // which overrides the cli internal proxy configuration.
   if (process.env.SNYK_SYSTEM_HTTP_PROXY !== undefined) {
     spawnOptions.env.HTTP_PROXY = process.env.SNYK_SYSTEM_HTTP_PROXY;
   }

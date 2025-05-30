@@ -228,7 +228,7 @@ test('inspect on pom that logs an error but succeeds', async (t) => {
 
 test('inspect on mvn error', async (t) => {
   const targetFile = path.join(fixturesPath, 'bad', 'pom.xml');
-  const fullCommand = `mvn dependency:tree -DoutputType=dot --batch-mode --non-recursive --file="${targetFile}"`;
+  const fullCommand = `mvn dependency:tree -DoutputType=dot --batch-mode --non-recursive --file=${targetFile}`;
   try {
     await plugin.inspect('.', targetFile, {
       dev: true,
