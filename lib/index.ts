@@ -257,9 +257,9 @@ export function buildArgs(
     // if we are where we can execute - we preserve the original path;
     // if not - we rely on the executor (mvnw) to be spawned at the closest directory, leaving us w/ the file itself
     if (rootPath === executionPath) {
-      args.push(`--file=${targetFile}`);
+      args.push(`--file="${targetFile}"`);
     } else {
-      args.push(`--file=${path.basename(targetFile)}`);
+      args.push(`--file="${path.basename(targetFile)}"`);
     }
   }
 

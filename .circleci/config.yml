@@ -217,6 +217,9 @@ workflows:
 
       # UNIX tests
       - test-unix:
+          requires:
+            - Lint
+            - Security Scans
           matrix:
             alias: test-unix
             parameters:
@@ -226,6 +229,9 @@ workflows:
 
       # Windows tests
       - test-windows:
+          requires:
+            - Lint
+            - Security Scans
           matrix:
             alias: test-windows
             parameters:
