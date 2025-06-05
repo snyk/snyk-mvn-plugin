@@ -37,5 +37,6 @@ test('findArchives', async () => {
     { dir: nestedJarsPath, expectedNumOfJars: 2 },
     { dir: nestedWarsAarsPath, expectedNumOfJars: 2 },
   ].forEach(({ dir, expectedNumOfJars }) =>
-    expect(findArchives(dir).length).toEqual(expectedNumOfJars));
+    expect(findArchives(dir).length).toEqual(expectedNumOfJars),
+  );
 });

@@ -1,6 +1,6 @@
 import * as childProcess from 'child_process';
 import { debug } from './index';
-import { quoteAll } from 'shescape';
+import { quoteAll } from 'shescape/stateless';
 
 export function execute(command, args, options): Promise<string> {
   const spawnOptions: {
@@ -12,11 +12,11 @@ export function execute(command, args, options): Promise<string> {
     spawnOptions.cwd = options.cwd;
   }
   if (args) {
-    args = quoteAll(args, spawnOptions);
+    args = quoteAll(args, { flagProtection: false });
   }
 
   // Before spawning an external process, we look if we need to restore the system proxy configuration,
-  // which overides the cli internal proxy configuration.
+  // which overrides the cli internal proxy configuration.
   if (process.env.SNYK_SYSTEM_HTTP_PROXY !== undefined) {
     spawnOptions.env.HTTP_PROXY = process.env.SNYK_SYSTEM_HTTP_PROXY;
   }
