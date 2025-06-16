@@ -79,7 +79,7 @@ test(
     const result = res.scannedProjects[0].depGraph.toJSON();
 
     // if running windows with an older version of maven 3.3.9.2 - one of the deps will be omitted
-    const mavenVersion = await subProcess.execute(`mvn --version`, [], {});
+    const mavenVersion = await subProcess.execute('mvn', ['--version'], {});
     let expectedJSON = await readFixtureJSON(
       'dverbose-dependency-management',
       mavenVersion.includes('3.3.9') && mavenVersion.includes('C:')
