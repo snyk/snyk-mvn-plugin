@@ -13,8 +13,7 @@ export function execute(command, args, options): Promise<string> {
   // Using shell: true has been deprecated in Node v24 and beyond. See:
   // https://nodejs.org/docs/latest-v24.x/api/deprecations.html#dep0190-passing-args-to-nodechild_process-execfilespawn-with-shell-option-true
   // However, this breaks on Windows, which means we must keep supporting it here.
-  // Note that "win32" is the common name for the Windows API, not 32-bit architecture.
-  if (os.platform() === 'win32') {
+  if (['win32', 'cygwin'].includes(os.platform())) {
     spawnOptions.shell = true;
   }
 
