@@ -183,8 +183,8 @@ export async function inspect(
       cwd: mvnWorkingDirectory,
     });
     const versionResult = await subProcess.execute(
-      `${mavenCommand} --version`,
-      [],
+      mavenCommand,
+      ['--version'],
       {
         cwd: mvnWorkingDirectory,
       },
