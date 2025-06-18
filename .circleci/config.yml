@@ -23,13 +23,23 @@ windows_defaults: &windows_defaults
   executor:
     name: win/default
 
+osx_defaults: &osx_defaults
+  macos:
+    xcode: 16.4.0
+
 test_matrix_unix: &test_matrix_unix
   jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca']
   maven_version: ['3.3.9', '3.6.3', '3.8.4']
   node_version: ['20.19.1']
+
 test_matrix_win: &test_matrix_win
   jdk_version: ['8', '17']
   maven_version: ['3.3.9.2', '3.6.3', '3.8.4']
+  node_version: ['20.19.1']
+
+test_matrix_os: &test_matrix_osx
+  jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca']
+  maven_version: ['3.3.9', '3.6.3', '3.8.4']
   node_version: ['20.19.1']
 
 commands:
@@ -39,6 +49,7 @@ commands:
       - run:
           name: Install dependencies
           command: npm install
+
   install_node_npm:
     description: Install correct Node version
     parameters:
@@ -52,6 +63,7 @@ commands:
       - run:
           name: Use correct version of Node
           command: nvm use << parameters.node_version >>
+
   show_node_version:
     description: Log Node and npm version
     steps:
@@ -61,15 +73,19 @@ commands:
       - run:
           name: NPM version
           command: npm --version
+
   install_sdkman:
     description: Install SDKMAN
     steps:
       - run:
           name: Installing SDKMAN
+          command: curl -s "https://get.sdkman.io?rcupdate=false" | bash
+      - run:
+          name: Sourcing SDKMAN
           command: |
-            curl -s "https://get.sdkman.io?rcupdate=false" | bash
-            echo -e '\nsource "/home/circleci/.sdkman/bin/sdkman-init.sh"' >> $BASH_ENV
+            echo -e '\nsource ~/.sdkman/bin/sdkman-init.sh' >> $BASH_ENV
             source $BASH_ENV
+
   install_jdk_unix:
     description: Install JDK
     parameters:
@@ -80,6 +96,7 @@ commands:
       - run:
           name: Installing JDK
           command: sdk install java $(sdk list java | grep -o -m1 "<< parameters.jdk_version >>\.[0-9\.]\+hs-adpt")
+
   install_jdk_windows:
     description: Install JDK
     parameters:
@@ -90,6 +107,7 @@ commands:
       - run:
           name: Installing JDK
           command: choco install openjdk
+
   install_maven_unix:
     description: Install maven
     parameters:
@@ -100,6 +118,7 @@ commands:
       - run:
           name: Installing Maven
           command: sdk install maven << parameters.maven_version >>
+
   install_maven_windows:
     description: Install maven
     parameters:
@@ -158,6 +177,25 @@ jobs:
     <<: *defaults
     docker:
       - image: cimg/node:<< parameters.node_version >>
+    environment:
+      MAVEN_VERSION: << parameters.maven_version >>
+      JDK: << parameters.jdk_version >>
+    steps:
+      - checkout
+      - install_sdkman
+      - install_jdk_unix:
+          jdk_version: << parameters.jdk_version >>
+      - install_maven_unix:
+          maven_version: << parameters.maven_version >>
+      - install_deps
+      - show_node_version
+      - run:
+          name: Run tests
+          command: npm test
+
+  test-osx:
+    <<: *defaults
+    <<: *osx_defaults
     environment:
       MAVEN_VERSION: << parameters.maven_version >>
       JDK: << parameters.jdk_version >>
@@ -239,12 +277,25 @@ workflows:
           name: Windows Tests for Maven=<< matrix.maven_version >> JDK=<< matrix.jdk_version >> Node=<< matrix.node_version >>
           context: nodejs-install
 
+      # OSX tests
+      - test-osx:
+          requires:
+            - Lint
+            - Security Scans
+          matrix:
+            alias: test-osx
+            parameters:
+              <<: *test_matrix_osx
+          name: OSX Tests for Maven=<< matrix.maven_version >> JDK=<< matrix.jdk_version >> Node=<< matrix.node_version >>
+          context: nodejs-install
+
       # Release
       - release:
           name: Release
           context: nodejs-app-release
           node_version: '20.19.1'
           requires:
+            - test-osx
             - test-windows
             - test-unix
           filters:

@@ -1,18 +1,33 @@
 import * as childProcess from 'child_process';
 import { debug } from './index';
-import { quoteAll } from 'shescape/stateless';
+import { escapeAll, quoteAll } from 'shescape/stateless';
+import * as os from 'node:os';
 
 export function execute(command, args, options): Promise<string> {
   const spawnOptions: {
     shell: boolean;
     cwd?: string;
     env: Record<string, string | undefined>;
-  } = { shell: true, env: { ...process.env } };
+  } = { shell: false, env: { ...process.env } };
+
   if (options && options.cwd) {
     spawnOptions.cwd = options.cwd;
   }
+
   if (args) {
-    args = quoteAll(args, { flagProtection: false });
+    // Best practices, also security-wise, is to not invoke processes in a shell, but as a stand-alone command.
+    // However, on Windows, we need to invoke the command in a shell, due to internal NodeJS problems with this approach
+    // see: https://nodejs.org/docs/latest-v24.x/api/child_process.html#spawning-bat-and-cmd-files-on-windows
+    const isWinLocal = /^win/.test(os.platform());
+    if (isWinLocal) {
+      spawnOptions.shell = true;
+      // Further, we distinguish between quoting and escaping arguments since quoteAll does not support quoting without
+      // supplying a shell, but escapeAll does.
+      // See this (very long) discussion for more details: https://github.com/ericcornelissen/shescape/issues/2009
+      args = quoteAll(args, { ...spawnOptions, flagProtection: false });
+    } else {
+      args = escapeAll(args, { ...spawnOptions, flagProtection: false });
+    }
   }
 
   // Before spawning an external process, we look if we need to restore the system proxy configuration,
