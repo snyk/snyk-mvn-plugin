@@ -2,13 +2,22 @@ import type { MavenDependency, MavenGraph } from './types';
 import { MavenGraphBuilder } from './maven-graph-builder';
 import { buildDependencyString, parseDependency } from './dependency';
 
+type ParseOptions = {
+  mavenVerboseIncludeAllVersions: boolean;
+};
+
+const DEFAULT_PARSE_OPTIONS = { mavenVerboseIncludeAllVersions: false };
+
 const newLine = /[\r\n]+/g;
 
-export function parseDigraphs(digraphs: string[]): MavenGraph[] {
+export function parseDigraphs(
+  digraphs: string[],
+  options: ParseOptions = DEFAULT_PARSE_OPTIONS,
+): MavenGraph[] {
   const graphs: MavenGraph[] = [];
   for (const digraph of digraphs) {
     const lines = digraph.split(newLine);
-    const rootId = findQuotedContents(lines[0]);
+    const rootId = findQuotedContents(options, lines[0]);
     if (!rootId) {
       throw new Error(
         `Unexpected digraph could not find root node. Could not parse "${lines[0]}".`,
@@ -16,7 +25,7 @@ export function parseDigraphs(digraphs: string[]): MavenGraph[] {
     }
     const builder = new MavenGraphBuilder(rootId);
     for (let i = 1; i < lines.length - 1; i++) {
-      const line = parseLine(lines[i]);
+      const line = parseLine(options, lines[i]);
       if (!line) {
         throw new Error(
           `Unexpected digraph could not connect nodes. Could not parse "${lines[i]}".`,
@@ -31,22 +40,28 @@ export function parseDigraphs(digraphs: string[]): MavenGraph[] {
 
 type ParsedLine = { from: string; to: string };
 
-function parseLine(line?: string): ParsedLine | null {
+function parseLine(options: ParseOptions, line?: string): ParsedLine | null {
   if (!line) return null;
   const [left, right] = line.split('->');
   if (!left || !right) return null;
-  const from = findQuotedContents(left);
-  const to = findQuotedContents(right);
+  const from = findQuotedContents(options, left);
+  const to = findQuotedContents(options, right);
   if (!from || !to) return null;
   return { from, to };
 }
 
-function findQuotedContents(value?: string): string | null {
+function findQuotedContents(
+  options: ParseOptions,
+  value?: string,
+): string | null {
   if (!value) return null;
   const start = value.indexOf('"') + 1;
   const end = value.lastIndexOf('"');
 
-  if (isVerboseVersionOmitted(value)) {
+  if (
+    options.mavenVerboseIncludeAllVersions === false &&
+    isVerboseVersionOmittedForConflict(value)
+  ) {
     const [ommitedDep, conflictString] = value
       .substring(start + (value[start] == '(' ? 1 : 0), end)
       .split(/ [-(]/);
@@ -78,6 +93,7 @@ function isVerbose(value: string): boolean {
   const dverboseReasons = [
     'version managed from',
     'omitted for duplicate',
+    'omitted for conflict with',
     'scope not updated to compile',
     'scope not updated to runtime',
     'scope not updated to test',
@@ -88,7 +104,7 @@ function isVerbose(value: string): boolean {
   return false;
 }
 
-function isVerboseVersionOmitted(value: string): boolean {
+function isVerboseVersionOmittedForConflict(value: string): boolean {
   const dverboseReasons = ['omitted for conflict with'];
   for (const dverboseReason of dverboseReasons) {
     if (value.includes(dverboseReason)) return true;

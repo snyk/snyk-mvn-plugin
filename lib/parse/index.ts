@@ -9,9 +9,12 @@ export function parse(
   stdout: string,
   includeTestScope = false,
   verboseEnabled = false,
+  mavenVerboseIncludeAllVersions = false,
 ): { scannedProjects: ScannedProject[] } {
   const digraphs = parseDigraphsFromStdout(stdout);
-  const mavenGraphs = parseDigraphs(digraphs);
+  const mavenGraphs = parseDigraphs(digraphs, {
+    mavenVerboseIncludeAllVersions,
+  });
   const scannedProjects: ScannedProject[] = [];
   for (const mavenGraph of mavenGraphs) {
     const depGraph = buildDepGraph(

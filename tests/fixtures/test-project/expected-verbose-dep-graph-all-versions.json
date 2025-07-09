@@ -1,0 +1,133 @@
+{
+    "schemaVersion": "1.2.0",
+    "pkgManager": {
+      "name": "maven"
+    },
+    "pkgs": [
+      {
+        "id": "io.snyk.example:test-project@1.0-SNAPSHOT",
+        "info": {
+          "name": "io.snyk.example:test-project",
+          "version": "1.0-SNAPSHOT"
+        }
+      },
+      {
+        "id": "axis:axis@1.4",
+        "info": {
+          "name": "axis:axis",
+          "version": "1.4"
+        }
+      },
+      {
+        "id": "commons-discovery:commons-discovery@0.2",
+        "info": {
+          "name": "commons-discovery:commons-discovery",
+          "version": "0.2"
+        }
+      },
+      {
+        "id": "commons-logging:commons-logging@1.0.3",
+        "info": {
+          "name": "commons-logging:commons-logging",
+          "version": "1.0.3"
+        }
+      },
+      {
+        "id": "commons-logging:commons-logging@1.0.4",
+        "info": {
+          "name": "commons-logging:commons-logging",
+          "version": "1.0.4"
+        }
+      },
+      {
+        "id": "axis:axis-wsdl4j@1.5.1",
+        "info": {
+          "name": "axis:axis-wsdl4j",
+          "version": "1.5.1"
+        }
+      },
+      {
+        "id": "org.apache.axis:axis-saaj@1.4",
+        "info": {
+          "name": "org.apache.axis:axis-saaj",
+          "version": "1.4"
+        }
+      },
+      {
+        "id": "org.apache.axis:axis-jaxrpc@1.4",
+        "info": {
+          "name": "org.apache.axis:axis-jaxrpc",
+          "version": "1.4"
+        }
+      }
+    ],
+    "graph": {
+      "rootNodeId": "root-node",
+      "nodes": [
+        {
+          "nodeId": "root-node",
+          "pkgId": "io.snyk.example:test-project@1.0-SNAPSHOT",
+          "deps": [
+            {
+              "nodeId": "axis:axis:jar:1.4:compile"
+            }
+          ]
+        },
+        {
+          "nodeId": "axis:axis:jar:1.4:compile",
+          "pkgId": "axis:axis@1.4",
+          "deps": [
+            {
+              "nodeId": "commons-discovery:commons-discovery:jar:0.2:runtime"
+            },
+            {
+              "nodeId": "commons-logging:commons-logging:jar:1.0.4:runtime"
+            },
+            {
+              "nodeId": "axis:axis-wsdl4j:jar:1.5.1:runtime"
+            },
+            {
+              "nodeId": "org.apache.axis:axis-saaj:jar:1.4:compile"
+            },
+            {
+              "nodeId": "org.apache.axis:axis-jaxrpc:jar:1.4:compile"
+            }
+          ]
+        },
+        {
+          "nodeId": "commons-discovery:commons-discovery:jar:0.2:runtime",
+          "pkgId": "commons-discovery:commons-discovery@0.2",
+          "deps": [
+            {
+              "nodeId": "commons-logging:commons-logging:jar:1.0.3:runtime"
+            }
+          ]
+        },
+        {
+          "nodeId": "commons-logging:commons-logging:jar:1.0.3:runtime",
+          "pkgId": "commons-logging:commons-logging@1.0.3",
+          "deps": []
+        },
+        {
+          "nodeId": "commons-logging:commons-logging:jar:1.0.4:runtime",
+          "pkgId": "commons-logging:commons-logging@1.0.4",
+          "deps": []
+        },
+        {
+          "nodeId": "axis:axis-wsdl4j:jar:1.5.1:runtime",
+          "pkgId": "axis:axis-wsdl4j@1.5.1",
+          "deps": []
+        },
+        {
+          "nodeId": "org.apache.axis:axis-saaj:jar:1.4:compile",
+          "pkgId": "org.apache.axis:axis-saaj@1.4",
+          "deps": []
+        },
+        {
+          "nodeId": "org.apache.axis:axis-jaxrpc:jar:1.4:compile",
+          "pkgId": "org.apache.axis:axis-jaxrpc@1.4",
+          "deps": []
+        }
+      ]
+    }
+  }
