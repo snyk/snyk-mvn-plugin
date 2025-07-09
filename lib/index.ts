@@ -35,6 +35,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   scanAllUnmanaged?: boolean;
   allProjects?: boolean;
   mavenAggregateProject?: boolean;
+  mavenVerboseIncludeAllVersions?: boolean;
 }
 
 export function getCommand(root: string, targetFile: string | undefined) {
@@ -113,7 +114,12 @@ export async function inspect(
     throw new Error('Could not find file or directory ' + targetPath);
   }
   if (!options) {
-    options = { dev: false, scanAllUnmanaged: false, 'print-graph': false };
+    options = {
+      dev: false,
+      scanAllUnmanaged: false,
+      'print-graph': false,
+      mavenVerboseIncludeAllVersions: false,
+    };
   }
 
   if (targetPath && isArchive(targetPath)) {
@@ -179,6 +185,9 @@ export async function inspect(
     debug(`Maven command: ${mavenCommand} ${mvnArgs.join(' ')}`);
     debug(`Maven working directory: ${mvnWorkingDirectory}`);
     debug(`Verbose enabled: ${verboseEnabled}`);
+    debug(
+      `Verbose enabled with all versions: ${options.mavenVerboseIncludeAllVersions}`,
+    );
     result = await subProcess.execute(mavenCommand, mvnArgs, {
       cwd: mvnWorkingDirectory,
     });
@@ -189,7 +198,12 @@ export async function inspect(
         cwd: mvnWorkingDirectory,
       },
     );
-    const parseResult = parse(result, options.dev, verboseEnabled);
+    const parseResult = parse(
+      result,
+      options.dev,
+      verboseEnabled,
+      options.mavenVerboseIncludeAllVersions,
+    );
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
     const mavenPluginVersion = parsePluginVersionFromStdout(result);
     return {
