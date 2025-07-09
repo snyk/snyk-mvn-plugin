@@ -196,6 +196,7 @@ export async function inspect(
       plugin: {
         name: 'bundled:maven',
         runtime: 'unknown',
+        targetFile: targetFile,
         meta: {
           versionBuildInfo: {
             metaBuildVersion: {

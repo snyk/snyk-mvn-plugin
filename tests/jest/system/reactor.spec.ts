@@ -146,6 +146,8 @@ test('inspect on complex aggregate project using maven reactor include test scop
       },
     ].sort(byPkgName),
   );
+
+    expect(result.plugin.targetFile).toEqual('pom.xml');
 }, 20000);
 
 test('inspect on complex aggregate project using maven reactor and verbose enabled', async () => {
