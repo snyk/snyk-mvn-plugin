@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
   "pkgManager": {
     "name": "maven"
   },
@@ -8,7 +8,8 @@
       "id": "io.snyk.example:test-project@1.0.0-SNAPSHOT",
       "info": {
         "name": "io.snyk.example:test-project",
-        "version": "1.0.0-SNAPSHOT"
+        "version": "1.0.0-SNAPSHOT",
+        "purl": "pkg:maven/io.snyk.example/test-project@1.0.0-SNAPSHOT"
       }
     }
   ],

@@ -22,7 +22,7 @@ describe('buildDepGraph', () => {
     const mavenGraph = parseDigraphs([diGraph])[0];
     const depGraph = buildDepGraph(mavenGraph);
     expect(depGraph.toJSON()).toEqual({
-      schemaVersion: '1.2.0',
+      schemaVersion: '1.3.0',
       pkgManager: {
         name: 'maven',
       },
@@ -32,6 +32,7 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:root',
             version: '1.2.3',
+            purl: 'pkg:maven/test/root@1.2.3',
           },
         },
         {
@@ -39,6 +40,7 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:a',
             version: '1.0.0',
+            purl: 'pkg:maven/test/a@1.0.0',
           },
         },
         {
@@ -46,6 +48,7 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:c',
             version: '1.0.0',
+            purl: 'pkg:maven/test/c@1.0.0',
           },
         },
         {
@@ -53,6 +56,7 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:d',
             version: '1.0.0',
+            purl: 'pkg:maven/test/d@1.0.0',
           },
         },
         {
@@ -60,6 +64,7 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:b',
             version: '1.0.0',
+            purl: 'pkg:maven/test/b@1.0.0',
           },
         },
       ],
@@ -158,7 +163,7 @@ describe('buildDepGraph', () => {
     const mavenGraph = parseDigraphs([diGraph])[0];
     const depGraph = buildDepGraph(mavenGraph);
     expect(depGraph.toJSON()).toEqual({
-      schemaVersion: '1.2.0',
+      schemaVersion: '1.3.0',
       pkgManager: {
         name: 'maven',
       },
@@ -168,6 +173,7 @@ describe('buildDepGraph', () => {
           info: {
             name: 'example:root',
             version: '1.2.3',
+            purl: 'pkg:maven/example/root@1.2.3',
           },
         },
         {
@@ -175,6 +181,7 @@ describe('buildDepGraph', () => {
           info: {
             name: 'example:a',
             version: '1.0.0',
+            purl: 'pkg:maven/example/a@1.0.0',
           },
         },
         {
@@ -182,6 +189,7 @@ describe('buildDepGraph', () => {
           info: {
             name: 'example:b',
             version: '1.0.0',
+            purl: 'pkg:maven/example/b@1.0.0',
           },
         },
         {
@@ -189,6 +197,7 @@ describe('buildDepGraph', () => {
           info: {
             name: 'example:c',
             version: '1.0.0',
+            purl: 'pkg:maven/example/c@1.0.0',
           },
         },
       ],

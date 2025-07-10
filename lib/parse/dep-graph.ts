@@ -1,27 +1,30 @@
-import type { MavenGraph, MavenGraphNode } from './types';
+import type { MavenGraph, MavenGraphNode, FingerprintData } from './types';
 
+import Queue from '@common.js/yocto-queue';
 import { DepGraph, DepGraphBuilder, PkgInfo } from '@snyk/dep-graph';
 import { parseDependency } from './dependency';
-import Queue from '@common.js/yocto-queue';
+import { createMavenPurlWithChecksum } from '../fingerprint';
 
 export function buildDepGraph(
   mavenGraph: MavenGraph,
   includeTestScope = false,
   verboseEnabled = false,
+  fingerprintMap = new Map<string, FingerprintData>(),
 ): DepGraph {
   const { rootId, nodes } = mavenGraph;
 
   return verboseEnabled
-    ? buildWithVerbose(rootId, nodes, includeTestScope)
-    : buildWithoutVerbose(rootId, nodes, includeTestScope);
+    ? buildWithVerbose(rootId, nodes, includeTestScope, fingerprintMap)
+    : buildWithoutVerbose(rootId, nodes, includeTestScope, fingerprintMap);
 }
 
 export function buildWithoutVerbose(
   rootId: string,
   nodes: Record<string, MavenGraphNode>,
   includeTestScope = false,
+  fingerprintMap = new Map<string, FingerprintData>(),
 ): DepGraph {
-  const parsedRoot = parseId(rootId);
+  const parsedRoot = parseId(rootId, false, fingerprintMap.get(rootId));
   const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
   const visitedMap: Record<string, DepInfo> = {};
   const queue = new Queue<QueueItem>();
@@ -33,7 +36,8 @@ export function buildWithoutVerbose(
 
     if (!item) continue;
     const { id, parentId } = item;
-    const parsed = parseId(id);
+    const fingerprintData = fingerprintMap.get(id);
+    const parsed = parseId(id, false, fingerprintData);
     const node = nodes[id];
     if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep) {
       continue;
@@ -63,8 +67,9 @@ export function buildWithVerbose(
   rootId: string,
   nodes: Record<string, MavenGraphNode>,
   includeTestScope = false,
+  fingerprintMap = new Map<string, FingerprintData>(),
 ): DepGraph {
-  const parsedRoot = parseId(rootId);
+  const parsedRoot = parseId(rootId, true, fingerprintMap.get(rootId));
   const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
   const visitedMap: Record<string, DepInfo> = {};
   const stack: StackItemVerbose[] = [];
@@ -76,7 +81,8 @@ export function buildWithVerbose(
 
     if (!item) continue;
     const { id, ancestry, parentId } = item;
-    const parsed = parseId(id, true);
+    const fingerprintData = fingerprintMap.get(id);
+    const parsed = parseId(id, true, fingerprintData);
     const node = nodes[id];
     if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep) {
       continue;
@@ -96,7 +102,6 @@ export function buildWithVerbose(
 
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
     if (visited) {
-      builder.addPkgNode(visited.pkgInfo, visited.id);
       builder.connectDep(parentNodeId, visited.id);
 
       // use visited node when omited dependencies found (verbose)
@@ -151,10 +156,25 @@ interface DepInfo {
   scope?: string; // maybe scope
 }
 
-function parseId(id: string, verboseEnabled = false): DepInfo {
+function parseId(
+  id: string,
+  verboseEnabled = false,
+  fingerprintData?: FingerprintData,
+): DepInfo {
   const dep = parseDependency(id);
   const maybeClassifier = dep.classifier ? `:${dep.classifier}` : '';
   const name = `${dep.groupId}:${dep.artifactId}`;
+
+  // Create PURL with checksum if fingerprint data is available
+  const purl = createMavenPurlWithChecksum(
+    dep.groupId,
+    dep.artifactId,
+    dep.version,
+    fingerprintData,
+    dep.classifier,
+    dep.type,
+  );
+
   return {
     id,
     key: verboseEnabled
@@ -163,6 +183,7 @@ function parseId(id: string, verboseEnabled = false): DepInfo {
     pkgInfo: {
       name,
       version: dep.version,
+      purl,
     },
     scope: dep.scope,
   };

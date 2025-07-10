@@ -346,6 +346,7 @@ describe('plugin.inspect', () => {
     expect(result.scannedProjects.length).toBe(1);
     expect(result.scannedProjects[0].depGraph?.rootPkg).toEqual({
       name: 'io.snyk:my-app',
+      purl: "pkg:maven/io.snyk/my-app@1.2.3?type=pom",
       version: '1.2.3',
     });
     expect(result.scannedProjects[0].depGraph?.getDepPkgs().length).toBe(0);
