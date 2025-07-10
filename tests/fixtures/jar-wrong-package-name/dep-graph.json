@@ -1,6 +1,8 @@
 {
-  "schemaVersion": "1.2.0",
-  "pkgManager": { "name": "maven" },
+  "schemaVersion": "1.3.0",
+  "pkgManager": {
+    "name": "maven"
+  },
   "pkgs": [
     {
       "id": "fixtures:jar-wrong-package-name@1.0.0",
