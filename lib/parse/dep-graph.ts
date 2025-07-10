@@ -1,25 +1,28 @@
-import type { MavenGraph, MavenGraphNode } from './types';
+import type { MavenGraph, MavenGraphNode, FingerprintData } from './types';
 
+import Queue from '@common.js/yocto-queue';
 import { DepGraph, DepGraphBuilder, PkgInfo } from '@snyk/dep-graph';
 import { parseDependency } from './dependency';
-import Queue from '@common.js/yocto-queue';
+import { createFingerprintLabels } from '../fingerprint';
 
 export function buildDepGraph(
   mavenGraph: MavenGraph,
   includeTestScope = false,
   verboseEnabled = false,
+  fingerprintMap = new Map<string, FingerprintData>(),
 ): DepGraph {
   const { rootId, nodes } = mavenGraph;
 
   return verboseEnabled
-    ? buildWithVerbose(rootId, nodes, includeTestScope)
-    : buildWithoutVerbose(rootId, nodes, includeTestScope);
+    ? buildWithVerbose(rootId, nodes, includeTestScope, fingerprintMap)
+    : buildWithoutVerbose(rootId, nodes, includeTestScope, fingerprintMap);
 }
 
 export function buildWithoutVerbose(
   rootId: string,
   nodes: Record<string, MavenGraphNode>,
   includeTestScope = false,
+  fingerprintMap = new Map<string, FingerprintData>(),
 ): DepGraph {
   const parsedRoot = parseId(rootId);
   const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
@@ -50,7 +53,11 @@ export function buildWithoutVerbose(
 
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
 
-    builder.addPkgNode(parsed.pkgInfo, id);
+    // Check for fingerprint data
+    const fingerprintData = fingerprintMap.get(id);
+    const labels = fingerprintData ? createFingerprintLabels(fingerprintData) : undefined;
+
+    builder.addPkgNode(parsed.pkgInfo, id, labels ? { labels } : undefined);
     builder.connectDep(parentNodeId, id);
     visitedMap[parsed.key] = parsed;
     getItems(id, node).forEach((item) => queue.enqueue(item));
@@ -63,6 +70,7 @@ export function buildWithVerbose(
   rootId: string,
   nodes: Record<string, MavenGraphNode>,
   includeTestScope = false,
+  fingerprintMap = new Map<string, FingerprintData>(),
 ): DepGraph {
   const parsedRoot = parseId(rootId);
   const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
@@ -96,7 +104,6 @@ export function buildWithVerbose(
 
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
     if (visited) {
-      builder.addPkgNode(visited.pkgInfo, visited.id);
       builder.connectDep(parentNodeId, visited.id);
 
       // use visited node when omited dependencies found (verbose)
@@ -104,7 +111,11 @@ export function buildWithVerbose(
         ...getVerboseItems(visited.id, [...ancestry, parsed.key], node),
       );
     } else {
-      builder.addPkgNode(parsed.pkgInfo, id);
+      // Check for fingerprint data for new nodes
+      const fingerprintData = fingerprintMap.get(id);
+      const labels = fingerprintData ? createFingerprintLabels(fingerprintData) : undefined;
+
+      builder.addPkgNode(parsed.pkgInfo, id, labels ? { labels } : undefined);
       builder.connectDep(parentNodeId, id);
       visitedMap[parsed.key] = parsed;
       // Remember to push updated ancestry here

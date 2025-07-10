@@ -14,7 +14,7 @@ import {
 import { formatGenericPluginError } from './error-format';
 import * as debugModule from 'debug';
 import { parse, parsePluginVersionFromStdout } from './parse';
-import { SnykHttpClient } from './parse/types';
+import { SnykHttpClient, HashAlgorithm, FingerprintOptions } from './parse/types';
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
@@ -36,6 +36,11 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   allProjects?: boolean;
   mavenAggregateProject?: boolean;
   mavenVerboseIncludeAllVersions?: boolean;
+  fingerprintArtifacts?: boolean;
+  fingerprintAlgorithm?: HashAlgorithm;
+  fingerprintTiming?: boolean;
+  fingerprintConcurrency?: number;
+  mavenRepository?: string;
 }
 
 export function getCommand(root: string, targetFile: string | undefined) {
@@ -99,6 +104,20 @@ function findWrapper(
   } while (!foundMVWLocation);
 
   return currentFolder;
+}
+
+function buildFingerprintOptions(options: MavenOptions): FingerprintOptions | undefined {
+  if (!options.fingerprintArtifacts) {
+    return undefined;
+  }
+  
+  return {
+    enabled: true,
+    algorithm: options.fingerprintAlgorithm || 'sha256',
+    concurrency: options.fingerprintConcurrency,
+    mavenRepository: options.mavenRepository,
+    reportTiming: options.fingerprintTiming
+  };
 }
 
 export async function inspect(
@@ -198,11 +217,15 @@ export async function inspect(
         cwd: mvnWorkingDirectory,
       },
     );
-    const parseResult = parse(
+    const fingerprintOptions = buildFingerprintOptions(options);
+
+    const parseResult = await parse(
       result,
       options.dev,
       verboseEnabled,
       options.mavenVerboseIncludeAllVersions,
+      fingerprintOptions,
+      mavenCommand,
     );
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
     const mavenPluginVersion = parsePluginVersionFromStdout(result);
