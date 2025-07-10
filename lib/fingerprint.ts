@@ -108,6 +108,21 @@ async function checkArtifactExists(
 }
 
 /**
+ * Sanitize artifact path to show only the relative path within the repository
+ */
+function sanitizeArtifactPath(
+  artifactPath: string,
+  repositoryPath: string,
+): string {
+  if (artifactPath.startsWith(repositoryPath)) {
+    // Remove the repository path prefix and any leading path separator
+    return artifactPath.slice(repositoryPath.length).replace(/^[/\\]+/, '');
+  }
+  // Fallback to the full path if sanitization isn't possible
+  return artifactPath;
+}
+
+/**
  * Process a single dependency ID to generate fingerprint
  */
 async function processSingleDependency(
@@ -124,12 +139,15 @@ async function processSingleDependency(
     );
     const { exists, size } = await checkArtifactExists(artifactPath);
 
+    // Sanitize the artifact path to show only the relative path within the repository
+    const sanitizedPath = sanitizeArtifactPath(artifactPath, repositoryPath);
+
     if (!exists) {
       const endTime = performance.now();
       return {
         hash: '',
         algorithm,
-        filePath: artifactPath,
+        filePath: sanitizedPath,
         fileSize: 0,
         processingTime: endTime - startTime,
         error: 'Artifact not found in repository',
@@ -142,16 +160,22 @@ async function processSingleDependency(
     return {
       hash,
       algorithm,
-      filePath: artifactPath,
+      filePath: sanitizedPath,
       fileSize: size || 0,
       processingTime: endTime - startTime,
     };
   } catch (error) {
     const endTime = performance.now();
+    const artifactPath = dependencyIdToArtifactPath(
+      dependencyId,
+      repositoryPath,
+    );
+    const sanitizedPath = sanitizeArtifactPath(artifactPath, repositoryPath);
+
     return {
       hash: '',
       algorithm,
-      filePath: dependencyIdToArtifactPath(dependencyId, repositoryPath),
+      filePath: sanitizedPath,
       fileSize: 0,
       processingTime: endTime - startTime,
       error: error instanceof Error ? error.message : 'Unknown error',
