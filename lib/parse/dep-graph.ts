@@ -55,7 +55,9 @@ export function buildWithoutVerbose(
 
     // Check for fingerprint data
     const fingerprintData = fingerprintMap.get(id);
-    const labels = fingerprintData ? createFingerprintLabels(fingerprintData) : undefined;
+    const labels = fingerprintData
+      ? createFingerprintLabels(fingerprintData)
+      : undefined;
 
     builder.addPkgNode(parsed.pkgInfo, id, labels ? { labels } : undefined);
     builder.connectDep(parentNodeId, id);
@@ -113,7 +115,9 @@ export function buildWithVerbose(
     } else {
       // Check for fingerprint data for new nodes
       const fingerprintData = fingerprintMap.get(id);
-      const labels = fingerprintData ? createFingerprintLabels(fingerprintData) : undefined;
+      const labels = fingerprintData
+        ? createFingerprintLabels(fingerprintData)
+        : undefined;
 
       builder.addPkgNode(parsed.pkgInfo, id, labels ? { labels } : undefined);
       builder.connectDep(parentNodeId, id);

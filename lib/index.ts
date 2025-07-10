@@ -14,7 +14,11 @@ import {
 import { formatGenericPluginError } from './error-format';
 import * as debugModule from 'debug';
 import { parse, parsePluginVersionFromStdout } from './parse';
-import { SnykHttpClient, HashAlgorithm, FingerprintOptions } from './parse/types';
+import {
+  SnykHttpClient,
+  HashAlgorithm,
+  FingerprintOptions,
+} from './parse/types';
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
@@ -106,17 +110,19 @@ function findWrapper(
   return currentFolder;
 }
 
-function buildFingerprintOptions(options: MavenOptions): FingerprintOptions | undefined {
+function buildFingerprintOptions(
+  options: MavenOptions,
+): FingerprintOptions | undefined {
   if (!options.fingerprintArtifacts) {
     return undefined;
   }
-  
+
   return {
     enabled: true,
     algorithm: options.fingerprintAlgorithm || 'sha256',
     concurrency: options.fingerprintConcurrency,
     mavenRepository: options.mavenRepository,
-    reportTiming: options.fingerprintTiming
+    reportTiming: options.fingerprintTiming,
   };
 }
 

@@ -24,13 +24,16 @@ test('buildDepGraph integration with fingerprint data', async (t) => {
 
   // Create fingerprint data
   const fingerprintMap = new Map<string, FingerprintData>([
-    ['junit:junit:jar:4.13.2:test', {
-      hash: 'abc123def456',
-      algorithm: 'sha256',
-      filePath: '/path/to/junit-4.13.2.jar',
-      fileSize: 384581,
-      processingTime: 5.2
-    }]
+    [
+      'junit:junit:jar:4.13.2:test',
+      {
+        hash: 'abc123def456',
+        algorithm: 'sha256',
+        filePath: '/path/to/junit-4.13.2.jar',
+        fileSize: 384581,
+        processingTime: 5.2,
+      },
+    ],
   ]);
 
   // Build dep graph with fingerprint data
@@ -38,25 +41,41 @@ test('buildDepGraph integration with fingerprint data', async (t) => {
     mockMavenGraph,
     true, // includeTestScope
     false, // verboseEnabled
-    fingerprintMap
+    fingerprintMap,
   );
 
   t.ok(depGraph, 'dep graph should be created');
-  
+
   // Convert to JSON to inspect labels
   const depGraphJson = depGraph.toJSON();
-  
+
   // Find the junit node
   const junitNode = depGraphJson.graph.nodes.find(
-    node => node.nodeId === 'junit:junit:jar:4.13.2:test'
+    (node) => node.nodeId === 'junit:junit:jar:4.13.2:test',
   );
-  
+
   t.ok(junitNode, 'junit node should exist in dep graph');
   t.ok(junitNode?.info?.labels, 'junit node should have labels');
-  t.equal(junitNode?.info?.labels?.fingerprint, 'abc123def456', 'should have correct fingerprint');
-  t.equal(junitNode?.info?.labels?.fingerprintAlgorithm, 'sha256', 'should have correct algorithm');
-  t.equal(junitNode?.info?.labels?.artifactPath, '/path/to/junit-4.13.2.jar', 'should have correct path');
-  t.equal(junitNode?.info?.labels?.fileSize, '384581', 'should have correct file size');
+  t.equal(
+    junitNode?.info?.labels?.fingerprint,
+    'abc123def456',
+    'should have correct fingerprint',
+  );
+  t.equal(
+    junitNode?.info?.labels?.fingerprintAlgorithm,
+    'sha256',
+    'should have correct algorithm',
+  );
+  t.equal(
+    junitNode?.info?.labels?.artifactPath,
+    '/path/to/junit-4.13.2.jar',
+    'should have correct path',
+  );
+  t.equal(
+    junitNode?.info?.labels?.fileSize,
+    '384581',
+    'should have correct file size',
+  );
 });
 
 test('buildDepGraph with error fingerprint data', async (t) => {
@@ -78,33 +97,43 @@ test('buildDepGraph with error fingerprint data', async (t) => {
 
   // Create fingerprint data with error
   const fingerprintMap = new Map<string, FingerprintData>([
-    ['missing:artifact:jar:1.0.0', {
-      hash: '',
-      algorithm: 'sha256',
-      filePath: '/path/to/missing-1.0.0.jar',
-      fileSize: 0,
-      processingTime: 1.1,
-      error: 'Artifact not found in repository'
-    }]
+    [
+      'missing:artifact:jar:1.0.0',
+      {
+        hash: '',
+        algorithm: 'sha256',
+        filePath: '/path/to/missing-1.0.0.jar',
+        fileSize: 0,
+        processingTime: 1.1,
+        error: 'Artifact not found in repository',
+      },
+    ],
   ]);
 
   const depGraph = buildDepGraph(
     mockMavenGraph,
     false, // includeTestScope
     false, // verboseEnabled
-    fingerprintMap
+    fingerprintMap,
   );
 
   const depGraphJson = depGraph.toJSON();
-  
+
   const missingNode = depGraphJson.graph.nodes.find(
-    node => node.nodeId === 'missing:artifact:jar:1.0.0'
+    (node) => node.nodeId === 'missing:artifact:jar:1.0.0',
   );
-  
+
   t.ok(missingNode, 'missing artifact node should exist');
   t.ok(missingNode?.info?.labels, 'missing node should have labels');
-  t.equal(missingNode?.info?.labels?.fingerprintError, 'Artifact not found in repository', 'should have error message');
-  t.notOk(missingNode?.info?.labels?.fingerprint, 'should not have fingerprint hash');
+  t.equal(
+    missingNode?.info?.labels?.fingerprintError,
+    'Artifact not found in repository',
+    'should have error message',
+  );
+  t.notOk(
+    missingNode?.info?.labels?.fingerprint,
+    'should not have fingerprint hash',
+  );
 });
 
 test('buildDepGraph with empty fingerprint map', async (t) => {
@@ -129,17 +158,20 @@ test('buildDepGraph with empty fingerprint map', async (t) => {
     mockMavenGraph,
     false,
     false,
-    new Map() // empty fingerprint map
+    new Map(), // empty fingerprint map
   );
 
   const depGraphJson = depGraph.toJSON();
-  
+
   const slf4jNode = depGraphJson.graph.nodes.find(
-    node => node.nodeId === 'org.slf4j:slf4j-api:jar:1.7.36'
+    (node) => node.nodeId === 'org.slf4j:slf4j-api:jar:1.7.36',
   );
-  
+
   t.ok(slf4jNode, 'slf4j node should exist');
-  t.notOk(slf4jNode?.info?.labels, 'node should not have labels when no fingerprint data');
+  t.notOk(
+    slf4jNode?.info?.labels,
+    'node should not have labels when no fingerprint data',
+  );
 });
 
 test('buildDepGraph verbose mode with fingerprints', async (t) => {
@@ -160,13 +192,16 @@ test('buildDepGraph verbose mode with fingerprints', async (t) => {
   };
 
   const fingerprintMap = new Map<string, FingerprintData>([
-    ['commons-logging:commons-logging:jar:1.2', {
-      hash: 'def456ghi789',
-      algorithm: 'sha1',
-      filePath: '/path/to/commons-logging-1.2.jar',
-      fileSize: 60686,
-      processingTime: 3.8
-    }]
+    [
+      'commons-logging:commons-logging:jar:1.2',
+      {
+        hash: 'def456ghi789',
+        algorithm: 'sha1',
+        filePath: '/path/to/commons-logging-1.2.jar',
+        fileSize: 60686,
+        processingTime: 3.8,
+      },
+    ],
   ]);
 
   // Test verbose mode
@@ -174,19 +209,27 @@ test('buildDepGraph verbose mode with fingerprints', async (t) => {
     mockMavenGraph,
     false,
     true, // verbose enabled
-    fingerprintMap
+    fingerprintMap,
   );
 
   const depGraphJson = depGraph.toJSON();
-  
+
   const commonsNode = depGraphJson.graph.nodes.find(
-    node => node.nodeId === 'commons-logging:commons-logging:jar:1.2'
+    (node) => node.nodeId === 'commons-logging:commons-logging:jar:1.2',
   );
-  
+
   t.ok(commonsNode, 'commons-logging node should exist in verbose mode');
   t.ok(commonsNode?.info?.labels, 'node should have labels in verbose mode');
-  t.equal(commonsNode?.info?.labels?.fingerprint, 'def456ghi789', 'should have fingerprint in verbose mode');
-  t.equal(commonsNode?.info?.labels?.fingerprintAlgorithm, 'sha1', 'should have correct algorithm in verbose mode');
+  t.equal(
+    commonsNode?.info?.labels?.fingerprint,
+    'def456ghi789',
+    'should have fingerprint in verbose mode',
+  );
+  t.equal(
+    commonsNode?.info?.labels?.fingerprintAlgorithm,
+    'sha1',
+    'should have correct algorithm in verbose mode',
+  );
 });
 
 test('createFingerprintLabels function', async (t) => {
@@ -195,16 +238,19 @@ test('createFingerprintLabels function', async (t) => {
     algorithm: 'sha256',
     filePath: '/test/path.jar',
     fileSize: 12345,
-    processingTime: 2.5
+    processingTime: 2.5,
   };
 
   const labels = createFingerprintLabels(successData);
-  
+
   t.equal(labels.fingerprint, 'testfingerprint123', 'should set fingerprint');
   t.equal(labels.fingerprintAlgorithm, 'sha256', 'should set algorithm');
   t.equal(labels.artifactPath, '/test/path.jar', 'should set artifact path');
   t.equal(labels.fileSize, '12345', 'should set file size as string');
-  t.notOk(labels.fingerprintError, 'should not have error for successful fingerprint');
+  t.notOk(
+    labels.fingerprintError,
+    'should not have error for successful fingerprint',
+  );
 
   const errorData: FingerprintData = {
     hash: '',
@@ -212,12 +258,22 @@ test('createFingerprintLabels function', async (t) => {
     filePath: '/missing/path.jar',
     fileSize: 0,
     processingTime: 1.0,
-    error: 'File not found'
+    error: 'File not found',
   };
 
   const errorLabels = createFingerprintLabels(errorData);
-  
-  t.equal(errorLabels.fingerprintError, 'File not found', 'should set error message');
-  t.notOk(errorLabels.fingerprint, 'should not have fingerprint for error case');
-  t.notOk(errorLabels.fingerprintAlgorithm, 'should not have algorithm for error case');
-}); 
+
+  t.equal(
+    errorLabels.fingerprintError,
+    'File not found',
+    'should set error message',
+  );
+  t.notOk(
+    errorLabels.fingerprint,
+    'should not have fingerprint for error case',
+  );
+  t.notOk(
+    errorLabels.fingerprintAlgorithm,
+    'should not have algorithm for error case',
+  );
+});

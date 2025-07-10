@@ -19,19 +19,23 @@ export async function parse(
   const mavenGraphs = parseDigraphs(digraphs, {
     mavenVerboseIncludeAllVersions,
   });
-  
+
   // Generate fingerprints between parsing and building dep-graphs
   let fingerprintMap = new Map();
-  
+
   if (fingerprintOptions?.enabled && mavenCommand) {
-    fingerprintMap = await generateFingerprints(mavenGraphs, fingerprintOptions, mavenCommand);
-    
+    fingerprintMap = await generateFingerprints(
+      mavenGraphs,
+      fingerprintOptions,
+      mavenCommand,
+    );
+
     // Optional timing output
     if (fingerprintOptions.reportTiming) {
       reportFingerprintTiming(fingerprintMap);
     }
   }
-  
+
   const scannedProjects: ScannedProject[] = [];
   for (const mavenGraph of mavenGraphs) {
     const depGraph = buildDepGraph(
