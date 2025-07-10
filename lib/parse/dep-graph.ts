@@ -2,6 +2,7 @@ import type { MavenGraph, MavenGraphNode } from './types';
 
 import { DepGraph, DepGraphBuilder, PkgInfo } from '@snyk/dep-graph';
 import { parseDependency } from './dependency';
+import Queue from '@common.js/yocto-queue';
 
 export function buildDepGraph(
   mavenGraph: MavenGraph,
@@ -23,12 +24,12 @@ export function buildWithoutVerbose(
   const parsedRoot = parseId(rootId);
   const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
   const visitedMap: Record<string, DepInfo> = {};
-  const queue: QueueItem[] = [];
-  queue.push(...getItems(rootId, nodes[rootId]));
+  const queue = new Queue<QueueItem>();
+  getItems(rootId, nodes[rootId]).forEach((item) => queue.enqueue(item));
 
   // breadth first search
-  while (queue.length > 0) {
-    const item = queue.shift();
+  while (queue.size > 0) {
+    const item = queue.dequeue();
 
     if (!item) continue;
     const { id, parentId } = item;
@@ -52,7 +53,7 @@ export function buildWithoutVerbose(
     builder.addPkgNode(parsed.pkgInfo, id);
     builder.connectDep(parentNodeId, id);
     visitedMap[parsed.key] = parsed;
-    queue.push(...getItems(id, node));
+    getItems(id, node).forEach((item) => queue.enqueue(item));
   }
 
   return builder.build();

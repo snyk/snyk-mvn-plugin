@@ -51,6 +51,7 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "@common.js/yocto-queue": "^1.1.1",
     "@snyk/cli-interface": "2.11.3",
     "@snyk/dep-graph": "^1.23.1",
     "debug": "^4.3.4",
