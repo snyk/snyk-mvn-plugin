@@ -1,7 +1,7 @@
 import * as path from 'path';
 import {
   dependencyIdToArtifactPath,
-  createFingerprintLabels,
+  createMavenPurlWithChecksum,
   reportFingerprintTiming,
 } from '../../../lib/fingerprint';
 import { FingerprintData } from '../../../lib/parse/types';
@@ -78,27 +78,29 @@ describe('Fingerprint Module Unit Tests', () => {
     });
   });
 
-  describe('createFingerprintLabels', () => {
-    it('should create labels for successful fingerprint', () => {
+  describe('createMavenPurlWithChecksum', () => {
+    it('should create PURL with checksum for successful fingerprint', () => {
       const fingerprintData: FingerprintData = {
         hash: 'abc123def456',
-        algorithm: 'sha256',
+        algorithm: 'SHA256',
         filePath: '/path/to/artifact.jar',
         fileSize: 1024,
         processingTime: 5.5,
       };
 
-      const result = createFingerprintLabels(fingerprintData);
+      const result = createMavenPurlWithChecksum(
+        'com.example',
+        'my-library',
+        '1.0.0',
+        fingerprintData,
+      );
 
-      expect(result).toEqual({
-        fingerprint: 'abc123def456',
-        fingerprintAlgorithm: 'sha256',
-        artifactPath: '/path/to/artifact.jar',
-        fileSize: '1024',
-      });
+      expect(result).toBe(
+        'pkg:maven/com.example/my-library@1.0.0?checksum=sha256:abc123def456',
+      );
     });
 
-    it('should create error labels for failed fingerprint', () => {
+    it('should create PURL without checksum for failed fingerprint', () => {
       const fingerprintData: FingerprintData = {
         hash: '',
         algorithm: 'sha256',
@@ -108,26 +110,68 @@ describe('Fingerprint Module Unit Tests', () => {
         error: 'Artifact not found in repository',
       };
 
-      const result = createFingerprintLabels(fingerprintData);
+      const result = createMavenPurlWithChecksum(
+        'com.example',
+        'my-library',
+        '1.0.0',
+        fingerprintData,
+      );
 
-      expect(result).toEqual({
-        fingerprintError: 'Artifact not found in repository',
-      });
+      expect(result).toBe('pkg:maven/com.example/my-library@1.0.0');
     });
 
     it('should handle different hash algorithms', () => {
       const fingerprintData: FingerprintData = {
-        hash: 'sha1hash',
-        algorithm: 'sha1',
+        hash: 'abcdef123456',
+        algorithm: 'SHA1',
         filePath: '/path/to/artifact.jar',
         fileSize: 2048,
         processingTime: 3.1,
       };
 
-      const result = createFingerprintLabels(fingerprintData);
+      const result = createMavenPurlWithChecksum(
+        'org.example',
+        'test-lib',
+        '2.0.0',
+        fingerprintData,
+      );
 
-      expect(result.fingerprintAlgorithm).toBe('sha1');
-      expect(result.fingerprint).toBe('sha1hash');
+      expect(result).toBe(
+        'pkg:maven/org.example/test-lib@2.0.0?checksum=sha1:abcdef123456',
+      );
+    });
+
+    it('should include classifier and type in PURL', () => {
+      const fingerprintData: FingerprintData = {
+        hash: 'def456ghi789',
+        algorithm: 'sha256',
+        filePath: '/path/to/artifact-sources.jar',
+        fileSize: 512,
+        processingTime: 2.1,
+      };
+
+      const result = createMavenPurlWithChecksum(
+        'com.test',
+        'my-artifact',
+        '3.0.0',
+        fingerprintData,
+        'sources',
+        'jar',
+      );
+
+      expect(result).toBe(
+        'pkg:maven/com.test/my-artifact@3.0.0?classifier=sources&checksum=sha256:def456ghi789',
+      );
+    });
+
+    it('should handle no fingerprint data', () => {
+      const result = createMavenPurlWithChecksum(
+        'com.example',
+        'basic-lib',
+        '1.0.0',
+      );
+
+      expect(result).toBe('pkg:maven/com.example/basic-lib@1.0.0');
     });
   });
 

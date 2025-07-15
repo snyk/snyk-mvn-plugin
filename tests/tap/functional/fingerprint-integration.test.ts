@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { test } from 'tap';
 import { buildDepGraph } from '../../../lib/parse/dep-graph';
-import { createFingerprintLabels } from '../../../lib/fingerprint';
+import { createMavenPurlWithChecksum } from '../../../lib/fingerprint';
 import type { MavenGraph, FingerprintData } from '../../../lib/parse/types';
 
 test('buildDepGraph integration with fingerprint data', async (t) => {
@@ -46,7 +46,7 @@ test('buildDepGraph integration with fingerprint data', async (t) => {
 
   t.ok(depGraph, 'dep graph should be created');
 
-  // Convert to JSON to inspect labels
+  // Convert to JSON to inspect PURLs
   const depGraphJson = depGraph.toJSON();
 
   // Find the junit node
@@ -55,26 +55,20 @@ test('buildDepGraph integration with fingerprint data', async (t) => {
   );
 
   t.ok(junitNode, 'junit node should exist in dep graph');
-  t.ok(junitNode?.info?.labels, 'junit node should have labels');
-  t.equal(
-    junitNode?.info?.labels?.fingerprint,
-    'abc123def456',
-    'should have correct fingerprint',
+
+  // Find the junit package info
+  const junitPkg = depGraphJson.pkgs.find(
+    (pkg) => pkg.id === 'junit:junit@4.13.2',
   );
-  t.equal(
-    junitNode?.info?.labels?.fingerprintAlgorithm,
-    'sha256',
-    'should have correct algorithm',
-  );
-  t.equal(
-    junitNode?.info?.labels?.artifactPath,
-    '/path/to/junit-4.13.2.jar',
-    'should have correct path',
-  );
-  t.equal(
-    junitNode?.info?.labels?.fileSize,
-    '384581',
-    'should have correct file size',
+
+  t.ok(junitPkg, 'junit package should exist in dep graph');
+  t.ok(junitPkg?.info?.purl, 'junit package should have PURL');
+
+  // Check that PURL contains checksum
+  const purl = junitPkg?.info?.purl;
+  t.ok(
+    purl?.includes('checksum=sha256:abc123def456'),
+    'PURL should contain correct checksum',
   );
 });
 
@@ -124,15 +118,20 @@ test('buildDepGraph with error fingerprint data', async (t) => {
   );
 
   t.ok(missingNode, 'missing artifact node should exist');
-  t.ok(missingNode?.info?.labels, 'missing node should have labels');
-  t.equal(
-    missingNode?.info?.labels?.fingerprintError,
-    'Artifact not found in repository',
-    'should have error message',
+
+  // Find the missing package info
+  const missingPkg = depGraphJson.pkgs.find(
+    (pkg) => pkg.id === 'missing:artifact@1.0.0',
   );
+
+  t.ok(missingPkg, 'missing package should exist in dep graph');
+  t.ok(missingPkg?.info?.purl, 'missing package should have PURL');
+
+  // Check that PURL does not contain checksum when there's an error
+  const purl = missingPkg?.info?.purl;
   t.notOk(
-    missingNode?.info?.labels?.fingerprint,
-    'should not have fingerprint hash',
+    purl?.includes('checksum='),
+    'PURL should not contain checksum when there is an error',
   );
 });
 
@@ -168,9 +167,20 @@ test('buildDepGraph with empty fingerprint map', async (t) => {
   );
 
   t.ok(slf4jNode, 'slf4j node should exist');
+
+  // Find the slf4j package info
+  const slf4jPkg = depGraphJson.pkgs.find(
+    (pkg) => pkg.id === 'org.slf4j:slf4j-api@1.7.36',
+  );
+
+  t.ok(slf4jPkg, 'slf4j package should exist in dep graph');
+  t.ok(slf4jPkg?.info?.purl, 'slf4j package should have PURL');
+
+  // Check that PURL does not contain checksum when no fingerprint data
+  const purl = slf4jPkg?.info?.purl;
   t.notOk(
-    slf4jNode?.info?.labels,
-    'node should not have labels when no fingerprint data',
+    purl?.includes('checksum='),
+    'PURL should not contain checksum when no fingerprint data',
   );
 });
 
@@ -219,20 +229,24 @@ test('buildDepGraph verbose mode with fingerprints', async (t) => {
   );
 
   t.ok(commonsNode, 'commons-logging node should exist in verbose mode');
-  t.ok(commonsNode?.info?.labels, 'node should have labels in verbose mode');
-  t.equal(
-    commonsNode?.info?.labels?.fingerprint,
-    'def456ghi789',
-    'should have fingerprint in verbose mode',
+
+  // Find the commons-logging package info
+  const commonsPkg = depGraphJson.pkgs.find(
+    (pkg) => pkg.id === 'commons-logging:commons-logging@1.2',
   );
-  t.equal(
-    commonsNode?.info?.labels?.fingerprintAlgorithm,
-    'sha1',
-    'should have correct algorithm in verbose mode',
+
+  t.ok(commonsPkg, 'commons-logging package should exist in dep graph');
+  t.ok(commonsPkg?.info?.purl, 'commons-logging package should have PURL');
+
+  // Check that PURL contains checksum in verbose mode
+  const purl = commonsPkg?.info?.purl;
+  t.ok(
+    purl?.includes('checksum=sha1:def456ghi789'),
+    'PURL should contain correct checksum in verbose mode',
   );
 });
 
-test('createFingerprintLabels function', async (t) => {
+test('createMavenPurlWithChecksum function', async (t) => {
   const successData: FingerprintData = {
     hash: 'testfingerprint123',
     algorithm: 'sha256',
@@ -241,15 +255,20 @@ test('createFingerprintLabels function', async (t) => {
     processingTime: 2.5,
   };
 
-  const labels = createFingerprintLabels(successData);
+  const purl = createMavenPurlWithChecksum(
+    'com.example',
+    'test-artifact',
+    '1.0.0',
+    successData,
+  );
 
-  t.equal(labels.fingerprint, 'testfingerprint123', 'should set fingerprint');
-  t.equal(labels.fingerprintAlgorithm, 'sha256', 'should set algorithm');
-  t.equal(labels.artifactPath, '/test/path.jar', 'should set artifact path');
-  t.equal(labels.fileSize, '12345', 'should set file size as string');
-  t.notOk(
-    labels.fingerprintError,
-    'should not have error for successful fingerprint',
+  t.ok(
+    purl.includes('checksum=sha256:testfingerprint123'),
+    'should include checksum in PURL',
+  );
+  t.ok(
+    purl.startsWith('pkg:maven/com.example/test-artifact@1.0.0'),
+    'should have correct Maven PURL format',
   );
 
   const errorData: FingerprintData = {
@@ -261,19 +280,20 @@ test('createFingerprintLabels function', async (t) => {
     error: 'File not found',
   };
 
-  const errorLabels = createFingerprintLabels(errorData);
+  const errorPurl = createMavenPurlWithChecksum(
+    'com.example',
+    'test-artifact',
+    '1.0.0',
+    errorData,
+  );
 
   t.equal(
-    errorLabels.fingerprintError,
-    'File not found',
-    'should set error message',
+    errorPurl,
+    'pkg:maven/com.example/test-artifact@1.0.0',
+    'should not include checksum for error case',
   );
   t.notOk(
-    errorLabels.fingerprint,
-    'should not have fingerprint for error case',
-  );
-  t.notOk(
-    errorLabels.fingerprintAlgorithm,
-    'should not have algorithm for error case',
+    errorPurl.includes('checksum='),
+    'should not have checksum qualifier for error case',
   );
 });

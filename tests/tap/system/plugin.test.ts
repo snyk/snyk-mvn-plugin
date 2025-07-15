@@ -350,7 +350,11 @@ test('inspect on aggregate project root pom', async (t) => {
   t.equal(result.scannedProjects.length, 1, 'returns 1 scanned project');
   t.same(
     result.scannedProjects[0].depGraph?.rootPkg,
-    { name: 'io.snyk:my-app', version: '1.2.3' },
+    {
+      name: 'io.snyk:my-app',
+      version: '1.2.3',
+      purl: 'pkg:maven/io.snyk/my-app@1.2.3?type=pom',
+    },
     'has expected root pkg',
   );
   t.equal(

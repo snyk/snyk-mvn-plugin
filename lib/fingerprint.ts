@@ -5,6 +5,7 @@ import * as os from 'os';
 import { performance } from 'perf_hooks';
 import { promisify } from 'util';
 import { exec } from 'child_process';
+import { PackageURL } from 'packageurl-js';
 import type {
   MavenGraph,
   FingerprintOptions,
@@ -272,21 +273,51 @@ export function reportFingerprintTiming(
 }
 
 /**
- * Create labels object for DepGraph from fingerprint data
+ * Create a Maven PURL with checksum qualifier from dependency information and fingerprint data
  */
-export function createFingerprintLabels(
-  fingerprintData: FingerprintData,
-): Record<string, string> {
-  const labels: Record<string, string> = {};
+export function createMavenPurlWithChecksum(
+  groupId: string,
+  artifactId: string,
+  version: string,
+  fingerprintData?: FingerprintData,
+  classifier?: string,
+  type?: string,
+): string {
+  const standardQualifiers: Record<string, string> = {};
 
-  if (fingerprintData.error) {
-    labels.fingerprintError = fingerprintData.error;
-  } else {
-    labels.fingerprint = fingerprintData.hash;
-    labels.fingerprintAlgorithm = fingerprintData.algorithm;
-    labels.artifactPath = fingerprintData.filePath;
-    labels.fileSize = fingerprintData.fileSize.toString();
+  if (classifier) {
+    standardQualifiers.classifier = classifier;
   }
 
-  return labels;
+  if (type && type !== 'jar') {
+    standardQualifiers.type = type;
+  }
+
+  const purl = new PackageURL(
+    'maven',
+    groupId,
+    artifactId,
+    version,
+    Object.keys(standardQualifiers).length > 0 ? standardQualifiers : undefined,
+    undefined, // subpath
+  );
+
+  // Get base PURL string
+  let purlStr = purl.toString();
+
+  // Add checksum qualifier manually to avoid colon encoding
+  if (fingerprintData && !fingerprintData.error && fingerprintData.hash) {
+    const checksumValue = `${fingerprintData.algorithm.toLowerCase()}:${fingerprintData.hash.toLowerCase()}`;
+    const checksumQualifier = `checksum=${checksumValue}`;
+
+    if (purlStr.includes('?')) {
+      // Already has qualifiers, append with &
+      purlStr += `&${checksumQualifier}`;
+    } else {
+      // No qualifiers yet, add with ?
+      purlStr += `?${checksumQualifier}`;
+    }
+  }
+
+  return purlStr;
 }

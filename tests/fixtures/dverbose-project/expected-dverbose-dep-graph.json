@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
   "pkgManager": {
     "name": "maven"
   },
@@ -8,6 +8,7 @@
       "id": "com.example:my-java-project@1.0-SNAPSHOT",
       "info": {
         "name": "com.example:my-java-project",
+        "purl": "pkg:maven/com.example/my-java-project@1.0-SNAPSHOT",
         "version": "1.0-SNAPSHOT"
       }
     },
@@ -15,6 +16,7 @@
       "id": "org.apache.zookeeper:zookeeper@3.9.2",
       "info": {
         "name": "org.apache.zookeeper:zookeeper",
+        "purl": "pkg:maven/org.apache.zookeeper/zookeeper@3.9.2",
         "version": "3.9.2"
       }
     },
@@ -22,6 +24,7 @@
       "id": "org.apache.zookeeper:zookeeper-jute@3.9.2",
       "info": {
         "name": "org.apache.zookeeper:zookeeper-jute",
+        "purl": "pkg:maven/org.apache.zookeeper/zookeeper-jute@3.9.2",
         "version": "3.9.2"
       }
     },
@@ -29,6 +32,7 @@
       "id": "org.apache.yetus:audience-annotations@0.12.0",
       "info": {
         "name": "org.apache.yetus:audience-annotations",
+        "purl": "pkg:maven/org.apache.yetus/audience-annotations@0.12.0",
         "version": "0.12.0"
       }
     },
@@ -36,6 +40,7 @@
       "id": "io.netty:netty-handler@4.1.105.Final",
       "info": {
         "name": "io.netty:netty-handler",
+        "purl": "pkg:maven/io.netty/netty-handler@4.1.105.Final",
         "version": "4.1.105.Final"
       }
     },
@@ -43,6 +48,7 @@
       "id": "io.netty:netty-transport-native-epoll@4.1.105.Final",
       "info": {
         "name": "io.netty:netty-transport-native-epoll",
+        "purl": "pkg:maven/io.netty/netty-transport-native-epoll@4.1.105.Final?classifier=linux-x86_64",
         "version": "4.1.105.Final"
       }
     },
@@ -50,6 +56,7 @@
       "id": "io.netty:netty-tcnative-boringssl-static@2.0.61.Final",
       "info": {
         "name": "io.netty:netty-tcnative-boringssl-static",
+        "purl": "pkg:maven/io.netty/netty-tcnative-boringssl-static@2.0.61.Final?classifier=linux-x86_64",
         "version": "2.0.61.Final"
       }
     },
@@ -57,6 +64,7 @@
       "id": "org.slf4j:slf4j-api@1.7.30",
       "info": {
         "name": "org.slf4j:slf4j-api",
+        "purl": "pkg:maven/org.slf4j/slf4j-api@1.7.30",
         "version": "1.7.30"
       }
     },
@@ -64,6 +72,7 @@
       "id": "commons-io:commons-io@2.11.0",
       "info": {
         "name": "commons-io:commons-io",
+        "purl": "pkg:maven/commons-io/commons-io@2.11.0",
         "version": "2.11.0"
       }
     },
@@ -71,6 +80,7 @@
       "id": "io.netty:netty-common@4.1.105.Final",
       "info": {
         "name": "io.netty:netty-common",
+        "purl": "pkg:maven/io.netty/netty-common@4.1.105.Final",
         "version": "4.1.105.Final"
       }
     },
@@ -78,6 +88,7 @@
       "id": "io.netty:netty-resolver@4.1.105.Final",
       "info": {
         "name": "io.netty:netty-resolver",
+        "purl": "pkg:maven/io.netty/netty-resolver@4.1.105.Final",
         "version": "4.1.105.Final"
       }
     },
@@ -85,6 +96,7 @@
       "id": "io.netty:netty-buffer@4.1.105.Final",
       "info": {
         "name": "io.netty:netty-buffer",
+        "purl": "pkg:maven/io.netty/netty-buffer@4.1.105.Final",
         "version": "4.1.105.Final"
       }
     },
@@ -92,6 +104,7 @@
       "id": "io.netty:netty-transport@4.1.105.Final",
       "info": {
         "name": "io.netty:netty-transport",
+        "purl": "pkg:maven/io.netty/netty-transport@4.1.105.Final",
         "version": "4.1.105.Final"
       }
     },
@@ -99,6 +112,7 @@
       "id": "io.netty:netty-transport-native-unix-common@4.1.105.Final",
       "info": {
         "name": "io.netty:netty-transport-native-unix-common",
+        "purl": "pkg:maven/io.netty/netty-transport-native-unix-common@4.1.105.Final",
         "version": "4.1.105.Final"
       }
     },
@@ -106,6 +120,7 @@
       "id": "io.netty:netty-codec@4.1.105.Final",
       "info": {
         "name": "io.netty:netty-codec",
+        "purl": "pkg:maven/io.netty/netty-codec@4.1.105.Final",
         "version": "4.1.105.Final"
       }
     },
@@ -113,6 +128,7 @@
       "id": "io.netty:netty-transport-classes-epoll@4.1.105.Final",
       "info": {
         "name": "io.netty:netty-transport-classes-epoll",
+        "purl": "pkg:maven/io.netty/netty-transport-classes-epoll@4.1.105.Final",
         "version": "4.1.105.Final"
       }
     },
@@ -120,6 +136,7 @@
       "id": "io.netty:netty-tcnative-classes@2.0.61.Final",
       "info": {
         "name": "io.netty:netty-tcnative-classes",
+        "purl": "pkg:maven/io.netty/netty-tcnative-classes@2.0.61.Final",
         "version": "2.0.61.Final"
       }
     }
