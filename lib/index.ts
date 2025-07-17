@@ -149,10 +149,12 @@ export async function inspect(
 
   if (targetPath && isArchive(targetPath)) {
     debug(`Creating dep-graph from ${targetPath}`);
+    const fingerprintOptions = buildFingerprintOptions(options);
     const depGraph = await createDepGraphFromArchive(
       root,
       targetPath,
       snykHttpClient,
+      fingerprintOptions,
     );
     return {
       plugin: {
@@ -169,10 +171,12 @@ export async function inspect(
     const archives = findArchives(root);
     if (archives.length > 0) {
       debug(`Creating dep-graph from archives in ${root}`);
+      const fingerprintOptions = buildFingerprintOptions(options);
       const depGraph = await createDepGraphFromArchives(
         root,
         archives,
         snykHttpClient,
+        fingerprintOptions,
       );
       return {
         plugin: {
