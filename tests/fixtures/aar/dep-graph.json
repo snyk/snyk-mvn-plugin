@@ -15,7 +15,8 @@
       "id": "org.keycloak:keycloak-core@5.0.0",
       "info": {
         "name": "org.keycloak:keycloak-core",
-        "version": "5.0.0"
+        "version": "5.0.0",
+        "purl": "pkg:maven/org.keycloak/keycloak-core@5.0.0"
       }
     }
   ],
