@@ -42,8 +42,6 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   mavenVerboseIncludeAllVersions?: boolean;
   fingerprintArtifacts?: boolean;
   fingerprintAlgorithm?: HashAlgorithm;
-  fingerprintTiming?: boolean;
-  fingerprintConcurrency?: number;
   mavenRepository?: string;
 }
 
@@ -120,9 +118,7 @@ function buildFingerprintOptions(
   return {
     enabled: true,
     algorithm: options.fingerprintAlgorithm || 'sha256',
-    concurrency: options.fingerprintConcurrency,
     mavenRepository: options.mavenRepository,
-    reportTiming: options.fingerprintTiming,
   };
 }
 

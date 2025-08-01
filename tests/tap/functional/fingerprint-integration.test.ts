@@ -67,7 +67,7 @@ test('buildDepGraph integration with fingerprint data', async (t) => {
   // Check that PURL contains checksum
   const purl = junitPkg?.info?.purl;
   t.ok(
-    purl?.includes('checksum=sha256:abc123def456'),
+    purl?.includes('checksum=sha256%3Aabc123def456'),
     'PURL should contain correct checksum',
   );
 });
@@ -241,7 +241,7 @@ test('buildDepGraph verbose mode with fingerprints', async (t) => {
   // Check that PURL contains checksum in verbose mode
   const purl = commonsPkg?.info?.purl;
   t.ok(
-    purl?.includes('checksum=sha1:def456ghi789'),
+    purl?.includes('checksum=sha1%3Adef456ghi789'),
     'PURL should contain correct checksum in verbose mode',
   );
 });
@@ -263,7 +263,7 @@ test('createMavenPurlWithChecksum function', async (t) => {
   );
 
   t.ok(
-    purl.includes('checksum=sha256:testfingerprint123'),
+    purl.includes('checksum=sha256%3Atestfingerprint123'),
     'should include checksum in PURL',
   );
   t.ok(

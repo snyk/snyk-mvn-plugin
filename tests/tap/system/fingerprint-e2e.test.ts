@@ -60,7 +60,6 @@ test('end-to-end fingerprinting workflow', async (t) => {
       {
         dev: false,
         fingerprintArtifacts: true,
-        fingerprintTiming: true,
       },
     );
 
@@ -136,11 +135,10 @@ test('end-to-end fingerprinting workflow', async (t) => {
       {
         dev: false,
         fingerprintArtifacts: true,
-        fingerprintConcurrency: 2,
       },
     );
 
-    t.ok(resultWithConcurrency, 'should work with custom concurrency');
+    t.ok(resultWithConcurrency, 'should work with fingerprinting enabled');
   } catch (error) {
     t.fail(`Test failed with error: ${error}`);
   }
@@ -153,8 +151,6 @@ test('fingerprinting basic functionality', async (t) => {
       dev: false,
       fingerprintArtifacts: true,
       fingerprintAlgorithm: 'sha256',
-      fingerprintTiming: true,
-      fingerprintConcurrency: 5,
     });
 
     t.ok(result, 'should return result with all fingerprint options');

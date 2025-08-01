@@ -50,8 +50,6 @@ const result = await inspect(rootPath, targetFile, options);
 | `mavenVerboseIncludeAllVersions` | boolean | `false` | Include all dependency versions in verbose mode |
 | `fingerprintArtifacts` | boolean | `false` | Generate cryptographic fingerprints for artifacts |
 | `fingerprintAlgorithm` | string | `'sha256'` | Hash algorithm ('sha1', 'sha256', 'sha512') |
-| `fingerprintTiming` | boolean | `false` | Report fingerprinting performance metrics |
-| `fingerprintConcurrency` | number | `10` | Number of concurrent fingerprinting operations |
 | `mavenRepository` | string | - | Custom Maven repository path |
 
 ## Artifact Fingerprinting
@@ -72,8 +70,6 @@ Enable fingerprinting by setting `fingerprintArtifacts: true`:
 const result = await inspect(rootPath, 'pom.xml', {
   fingerprintArtifacts: true,
   fingerprintAlgorithm: 'sha256',
-  fingerprintTiming: true,
-  fingerprintConcurrency: 5,
   mavenRepository: '/path/to/custom/repo'
 });
 ```
@@ -86,38 +82,49 @@ const result = await inspect(rootPath, 'pom.xml', {
 
 ### Output Format
 
-When fingerprinting is enabled, the dependency graph includes additional metadata:
+When fingerprinting is enabled, the dependency graph includes PURL (Package URL) identifiers with checksum qualifiers:
 
 ```json
 {
+  "pkgs": [
+    {
+      "id": "com.example:artifact@1.0.0",
+      "info": {
+        "name": "com.example:artifact",
+        "version": "1.0.0",
+        "purl": "pkg:maven/com.example/artifact@1.0.0?checksum=sha256%3Aabc123def456789..."
+      }
+    }
+  ],
   "graph": {
     "nodes": [
       {
         "nodeId": "com.example:artifact:jar:1.0.0",
-        "info": {
-          "name": "com.example:artifact",
-          "version": "1.0.0",
-          "labels": {
-            "fingerprint": "abc123...",
-            "fingerprintAlgorithm": "sha256",
-            "artifactPath": "/path/to/artifact-1.0.0.jar",
-            "fileSize": "12345"
-          }
-        }
+        "pkgId": "com.example:artifact@1.0.0",
+        "deps": []
       }
     ]
   }
 }
 ```
 
+### PURL Format
+
+Package URLs follow the standard format with checksum qualifiers:
+- **Without fingerprinting**: `pkg:maven/com.example/artifact@1.0.0`
+- **With fingerprinting**: `pkg:maven/com.example/artifact@1.0.0?checksum=sha256%3Aabc123...`
+- **With classifier**: `pkg:maven/com.example/artifact@1.0.0?checksum=sha256%3Aabc123...&classifier=sources`
+
 ### Error Handling
 
-If fingerprinting fails for an artifact, error information is included:
+If fingerprinting fails for an artifact, the PURL will not include a checksum qualifier:
 
 ```json
 {
-  "labels": {
-    "fingerprintError": "Artifact not found in repository"
+  "info": {
+    "name": "com.example:missing-artifact",
+    "version": "1.0.0",
+    "purl": "pkg:maven/com.example/missing-artifact@1.0.0"
   }
 }
 ```
@@ -125,11 +132,12 @@ If fingerprinting fails for an artifact, error information is included:
 ### Performance Considerations
 
 - Fingerprinting adds processing time depending on artifact sizes
-- Use `fingerprintConcurrency` to control parallel processing
-- Enable `fingerprintTiming` to monitor performance
+- Fingerprinting processes up to 5 artifacts concurrently by default
 - Consider using `sha1` for faster processing of large artifacts
 
 ### Example Timing Output
+
+Timing information is available via debug logging (DEBUG=snyk-mvn-plugin or -d from cli):
 
 ```
 === Fingerprint Timing Summary ===
