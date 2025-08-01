@@ -66,7 +66,7 @@ describe('fingerprint integration', () => {
 
     // Check that PURL contains checksum
     const purl = (junitPkg?.info as any)?.purl;
-    expect(purl).toContain('checksum=sha256:abc123def456');
+    expect(purl).toContain('checksum=sha256%3Aabc123def456');
   });
 
   test('buildDepGraph with error fingerprint data', async () => {
@@ -231,7 +231,7 @@ describe('fingerprint integration', () => {
 
     // Check that PURL contains checksum in verbose mode
     const purl = (commonsPkg?.info as any)?.purl;
-    expect(purl).toContain('checksum=sha1:def456ghi789');
+    expect(purl).toContain('checksum=sha1%3Adef456ghi789');
   });
 
   test('createMavenPurlWithChecksum function', async () => {
@@ -250,10 +250,8 @@ describe('fingerprint integration', () => {
       successData,
     );
 
-    expect(purl).toContain('checksum=sha256:testfingerprint123');
-    expect(
-      purl.startsWith('pkg:maven/com.example/test-artifact@1.0.0'),
-    ).toBeTruthy();
+    expect(purl).toContain('checksum=sha256%3Atestfingerprint123');
+    expect(purl.startsWith('pkg:maven/com.example/test-artifact@1.0.0')).toBe(true);
 
     const errorData: FingerprintData = {
       hash: '',

@@ -74,9 +74,7 @@ export type HashAlgorithm = 'sha1' | 'sha256' | 'sha512';
 export interface FingerprintOptions {
   enabled: boolean;
   algorithm: HashAlgorithm;
-  concurrency?: number;
   mavenRepository?: string;
-  reportTiming?: boolean;
 }
 
 export interface FingerprintData {

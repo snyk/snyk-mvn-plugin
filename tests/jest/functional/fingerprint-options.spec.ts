@@ -29,8 +29,6 @@ describe('Fingerprint Helper Functions', () => {
 
       expect(options.fingerprintArtifacts).toBe(true);
       expect(options.fingerprintAlgorithm).toBeUndefined(); // Should default to 'sha256'
-      expect(options.fingerprintTiming).toBeUndefined();
-      expect(options.fingerprintConcurrency).toBeUndefined();
       expect(options.mavenRepository).toBeUndefined();
     });
 
@@ -38,15 +36,11 @@ describe('Fingerprint Helper Functions', () => {
       const options: MavenOptions = {
         fingerprintArtifacts: true,
         fingerprintAlgorithm: 'sha1',
-        fingerprintTiming: true,
-        fingerprintConcurrency: 10,
         mavenRepository: '/custom/repo',
       };
 
       expect(options.fingerprintArtifacts).toBe(true);
       expect(options.fingerprintAlgorithm).toBe('sha1');
-      expect(options.fingerprintTiming).toBe(true);
-      expect(options.fingerprintConcurrency).toBe(10);
       expect(options.mavenRepository).toBe('/custom/repo');
     });
 
@@ -88,8 +82,6 @@ describe('MavenOptions Type Tests', () => {
       // New fingerprint options
       fingerprintArtifacts: true,
       fingerprintAlgorithm: 'sha256',
-      fingerprintTiming: true,
-      fingerprintConcurrency: 5,
       mavenRepository: '/path/to/repo',
     };
 
@@ -98,8 +90,6 @@ describe('MavenOptions Type Tests', () => {
     expect(
       ['sha1', 'sha256', 'sha512'].includes(fullOptions.fingerprintAlgorithm!),
     ).toBe(true);
-    expect(typeof fullOptions.fingerprintTiming).toBe('boolean');
-    expect(typeof fullOptions.fingerprintConcurrency).toBe('number');
     expect(typeof fullOptions.mavenRepository).toBe('string');
   });
 });

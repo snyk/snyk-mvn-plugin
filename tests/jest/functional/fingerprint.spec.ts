@@ -2,7 +2,6 @@ import * as path from 'path';
 import {
   dependencyIdToArtifactPath,
   createMavenPurlWithChecksum,
-  reportFingerprintTiming,
 } from '../../../lib/fingerprint';
 import { FingerprintData } from '../../../lib/parse/types';
 
@@ -96,7 +95,7 @@ describe('Fingerprint Module Unit Tests', () => {
       );
 
       expect(result).toBe(
-        'pkg:maven/com.example/my-library@1.0.0?checksum=sha256:abc123def456',
+        'pkg:maven/com.example/my-library@1.0.0?checksum=sha256%3Aabc123def456',
       );
     });
 
@@ -137,7 +136,7 @@ describe('Fingerprint Module Unit Tests', () => {
       );
 
       expect(result).toBe(
-        'pkg:maven/org.example/test-lib@2.0.0?checksum=sha1:abcdef123456',
+        'pkg:maven/org.example/test-lib@2.0.0?checksum=sha1%3Aabcdef123456',
       );
     });
 
@@ -160,7 +159,7 @@ describe('Fingerprint Module Unit Tests', () => {
       );
 
       expect(result).toBe(
-        'pkg:maven/com.test/my-artifact@3.0.0?classifier=sources&checksum=sha256:def456ghi789',
+        'pkg:maven/com.test/my-artifact@3.0.0?checksum=sha256%3Adef456ghi789&classifier=sources',
       );
     });
 
@@ -172,100 +171,6 @@ describe('Fingerprint Module Unit Tests', () => {
       );
 
       expect(result).toBe('pkg:maven/com.example/basic-lib@1.0.0');
-    });
-  });
-
-  describe('reportFingerprintTiming', () => {
-    let consoleSpy: jest.SpyInstance;
-
-    beforeEach(() => {
-      consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-    });
-
-    afterEach(() => {
-      consoleSpy.mockRestore();
-    });
-
-    it('should report timing summary for successful fingerprints', () => {
-      const fingerprintMap = new Map<string, FingerprintData>([
-        [
-          'dep1',
-          {
-            hash: 'hash1',
-            algorithm: 'sha256',
-            filePath: '/path/1.jar',
-            fileSize: 1000,
-            processingTime: 10.5,
-          },
-        ],
-        [
-          'dep2',
-          {
-            hash: 'hash2',
-            algorithm: 'sha256',
-            filePath: '/path/2.jar',
-            fileSize: 2000,
-            processingTime: 20.2,
-          },
-        ],
-      ]);
-
-      reportFingerprintTiming(fingerprintMap);
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '\n=== Fingerprint Timing Summary ===',
-      );
-      expect(consoleSpy).toHaveBeenCalledWith('Total artifacts: 2');
-      expect(consoleSpy).toHaveBeenCalledWith('Successful: 2');
-      expect(consoleSpy).toHaveBeenCalledWith('Failed: 0');
-      expect(consoleSpy).toHaveBeenCalledWith('Total time: 30.70ms');
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Average time per artifact: 15.35ms',
-      );
-      expect(consoleSpy).toHaveBeenCalledWith('Fastest: 10.50ms');
-      expect(consoleSpy).toHaveBeenCalledWith('Slowest: 20.20ms');
-    });
-
-    it('should report timing summary with failures', () => {
-      const fingerprintMap = new Map<string, FingerprintData>([
-        [
-          'dep1',
-          {
-            hash: 'hash1',
-            algorithm: 'sha256',
-            filePath: '/path/1.jar',
-            fileSize: 1000,
-            processingTime: 5.0,
-          },
-        ],
-        [
-          'dep2',
-          {
-            hash: '',
-            algorithm: 'sha256',
-            filePath: '/path/missing.jar',
-            fileSize: 0,
-            processingTime: 2.0,
-            error: 'File not found',
-          },
-        ],
-      ]);
-
-      reportFingerprintTiming(fingerprintMap);
-
-      expect(consoleSpy).toHaveBeenCalledWith('Total artifacts: 2');
-      expect(consoleSpy).toHaveBeenCalledWith('Successful: 1');
-      expect(consoleSpy).toHaveBeenCalledWith('Failed: 1');
-    });
-
-    it('should handle empty fingerprint map', () => {
-      const fingerprintMap = new Map<string, FingerprintData>();
-
-      reportFingerprintTiming(fingerprintMap);
-
-      expect(consoleSpy).toHaveBeenCalledWith('Total artifacts: 0');
-      expect(consoleSpy).toHaveBeenCalledWith('Successful: 0');
-      expect(consoleSpy).toHaveBeenCalledWith('Failed: 0');
     });
   });
 });

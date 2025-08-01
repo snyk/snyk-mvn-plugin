@@ -13,6 +13,7 @@ import type {
   HashAlgorithm,
 } from './parse/types';
 import { parseDependency } from './parse/dependency';
+import { debug } from './index';
 
 const execAsync = promisify(exec);
 
@@ -236,7 +237,7 @@ export async function generateFingerprints(
     nodeIdArray,
     repositoryPath,
     options.algorithm,
-    options.concurrency || 5,
+    5, // Hardcoded concurrency limit
   );
 
   // Build the map
@@ -247,29 +248,32 @@ export async function generateFingerprints(
   return fingerprintMap;
 }
 
-/**
- * Report fingerprint timing information to stdout
- */
 export function reportFingerprintTiming(
   fingerprintMap: Map<string, FingerprintData>,
 ): void {
   const results = Array.from(fingerprintMap.values());
+
+  // Don't report timing if there are no results
+  if (results.length === 0) {
+    return;
+  }
+
   const processingTimes = results.map((r) => r.processingTime);
   const totalTime = processingTimes.reduce((sum, time) => sum + time, 0);
   const successful = results.filter((r) => !r.error).length;
   const failed = results.filter((r) => r.error).length;
 
-  console.log('\n=== Fingerprint Timing Summary ===');
-  console.log(`Total artifacts: ${results.length}`);
-  console.log(`Successful: ${successful}`);
-  console.log(`Failed: ${failed}`);
-  console.log(`Total time: ${totalTime.toFixed(2)}ms`);
-  console.log(
+  debug('=== Fingerprint Timing Summary ===');
+  debug(`Total artifacts: ${results.length}`);
+  debug(`Successful: ${successful}`);
+  debug(`Failed: ${failed}`);
+  debug(`Total time: ${totalTime.toFixed(2)}ms`);
+  debug(
     `Average time per artifact: ${(totalTime / results.length).toFixed(2)}ms`,
   );
-  console.log(`Fastest: ${Math.min(...processingTimes).toFixed(2)}ms`);
-  console.log(`Slowest: ${Math.max(...processingTimes).toFixed(2)}ms`);
-  console.log('=====================================\n');
+  debug(`Fastest: ${Math.min(...processingTimes).toFixed(2)}ms`);
+  debug(`Slowest: ${Math.max(...processingTimes).toFixed(2)}ms`);
+  debug('=====================================');
 }
 
 /**
@@ -293,6 +297,12 @@ export function createMavenPurlWithChecksum(
     standardQualifiers.type = type;
   }
 
+  // Add checksum qualifier to standard qualifiers
+  if (fingerprintData && !fingerprintData.error && fingerprintData.hash) {
+    const checksumValue = `${fingerprintData.algorithm.toLowerCase()}:${fingerprintData.hash.toLowerCase()}`;
+    standardQualifiers.checksum = checksumValue;
+  }
+
   const purl = new PackageURL(
     'maven',
     groupId,
@@ -302,22 +312,5 @@ export function createMavenPurlWithChecksum(
     undefined, // subpath
   );
 
-  // Get base PURL string
-  let purlStr = purl.toString();
-
-  // Add checksum qualifier manually to avoid colon encoding
-  if (fingerprintData && !fingerprintData.error && fingerprintData.hash) {
-    const checksumValue = `${fingerprintData.algorithm.toLowerCase()}:${fingerprintData.hash.toLowerCase()}`;
-    const checksumQualifier = `checksum=${checksumValue}`;
-
-    if (purlStr.includes('?')) {
-      // Already has qualifiers, append with &
-      purlStr += `&${checksumQualifier}`;
-    } else {
-      // No qualifiers yet, add with ?
-      purlStr += `?${checksumQualifier}`;
-    }
-  }
-
-  return purlStr;
+  return purl.toString();
 }

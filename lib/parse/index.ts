@@ -30,10 +30,7 @@ export async function parse(
       mavenCommand,
     );
 
-    // Optional timing output
-    if (fingerprintOptions.reportTiming) {
-      reportFingerprintTiming(fingerprintMap);
-    }
+    reportFingerprintTiming(fingerprintMap);
   }
 
   const scannedProjects: ScannedProject[] = [];

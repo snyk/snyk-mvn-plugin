@@ -49,7 +49,6 @@ describe('fingerprinting e2e', () => {
       {
         dev: false,
         fingerprintArtifacts: true,
-        fingerprintTiming: true,
       },
     );
 
@@ -112,19 +111,6 @@ describe('fingerprinting e2e', () => {
     );
 
     expect(resultWithSha1).toBeDefined();
-
-    // Test with custom concurrency
-    const resultWithConcurrency = await inspect(
-      '.',
-      path.join(testProjectPath, 'pom.xml'),
-      {
-        dev: false,
-        fingerprintArtifacts: true,
-        fingerprintConcurrency: 2,
-      },
-    );
-
-    expect(resultWithConcurrency).toBeDefined();
   });
 
   test('fingerprinting basic functionality', async () => {
@@ -133,8 +119,6 @@ describe('fingerprinting e2e', () => {
       dev: false,
       fingerprintArtifacts: true,
       fingerprintAlgorithm: 'sha256',
-      fingerprintTiming: true,
-      fingerprintConcurrency: 5,
     });
 
     expect(result).toBeDefined();
