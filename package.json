@@ -52,11 +52,11 @@
   },
   "dependencies": {
     "@common.js/yocto-queue": "^1.1.1",
-    "@snyk/cli-interface": "2.11.3",
-    "@snyk/dep-graph": "^1.23.1",
+    "@snyk/cli-interface": "2.14.1",
+    "@snyk/dep-graph": "^2.9.0",
     "debug": "^4.3.4",
     "glob": "^7.1.6",
-    "packageurl-js": "^1.0.0",
+    "packageurl-js": "^2.0.1",
     "shescape": "^2.1.4",
     "tslib": "^2.4.0"
   }

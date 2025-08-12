@@ -68,3 +68,20 @@ export interface ShaSearchError {
     links: string[];
   };
 }
+
+export type HashAlgorithm = 'sha1' | 'sha256' | 'sha512';
+
+export interface FingerprintOptions {
+  enabled: boolean;
+  algorithm: HashAlgorithm;
+  mavenRepository?: string;
+}
+
+export interface FingerprintData {
+  hash: string;
+  algorithm: string;
+  filePath: string;
+  fileSize: number;
+  processingTime: number;
+  error?: string;
+}
