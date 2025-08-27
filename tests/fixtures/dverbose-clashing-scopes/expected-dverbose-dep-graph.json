@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.2.0",
+  "schemaVersion": "1.3.0",
   "pkgManager": {
     "name": "maven"
   },
@@ -8,462 +8,528 @@
       "id": "com.example.scopetest:scope-collision-test@1.0.0",
       "info": {
         "name": "com.example.scopetest:scope-collision-test",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "purl": "pkg:maven/com.example.scopetest/scope-collision-test@1.0.0"
       }
     },
     {
       "id": "org.springframework.boot:spring-boot-starter-data-jpa@3.4.1",
       "info": {
         "name": "org.springframework.boot:spring-boot-starter-data-jpa",
-        "version": "3.4.1"
+        "version": "3.4.1",
+        "purl": "pkg:maven/org.springframework.boot/spring-boot-starter-data-jpa@3.4.1"
       }
     },
     {
       "id": "org.springdoc:springdoc-openapi-starter-webmvc-ui@2.0.2",
       "info": {
         "name": "org.springdoc:springdoc-openapi-starter-webmvc-ui",
-        "version": "2.0.2"
+        "version": "2.0.2",
+        "purl": "pkg:maven/org.springdoc/springdoc-openapi-starter-webmvc-ui@2.0.2"
       }
     },
     {
       "id": "org.springframework.boot:spring-boot-starter@3.4.1",
       "info": {
         "name": "org.springframework.boot:spring-boot-starter",
-        "version": "3.4.1"
+        "version": "3.4.1",
+        "purl": "pkg:maven/org.springframework.boot/spring-boot-starter@3.4.1"
       }
     },
     {
       "id": "org.springframework.boot:spring-boot-starter-jdbc@3.4.1",
       "info": {
         "name": "org.springframework.boot:spring-boot-starter-jdbc",
-        "version": "3.4.1"
+        "version": "3.4.1",
+        "purl": "pkg:maven/org.springframework.boot/spring-boot-starter-jdbc@3.4.1"
       }
     },
     {
       "id": "org.hibernate.orm:hibernate-core@6.6.4.Final",
       "info": {
         "name": "org.hibernate.orm:hibernate-core",
-        "version": "6.6.4.Final"
+        "version": "6.6.4.Final",
+        "purl": "pkg:maven/org.hibernate.orm/hibernate-core@6.6.4.Final"
       }
     },
     {
       "id": "org.springframework.data:spring-data-jpa@3.4.1",
       "info": {
         "name": "org.springframework.data:spring-data-jpa",
-        "version": "3.4.1"
+        "version": "3.4.1",
+        "purl": "pkg:maven/org.springframework.data/spring-data-jpa@3.4.1"
       }
     },
     {
       "id": "org.springframework:spring-aspects@6.2.1",
       "info": {
         "name": "org.springframework:spring-aspects",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-aspects@6.2.1"
       }
     },
     {
       "id": "org.springdoc:springdoc-openapi-starter-webmvc-api@2.0.2",
       "info": {
         "name": "org.springdoc:springdoc-openapi-starter-webmvc-api",
-        "version": "2.0.2"
+        "version": "2.0.2",
+        "purl": "pkg:maven/org.springdoc/springdoc-openapi-starter-webmvc-api@2.0.2"
       }
     },
     {
       "id": "org.webjars:swagger-ui@4.15.5",
       "info": {
         "name": "org.webjars:swagger-ui",
-        "version": "4.15.5"
+        "version": "4.15.5",
+        "purl": "pkg:maven/org.webjars/swagger-ui@4.15.5"
       }
     },
     {
       "id": "org.webjars:webjars-locator-core@0.59",
       "info": {
         "name": "org.webjars:webjars-locator-core",
-        "version": "0.59"
+        "version": "0.59",
+        "purl": "pkg:maven/org.webjars/webjars-locator-core@0.59"
       }
     },
     {
       "id": "io.github.classgraph:classgraph@4.8.149",
       "info": {
         "name": "io.github.classgraph:classgraph",
-        "version": "4.8.149"
+        "version": "4.8.149",
+        "purl": "pkg:maven/io.github.classgraph/classgraph@4.8.149"
       }
     },
     {
       "id": "org.springframework.boot:spring-boot@3.4.1",
       "info": {
         "name": "org.springframework.boot:spring-boot",
-        "version": "3.4.1"
+        "version": "3.4.1",
+        "purl": "pkg:maven/org.springframework.boot/spring-boot@3.4.1"
       }
     },
     {
       "id": "org.springframework.boot:spring-boot-autoconfigure@3.4.1",
       "info": {
         "name": "org.springframework.boot:spring-boot-autoconfigure",
-        "version": "3.4.1"
+        "version": "3.4.1",
+        "purl": "pkg:maven/org.springframework.boot/spring-boot-autoconfigure@3.4.1"
       }
     },
     {
       "id": "org.springframework.boot:spring-boot-starter-logging@3.4.1",
       "info": {
         "name": "org.springframework.boot:spring-boot-starter-logging",
-        "version": "3.4.1"
+        "version": "3.4.1",
+        "purl": "pkg:maven/org.springframework.boot/spring-boot-starter-logging@3.4.1"
       }
     },
     {
       "id": "jakarta.annotation:jakarta.annotation-api@2.1.1",
       "info": {
         "name": "jakarta.annotation:jakarta.annotation-api",
-        "version": "2.1.1"
+        "version": "2.1.1",
+        "purl": "pkg:maven/jakarta.annotation/jakarta.annotation-api@2.1.1"
       }
     },
     {
       "id": "org.springframework:spring-core@6.2.1",
       "info": {
         "name": "org.springframework:spring-core",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-core@6.2.1"
       }
     },
     {
       "id": "org.yaml:snakeyaml@2.3",
       "info": {
         "name": "org.yaml:snakeyaml",
-        "version": "2.3"
+        "version": "2.3",
+        "purl": "pkg:maven/org.yaml/snakeyaml@2.3"
       }
     },
     {
       "id": "com.zaxxer:HikariCP@5.1.0",
       "info": {
         "name": "com.zaxxer:HikariCP",
-        "version": "5.1.0"
+        "version": "5.1.0",
+        "purl": "pkg:maven/com.zaxxer/HikariCP@5.1.0"
       }
     },
     {
       "id": "org.springframework:spring-jdbc@6.2.1",
       "info": {
         "name": "org.springframework:spring-jdbc",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-jdbc@6.2.1"
       }
     },
     {
       "id": "jakarta.persistence:jakarta.persistence-api@3.1.0",
       "info": {
         "name": "jakarta.persistence:jakarta.persistence-api",
-        "version": "3.1.0"
+        "version": "3.1.0",
+        "purl": "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.1.0"
       }
     },
     {
       "id": "jakarta.transaction:jakarta.transaction-api@2.0.1",
       "info": {
         "name": "jakarta.transaction:jakarta.transaction-api",
-        "version": "2.0.1"
+        "version": "2.0.1",
+        "purl": "pkg:maven/jakarta.transaction/jakarta.transaction-api@2.0.1"
       }
     },
     {
       "id": "org.jboss.logging:jboss-logging@3.6.1.Final",
       "info": {
         "name": "org.jboss.logging:jboss-logging",
-        "version": "3.6.1.Final"
+        "version": "3.6.1.Final",
+        "purl": "pkg:maven/org.jboss.logging/jboss-logging@3.6.1.Final"
       }
     },
     {
       "id": "org.hibernate.common:hibernate-commons-annotations@7.0.3.Final",
       "info": {
         "name": "org.hibernate.common:hibernate-commons-annotations",
-        "version": "7.0.3.Final"
+        "version": "7.0.3.Final",
+        "purl": "pkg:maven/org.hibernate.common/hibernate-commons-annotations@7.0.3.Final"
       }
     },
     {
       "id": "io.smallrye:jandex@3.2.0",
       "info": {
         "name": "io.smallrye:jandex",
-        "version": "3.2.0"
+        "version": "3.2.0",
+        "purl": "pkg:maven/io.smallrye/jandex@3.2.0"
       }
     },
     {
       "id": "com.fasterxml:classmate@1.7.0",
       "info": {
         "name": "com.fasterxml:classmate",
-        "version": "1.7.0"
+        "version": "1.7.0",
+        "purl": "pkg:maven/com.fasterxml/classmate@1.7.0"
       }
     },
     {
       "id": "net.bytebuddy:byte-buddy@1.15.11",
       "info": {
         "name": "net.bytebuddy:byte-buddy",
-        "version": "1.15.11"
+        "version": "1.15.11",
+        "purl": "pkg:maven/net.bytebuddy/byte-buddy@1.15.11"
       }
     },
     {
       "id": "jakarta.xml.bind:jakarta.xml.bind-api@4.0.2",
       "info": {
         "name": "jakarta.xml.bind:jakarta.xml.bind-api",
-        "version": "4.0.2"
+        "version": "4.0.2",
+        "purl": "pkg:maven/jakarta.xml.bind/jakarta.xml.bind-api@4.0.2"
       }
     },
     {
       "id": "org.glassfish.jaxb:jaxb-runtime@4.0.5",
       "info": {
         "name": "org.glassfish.jaxb:jaxb-runtime",
-        "version": "4.0.5"
+        "version": "4.0.5",
+        "purl": "pkg:maven/org.glassfish.jaxb/jaxb-runtime@4.0.5"
       }
     },
     {
       "id": "jakarta.inject:jakarta.inject-api@2.0.1",
       "info": {
         "name": "jakarta.inject:jakarta.inject-api",
-        "version": "2.0.1"
+        "version": "2.0.1",
+        "purl": "pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1"
       }
     },
     {
       "id": "org.antlr:antlr4-runtime@4.13.0",
       "info": {
         "name": "org.antlr:antlr4-runtime",
-        "version": "4.13.0"
+        "version": "4.13.0",
+        "purl": "pkg:maven/org.antlr/antlr4-runtime@4.13.0"
       }
     },
     {
       "id": "org.springframework.data:spring-data-commons@3.4.1",
       "info": {
         "name": "org.springframework.data:spring-data-commons",
-        "version": "3.4.1"
+        "version": "3.4.1",
+        "purl": "pkg:maven/org.springframework.data/spring-data-commons@3.4.1"
       }
     },
     {
       "id": "org.springframework:spring-orm@6.2.1",
       "info": {
         "name": "org.springframework:spring-orm",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-orm@6.2.1"
       }
     },
     {
       "id": "org.springframework:spring-context@6.2.1",
       "info": {
         "name": "org.springframework:spring-context",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-context@6.2.1"
       }
     },
     {
       "id": "org.springframework:spring-aop@6.2.1",
       "info": {
         "name": "org.springframework:spring-aop",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-aop@6.2.1"
       }
     },
     {
       "id": "org.springframework:spring-tx@6.2.1",
       "info": {
         "name": "org.springframework:spring-tx",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-tx@6.2.1"
       }
     },
     {
       "id": "org.springframework:spring-beans@6.2.1",
       "info": {
         "name": "org.springframework:spring-beans",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-beans@6.2.1"
       }
     },
     {
       "id": "org.slf4j:slf4j-api@2.0.16",
       "info": {
         "name": "org.slf4j:slf4j-api",
-        "version": "2.0.16"
+        "version": "2.0.16",
+        "purl": "pkg:maven/org.slf4j/slf4j-api@2.0.16"
       }
     },
     {
       "id": "org.aspectj:aspectjweaver@1.9.22.1",
       "info": {
         "name": "org.aspectj:aspectjweaver",
-        "version": "1.9.22.1"
+        "version": "1.9.22.1",
+        "purl": "pkg:maven/org.aspectj/aspectjweaver@1.9.22.1"
       }
     },
     {
       "id": "org.springdoc:springdoc-openapi-starter-common@2.0.2",
       "info": {
         "name": "org.springdoc:springdoc-openapi-starter-common",
-        "version": "2.0.2"
+        "version": "2.0.2",
+        "purl": "pkg:maven/org.springdoc/springdoc-openapi-starter-common@2.0.2"
       }
     },
     {
       "id": "org.springframework:spring-webmvc@6.2.1",
       "info": {
         "name": "org.springframework:spring-webmvc",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-webmvc@6.2.1"
       }
     },
     {
       "id": "ch.qos.logback:logback-classic@1.5.12",
       "info": {
         "name": "ch.qos.logback:logback-classic",
-        "version": "1.5.12"
+        "version": "1.5.12",
+        "purl": "pkg:maven/ch.qos.logback/logback-classic@1.5.12"
       }
     },
     {
       "id": "org.apache.logging.log4j:log4j-to-slf4j@2.24.3",
       "info": {
         "name": "org.apache.logging.log4j:log4j-to-slf4j",
-        "version": "2.24.3"
+        "version": "2.24.3",
+        "purl": "pkg:maven/org.apache.logging.log4j/log4j-to-slf4j@2.24.3"
       }
     },
     {
       "id": "org.slf4j:jul-to-slf4j@2.0.16",
       "info": {
         "name": "org.slf4j:jul-to-slf4j",
-        "version": "2.0.16"
+        "version": "2.0.16",
+        "purl": "pkg:maven/org.slf4j/jul-to-slf4j@2.0.16"
       }
     },
     {
       "id": "org.springframework:spring-jcl@6.2.1",
       "info": {
         "name": "org.springframework:spring-jcl",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-jcl@6.2.1"
       }
     },
     {
       "id": "org.glassfish.jaxb:jaxb-core@4.0.5",
       "info": {
         "name": "org.glassfish.jaxb:jaxb-core",
-        "version": "4.0.5"
+        "version": "4.0.5",
+        "purl": "pkg:maven/org.glassfish.jaxb/jaxb-core@4.0.5"
       }
     },
     {
       "id": "org.springframework:spring-expression@6.2.1",
       "info": {
         "name": "org.springframework:spring-expression",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-expression@6.2.1"
       }
     },
     {
       "id": "io.micrometer:micrometer-observation@1.14.2",
       "info": {
         "name": "io.micrometer:micrometer-observation",
-        "version": "1.14.2"
+        "version": "1.14.2",
+        "purl": "pkg:maven/io.micrometer/micrometer-observation@1.14.2"
       }
     },
     {
       "id": "io.swagger.core.v3:swagger-core-jakarta@2.2.7",
       "info": {
         "name": "io.swagger.core.v3:swagger-core-jakarta",
-        "version": "2.2.7"
+        "version": "2.2.7",
+        "purl": "pkg:maven/io.swagger.core.v3/swagger-core-jakarta@2.2.7"
       }
     },
     {
       "id": "org.springframework:spring-web@6.2.1",
       "info": {
         "name": "org.springframework:spring-web",
-        "version": "6.2.1"
+        "version": "6.2.1",
+        "purl": "pkg:maven/org.springframework/spring-web@6.2.1"
       }
     },
     {
       "id": "ch.qos.logback:logback-core@1.5.12",
       "info": {
         "name": "ch.qos.logback:logback-core",
-        "version": "1.5.12"
+        "version": "1.5.12",
+        "purl": "pkg:maven/ch.qos.logback/logback-core@1.5.12"
       }
     },
     {
       "id": "org.apache.logging.log4j:log4j-api@2.24.3",
       "info": {
         "name": "org.apache.logging.log4j:log4j-api",
-        "version": "2.24.3"
+        "version": "2.24.3",
+        "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.24.3"
       }
     },
     {
       "id": "jakarta.activation:jakarta.activation-api@2.1.3",
       "info": {
         "name": "jakarta.activation:jakarta.activation-api",
-        "version": "2.1.3"
+        "version": "2.1.3",
+        "purl": "pkg:maven/jakarta.activation/jakarta.activation-api@2.1.3"
       }
     },
     {
       "id": "org.eclipse.angus:angus-activation@2.0.2",
       "info": {
         "name": "org.eclipse.angus:angus-activation",
-        "version": "2.0.2"
+        "version": "2.0.2",
+        "purl": "pkg:maven/org.eclipse.angus/angus-activation@2.0.2"
       }
     },
     {
       "id": "org.glassfish.jaxb:txw2@4.0.5",
       "info": {
         "name": "org.glassfish.jaxb:txw2",
-        "version": "4.0.5"
+        "version": "4.0.5",
+        "purl": "pkg:maven/org.glassfish.jaxb/txw2@4.0.5"
       }
     },
     {
       "id": "com.sun.istack:istack-commons-runtime@4.1.2",
       "info": {
         "name": "com.sun.istack:istack-commons-runtime",
-        "version": "4.1.2"
+        "version": "4.1.2",
+        "purl": "pkg:maven/com.sun.istack/istack-commons-runtime@4.1.2"
       }
     },
     {
       "id": "io.micrometer:micrometer-commons@1.14.2",
       "info": {
         "name": "io.micrometer:micrometer-commons",
-        "version": "1.14.2"
+        "version": "1.14.2",
+        "purl": "pkg:maven/io.micrometer/micrometer-commons@1.14.2"
       }
     },
     {
       "id": "org.apache.commons:commons-lang3@3.17.0",
       "info": {
         "name": "org.apache.commons:commons-lang3",
-        "version": "3.17.0"
+        "version": "3.17.0",
+        "purl": "pkg:maven/org.apache.commons/commons-lang3@3.17.0"
       }
     },
     {
       "id": "io.swagger.core.v3:swagger-annotations-jakarta@2.2.7",
       "info": {
         "name": "io.swagger.core.v3:swagger-annotations-jakarta",
-        "version": "2.2.7"
+        "version": "2.2.7",
+        "purl": "pkg:maven/io.swagger.core.v3/swagger-annotations-jakarta@2.2.7"
       }
     },
     {
       "id": "io.swagger.core.v3:swagger-models-jakarta@2.2.7",
       "info": {
         "name": "io.swagger.core.v3:swagger-models-jakarta",
-        "version": "2.2.7"
+        "version": "2.2.7",
+        "purl": "pkg:maven/io.swagger.core.v3/swagger-models-jakarta@2.2.7"
       }
     },
     {
       "id": "jakarta.validation:jakarta.validation-api@3.0.2",
       "info": {
         "name": "jakarta.validation:jakarta.validation-api",
-        "version": "3.0.2"
+        "version": "3.0.2",
+        "purl": "pkg:maven/jakarta.validation/jakarta.validation-api@3.0.2"
       }
     },
     {
       "id": "com.fasterxml.jackson.core:jackson-annotations@2.18.2",
       "info": {
         "name": "com.fasterxml.jackson.core:jackson-annotations",
-        "version": "2.18.2"
+        "version": "2.18.2",
+        "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.18.2"
       }
     },
     {
       "id": "com.fasterxml.jackson.core:jackson-databind@2.18.2",
       "info": {
         "name": "com.fasterxml.jackson.core:jackson-databind",
-        "version": "2.18.2"
+        "version": "2.18.2",
+        "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.18.2"
       }
     },
     {
       "id": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml@2.18.2",
       "info": {
         "name": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
-        "version": "2.18.2"
+        "version": "2.18.2",
+        "purl": "pkg:maven/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml@2.18.2"
       }
     },
     {
       "id": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310@2.18.2",
       "info": {
         "name": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310",
-        "version": "2.18.2"
+        "version": "2.18.2",
+        "purl": "pkg:maven/com.fasterxml.jackson.datatype/jackson-datatype-jsr310@2.18.2"
       }
     },
     {
       "id": "com.fasterxml.jackson.core:jackson-core@2.18.2",
       "info": {
         "name": "com.fasterxml.jackson.core:jackson-core",
-        "version": "2.18.2"
+        "version": "2.18.2",
+        "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.18.2"
       }
     }
   ],
