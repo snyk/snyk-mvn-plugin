@@ -1,0 +1,32 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< io.snyk.example:metaversion-simple >-----------------
+[INFO] Building Metaversion Simple Test Project 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- dependency:3.7.0:resolve (default-cli) @ metaversion-simple ---
+[INFO]
+[INFO] The following files have been resolved:
+[INFO]    org.jboss.resteasy:resteasy-core:jar:7.0.0.Beta1:compile -- module resteasy.core (auto)
+[INFO]    org.jboss.logging:jboss-logging:jar:3.6.1.Final:compile -- module org.jboss.logging
+[INFO]    jakarta.annotation:jakarta.annotation-api:jar:2.1.1:compile -- module jakarta.annotation
+[INFO]    jakarta.ws.rs:jakarta.ws.rs-api:jar:4.0.0:compile -- module jakarta.ws.rs
+[INFO]    jakarta.xml.bind:jakarta.xml.bind-api:jar:3.0.1:compile -- module jakarta.xml.bind
+[INFO]    io.smallrye:jandex:jar:3.2.7:compile -- module org.jboss.jandex [auto]
+[INFO]    org.jboss.resteasy:resteasy-core-spi:jar:7.0.0.Beta1:compile -- module resteasy.core.spi (auto)
+[INFO]    org.reactivestreams:reactive-streams:jar:1.0.4:compile -- module org.reactivestreams [auto]
+[INFO]    jakarta.activation:jakarta.activation-api:jar:2.1.3:compile -- module jakarta.activation
+[INFO]    org.eclipse.angus:angus-activation:jar:2.0.2:compile -- module org.eclipse.angus.activation
+[INFO]    jakarta.validation:jakarta.validation-api:jar:3.1.1:compile -- module jakarta.validation
+[INFO]    com.ibm.async:asyncutil:jar:0.1.0:compile -- module asyncutil (auto)
+[INFO]    commons-lang:commons-lang:jar:2.6:compile -- module commons.lang (auto)
+[INFO]    junit:junit:jar:4.13.2:test -- module junit [auto]
+[INFO]    org.hamcrest:hamcrest-core:jar:1.3:test -- module hamcrest.core (auto)
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.423 s
+[INFO] Finished at: 2025-08-29T10:55:06+01:00
+[INFO] ------------------------------------------------------------------------

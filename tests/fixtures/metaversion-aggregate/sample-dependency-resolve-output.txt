@@ -1,0 +1,68 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO]
+[INFO] Metaversion Aggregate Test Project                                 [pom]
+[INFO] Core Module with Metaversions                                      [jar]
+[INFO] Web Module with Metaversions                                       [jar]
+[INFO]
+[INFO] ---------------< io.snyk.example:metaversion-aggregate >----------------
+[INFO] Building Metaversion Aggregate Test Project 1.0-SNAPSHOT           [1/3]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO]
+[INFO] --- dependency:3.7.0:resolve (default-cli) @ metaversion-aggregate ---
+[INFO]
+[INFO] The following files have been resolved:
+[INFO]    none
+[INFO]
+[INFO]
+[INFO] --------------------< io.snyk.example:module-core >---------------------
+[INFO] Building Core Module with Metaversions 1.0-SNAPSHOT                [2/3]
+[INFO]   from module-core/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- dependency:3.7.0:resolve (default-cli) @ module-core ---
+[INFO]
+[INFO] The following files have been resolved:
+[INFO]    org.apache.httpcomponents:httpclient:jar:4.5.14:compile -- module org.apache.httpcomponents.httpclient [auto]
+[INFO]    org.apache.httpcomponents:httpcore:jar:4.4.16:compile -- module org.apache.httpcomponents.httpcore [auto]
+[INFO]    commons-logging:commons-logging:jar:1.2:compile -- module commons.logging (auto)
+[INFO]    commons-codec:commons-codec:jar:1.11:compile -- module org.apache.commons.codec [auto]
+[INFO]    org.springframework:spring-core:jar:7.0.0-M8:compile -- module spring.core [auto]
+[INFO]    org.jspecify:jspecify:jar:1.0.0:compile -- module org.jspecify
+[INFO]    com.fasterxml.jackson.core:jackson-core:jar:2.20.0:compile -- module com.fasterxml.jackson.core
+[INFO]
+[INFO]
+[INFO] ---------------------< io.snyk.example:module-web >---------------------
+[INFO] Building Web Module with Metaversions 1.0-SNAPSHOT                 [3/3]
+[INFO]   from module-web/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- dependency:3.7.0:resolve (default-cli) @ module-web ---
+[INFO]
+[INFO] The following files have been resolved:
+[INFO]    io.snyk.example:module-core:jar:1.0-SNAPSHOT:compile -- module module.core (auto)
+[INFO]    org.apache.httpcomponents:httpclient:jar:4.5.14:compile -- module org.apache.httpcomponents.httpclient [auto]
+[INFO]    org.apache.httpcomponents:httpcore:jar:4.4.16:compile -- module org.apache.httpcomponents.httpcore [auto]
+[INFO]    commons-logging:commons-logging:jar:1.2:compile -- module commons.logging (auto)
+[INFO]    commons-codec:commons-codec:jar:1.11:compile -- module org.apache.commons.codec [auto]
+[INFO]    org.springframework:spring-core:jar:7.0.0-M8:compile -- module spring.core [auto]
+[INFO]    org.jspecify:jspecify:jar:1.0.0:compile -- module org.jspecify
+[INFO]    com.fasterxml.jackson.core:jackson-core:jar:2.20.0:compile -- module com.fasterxml.jackson.core
+[INFO]    org.slf4j:slf4j-api:jar:2.1.0-alpha1:compile -- module org.slf4j
+[INFO]    org.apache.commons:commons-collections4:jar:4.5.0:compile -- module org.apache.commons.collections4
+[INFO]    javax.servlet:javax.servlet-api:jar:4.0.1:provided -- module javax.servlet.api (auto)
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for Metaversion Aggregate Test Project 1.0-SNAPSHOT:
+[INFO]
+[INFO] Metaversion Aggregate Test Project ................. SUCCESS [  0.255 s]
+[INFO] Core Module with Metaversions ...................... SUCCESS [  0.040 s]
+[INFO] Web Module with Metaversions ....................... SUCCESS [  0.020 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.406 s
+[INFO] Finished at: 2025-08-29T11:01:41+01:00
+[INFO] ------------------------------------------------------------------------

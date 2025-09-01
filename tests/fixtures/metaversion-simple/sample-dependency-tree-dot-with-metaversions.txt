@@ -1,0 +1,31 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Metaversion Simple Test Project 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO]
+[INFO] --- maven-dependency-plugin:3.6.1:tree (default-cli) @ metaversion-simple ---
+[INFO] digraph "io.snyk.example:metaversion-simple:jar:1.0-SNAPSHOT" {
+[INFO]  "io.snyk.example:metaversion-simple:jar:1.0-SNAPSHOT" -> "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" ;
+[INFO]  "io.snyk.example:metaversion-simple:jar:1.0-SNAPSHOT" -> "commons-lang:commons-lang:jar:LATEST:compile" ;
+[INFO]  "io.snyk.example:metaversion-simple:jar:1.0-SNAPSHOT" -> "junit:junit:jar:4.13.2:test" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "org.jboss.logging:jboss-logging:jar:3.6.1.Final:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "jakarta.annotation:jakarta.annotation-api:jar:2.1.1:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "jakarta.ws.rs:jakarta.ws.rs-api:jar:4.0.0:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "jakarta.xml.bind:jakarta.xml.bind-api:jar:3.0.1:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "io.smallrye:jandex:jar:3.2.7:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "org.jboss.resteasy:resteasy-core-spi:jar:7.0.0.Beta1:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "org.reactivestreams:reactive-streams:jar:1.0.4:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "jakarta.activation:jakarta.activation-api:jar:2.1.3:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "org.eclipse.angus:angus-activation:jar:2.0.2:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "jakarta.validation:jakarta.validation-api:jar:3.1.1:compile" ;
+[INFO]  "org.jboss.resteasy:resteasy-core:jar:RELEASE:compile" -> "com.ibm.async:asyncutil:jar:0.1.0:compile" ;
+[INFO]  "junit:junit:jar:4.13.2:test" -> "org.hamcrest:hamcrest-core:jar:1.3:test" ;
+[INFO]  }
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 0.404 s
+[INFO] Finished at: 2025-08-29T10:53:22+01:00
+[INFO] Final Memory: 14M/74M
+[INFO] ------------------------------------------------------------------------
