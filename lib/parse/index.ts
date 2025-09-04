@@ -3,7 +3,7 @@ import type { ScannedProject } from '@snyk/cli-interface/legacy/common';
 import { parseDigraphsFromStdout } from './stdout';
 import { parseDigraphs } from './digraph';
 import { buildDepGraph } from './dep-graph';
-import { FingerprintOptions } from './types';
+import { FingerprintOptions, ParseContext } from './types';
 import { generateFingerprints, reportFingerprintTiming } from '../fingerprint';
 export { parsePluginVersionFromStdout } from './stdout';
 
@@ -33,14 +33,15 @@ export async function parse(
     reportFingerprintTiming(fingerprintMap);
   }
 
+  const context: ParseContext = {
+    includeTestScope,
+    verboseEnabled,
+    fingerprintMap,
+    includePurl: !!fingerprintOptions?.enabled,
+  };
   const scannedProjects: ScannedProject[] = [];
   for (const mavenGraph of mavenGraphs) {
-    const depGraph = buildDepGraph(
-      mavenGraph,
-      includeTestScope,
-      verboseEnabled,
-      fingerprintMap,
-    );
+    const depGraph = buildDepGraph(mavenGraph, context);
     scannedProjects.push({ depGraph });
   }
   return {

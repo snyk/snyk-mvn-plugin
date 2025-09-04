@@ -15,16 +15,14 @@
       "id": "org.netbeans.external:org-apache-commons-io@RELEASE113",
       "info": {
         "name": "org.netbeans.external:org-apache-commons-io",
-        "version": "RELEASE113",
-        "purl": "pkg:maven/org.netbeans.external/org-apache-commons-io@RELEASE113"
+        "version": "RELEASE113"
       }
     },
     {
       "id": "commons-io:commons-io@2.6",
       "info": {
         "name": "commons-io:commons-io",
-        "version": "2.6",
-        "purl": "pkg:maven/commons-io/commons-io@2.6"
+        "version": "2.6"
       }
     }
   ],

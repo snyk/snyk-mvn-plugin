@@ -85,3 +85,10 @@ export interface FingerprintData {
   processingTime: number;
   error?: string;
 }
+
+export interface ParseContext {
+  includeTestScope: boolean;
+  verboseEnabled: boolean;
+  fingerprintMap: Map<string, FingerprintData>;
+  includePurl: boolean;
+}

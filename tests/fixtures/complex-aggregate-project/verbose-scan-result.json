@@ -11,8 +11,7 @@
             "id": "io.snyk:aggregate-project@1.0.0",
             "info": {
               "name": "io.snyk:aggregate-project",
-              "version": "1.0.0",
-              "purl": "pkg:maven/io.snyk/aggregate-project@1.0.0?type=pom"
+              "version": "1.0.0"
             }
           }
         ],
@@ -39,24 +38,21 @@
             "id": "io.snyk:core@1.0.0",
             "info": {
               "name": "io.snyk:core",
-              "version": "1.0.0",
-              "purl": "pkg:maven/io.snyk/core@1.0.0"
+              "version": "1.0.0"
             }
           },
           {
             "id": "org.apache.logging.log4j:log4j-api@2.17.2",
             "info": {
               "name": "org.apache.logging.log4j:log4j-api",
-              "version": "2.17.2",
-              "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.17.2"
+              "version": "2.17.2"
             }
           },
           {
             "id": "org.apache.logging.log4j:log4j-core@2.17.2",
             "info": {
               "name": "org.apache.logging.log4j:log4j-core",
-              "version": "2.17.2",
-              "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.17.2"
+              "version": "2.17.2"
             }
           }
         ],
@@ -104,64 +100,56 @@
             "id": "io.snyk:web@1.0.0",
             "info": {
               "name": "io.snyk:web",
-              "version": "1.0.0",
-              "purl": "pkg:maven/io.snyk/web@1.0.0"
+              "version": "1.0.0"
             }
           },
           {
             "id": "io.snyk:core@1.0.0",
             "info": {
               "name": "io.snyk:core",
-              "version": "1.0.0",
-              "purl": "pkg:maven/io.snyk/core@1.0.0"
+              "version": "1.0.0"
             }
           },
           {
             "id": "org.springframework:spring-web@5.3.21",
             "info": {
               "name": "org.springframework:spring-web",
-              "version": "5.3.21",
-              "purl": "pkg:maven/org.springframework/spring-web@5.3.21"
+              "version": "5.3.21"
             }
           },
           {
             "id": "org.apache.logging.log4j:log4j-api@2.17.2",
             "info": {
               "name": "org.apache.logging.log4j:log4j-api",
-              "version": "2.17.2",
-              "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.17.2"
+              "version": "2.17.2"
             }
           },
           {
             "id": "org.apache.logging.log4j:log4j-core@2.17.2",
             "info": {
               "name": "org.apache.logging.log4j:log4j-core",
-              "version": "2.17.2",
-              "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.17.2"
+              "version": "2.17.2"
             }
           },
           {
             "id": "org.springframework:spring-beans@5.3.21",
             "info": {
               "name": "org.springframework:spring-beans",
-              "version": "5.3.21",
-              "purl": "pkg:maven/org.springframework/spring-beans@5.3.21"
+              "version": "5.3.21"
             }
           },
           {
             "id": "org.springframework:spring-core@5.3.21",
             "info": {
               "name": "org.springframework:spring-core",
-              "version": "5.3.21",
-              "purl": "pkg:maven/org.springframework/spring-core@5.3.21"
+              "version": "5.3.21"
             }
           },
           {
             "id": "org.springframework:spring-jcl@5.3.21",
             "info": {
               "name": "org.springframework:spring-jcl",
-              "version": "5.3.21",
-              "purl": "pkg:maven/org.springframework/spring-jcl@5.3.21"
+              "version": "5.3.21"
             }
           }
         ],

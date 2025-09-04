@@ -8,48 +8,42 @@
       "id": "com.example.scopetest:scope-collision-test@1.0.0",
       "info": {
         "name": "com.example.scopetest:scope-collision-test",
-        "version": "1.0.0",
-        "purl": "pkg:maven/com.example.scopetest/scope-collision-test@1.0.0"
+        "version": "1.0.0"
       }
     },
     {
       "id": "commons-io:commons-io@2.11.0",
       "info": {
         "name": "commons-io:commons-io",
-        "version": "2.11.0",
-        "purl": "pkg:maven/commons-io/commons-io@2.11.0"
+        "version": "2.11.0"
       }
     },
     {
       "id": "ch.qos.logback:logback-classic@1.2.10",
       "info": {
         "name": "ch.qos.logback:logback-classic",
-        "version": "1.2.10",
-        "purl": "pkg:maven/ch.qos.logback/logback-classic@1.2.10"
+        "version": "1.2.10"
       }
     },
     {
       "id": "ch.qos.logback:logback-core@1.2.10",
       "info": {
         "name": "ch.qos.logback:logback-core",
-        "version": "1.2.10",
-        "purl": "pkg:maven/ch.qos.logback/logback-core@1.2.10"
+        "version": "1.2.10"
       }
     },
     {
       "id": "org.slf4j:slf4j-api@1.7.30",
       "info": {
         "name": "org.slf4j:slf4j-api",
-        "version": "1.7.30",
-        "purl": "pkg:maven/org.slf4j/slf4j-api@1.7.30"
+        "version": "1.7.30"
       }
     },
     {
       "id": "org.slf4j:slf4j-api@1.7.32",
       "info": {
         "name": "org.slf4j:slf4j-api",
-        "version": "1.7.32",
-        "purl": "pkg:maven/org.slf4j/slf4j-api@1.7.32"
+        "version": "1.7.32"
       }
     }
   ],

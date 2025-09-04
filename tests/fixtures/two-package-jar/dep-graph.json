@@ -15,16 +15,14 @@
       "id": "one.gfw:jakarta.annotation-api@1.3.5",
       "info": {
         "name": "one.gfw:jakarta.annotation-api",
-        "version": "1.3.5",
-        "purl": "pkg:maven/one.gfw/jakarta.annotation-api@1.3.5"
+        "version": "1.3.5"
       }
     },
     {
       "id": "jakarta.annotation:jakarta.annotation-api@1.3.5",
       "info": {
         "name": "jakarta.annotation:jakarta.annotation-api",
-        "version": "1.3.5",
-        "purl": "pkg:maven/jakarta.annotation/jakarta.annotation-api@1.3.5"
+        "version": "1.3.5"
       }
     }
   ],

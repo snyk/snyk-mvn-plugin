@@ -116,13 +116,17 @@ export async function createDepGraphFromArchives(
     for (const dependency of dependencies) {
       const nodeId = `${dependency.groupId}:${dependency.artifactId}@${dependency.version}`;
 
+      // Create package info
+      const pkgInfo: { name: string; version: string; purl?: string } = {
+        name: `${dependency.groupId}:${dependency.artifactId}`,
+        version: dependency.version,
+      };
       // Generate fingerprint data if fingerprinting is enabled
-      let fingerprintData;
       if (fingerprintOptions?.enabled) {
         try {
           const archiveContents = fs.readFileSync(dependency.archivePath);
           const hash = getHash(archiveContents, fingerprintOptions.algorithm);
-          fingerprintData = {
+          const fingerprintData = {
             hash,
             algorithm: fingerprintOptions.algorithm,
             filePath: dependency.archivePath,
@@ -130,6 +134,12 @@ export async function createDepGraphFromArchives(
             processingTime: 0, // Not tracking timing for archive files
           };
           debug(`Generated fingerprint for ${dependency.archivePath}: ${hash}`);
+          pkgInfo.purl = createMavenPurlWithChecksum(
+            dependency.groupId,
+            dependency.artifactId,
+            dependency.version,
+            fingerprintData,
+          );
         } catch (err) {
           debug(
             `Failed to generate fingerprint for ${dependency.archivePath}:`,
@@ -138,22 +148,7 @@ export async function createDepGraphFromArchives(
         }
       }
 
-      // Create PURL with checksum if fingerprint data is available
-      const purl = createMavenPurlWithChecksum(
-        dependency.groupId,
-        dependency.artifactId,
-        dependency.version,
-        fingerprintData,
-      );
-
-      builder.addPkgNode(
-        {
-          name: `${dependency.groupId}:${dependency.artifactId}`,
-          version: dependency.version,
-          purl,
-        },
-        nodeId,
-      );
+      builder.addPkgNode(pkgInfo, nodeId);
       builder.connectDep(builder.rootNodeId, nodeId);
     }
     const depGraph = builder.build();

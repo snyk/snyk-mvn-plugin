@@ -8,7 +8,6 @@
       "id": "com.example:my-app@1.2.3",
       "info": {
         "name": "com.example:my-app",
-        "purl": "pkg:maven/com.example/my-app@1.2.3",
         "version": "1.2.3"
       }
     }

@@ -1,5 +1,6 @@
 import { parseDigraphs } from '../../../lib/parse/digraph';
 import { buildDepGraph } from '../../../lib/parse/dep-graph';
+import type { ParseContext } from '../../../lib/parse/types';
 
 describe('buildDepGraph', () => {
   test('should build dependency graph correctly', async () => {
@@ -20,7 +21,13 @@ describe('buildDepGraph', () => {
       "test:c:jar:1.0.0" -> "test:d:jar:1.0.3" ; // pruned (first seen at top level)
     }`;
     const mavenGraph = parseDigraphs([diGraph])[0];
-    const depGraph = buildDepGraph(mavenGraph);
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: false,
+      fingerprintMap: new Map(),
+      includePurl: false,
+    };
+    const depGraph = buildDepGraph(mavenGraph, context);
     expect(depGraph.toJSON()).toEqual({
       schemaVersion: '1.3.0',
       pkgManager: {
@@ -32,7 +39,6 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:root',
             version: '1.2.3',
-            purl: 'pkg:maven/test/root@1.2.3',
           },
         },
         {
@@ -40,7 +46,6 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:a',
             version: '1.0.0',
-            purl: 'pkg:maven/test/a@1.0.0',
           },
         },
         {
@@ -48,7 +53,6 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:c',
             version: '1.0.0',
-            purl: 'pkg:maven/test/c@1.0.0',
           },
         },
         {
@@ -56,7 +60,6 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:d',
             version: '1.0.0',
-            purl: 'pkg:maven/test/d@1.0.0',
           },
         },
         {
@@ -64,7 +67,6 @@ describe('buildDepGraph', () => {
           info: {
             name: 'test:b',
             version: '1.0.0',
-            purl: 'pkg:maven/test/b@1.0.0',
           },
         },
       ],
@@ -161,7 +163,13 @@ describe('buildDepGraph', () => {
       "example:d:jar:1.0.0:test" -> "example:e:jar:1.0.0:test" ;
     }`;
     const mavenGraph = parseDigraphs([diGraph])[0];
-    const depGraph = buildDepGraph(mavenGraph);
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: false,
+      fingerprintMap: new Map(),
+      includePurl: false,
+    };
+    const depGraph = buildDepGraph(mavenGraph, context);
     expect(depGraph.toJSON()).toEqual({
       schemaVersion: '1.3.0',
       pkgManager: {
@@ -173,7 +181,6 @@ describe('buildDepGraph', () => {
           info: {
             name: 'example:root',
             version: '1.2.3',
-            purl: 'pkg:maven/example/root@1.2.3',
           },
         },
         {
@@ -181,7 +188,6 @@ describe('buildDepGraph', () => {
           info: {
             name: 'example:a',
             version: '1.0.0',
-            purl: 'pkg:maven/example/a@1.0.0',
           },
         },
         {
@@ -189,7 +195,6 @@ describe('buildDepGraph', () => {
           info: {
             name: 'example:b',
             version: '1.0.0',
-            purl: 'pkg:maven/example/b@1.0.0',
           },
         },
         {
@@ -197,7 +202,6 @@ describe('buildDepGraph', () => {
           info: {
             name: 'example:c',
             version: '1.0.0',
-            purl: 'pkg:maven/example/c@1.0.0',
           },
         },
       ],

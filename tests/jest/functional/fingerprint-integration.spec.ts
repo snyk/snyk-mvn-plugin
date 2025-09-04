@@ -1,7 +1,11 @@
 import * as path from 'path';
 import { buildDepGraph } from '../../../lib/parse/dep-graph';
 import { createMavenPurlWithChecksum } from '../../../lib/fingerprint';
-import type { MavenGraph, FingerprintData } from '../../../lib/parse/types';
+import type {
+  MavenGraph,
+  FingerprintData,
+  ParseContext,
+} from '../../../lib/parse/types';
 
 describe('fingerprint integration', () => {
   test('buildDepGraph integration with fingerprint data', async () => {
@@ -36,13 +40,13 @@ describe('fingerprint integration', () => {
       ],
     ]);
 
-    // Build dep graph with fingerprint data
-    const depGraph = buildDepGraph(
-      mockMavenGraph,
-      true, // includeTestScope
-      false, // verboseEnabled
+    const context: ParseContext = {
+      includeTestScope: true,
+      verboseEnabled: false,
       fingerprintMap,
-    );
+      includePurl: true,
+    };
+    const depGraph = buildDepGraph(mockMavenGraph, context);
 
     expect(depGraph).toBeDefined();
 
@@ -101,12 +105,13 @@ describe('fingerprint integration', () => {
       ],
     ]);
 
-    const depGraph = buildDepGraph(
-      mockMavenGraph,
-      false, // includeTestScope
-      false, // verboseEnabled
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: false,
       fingerprintMap,
-    );
+      includePurl: true, // Testing PURL functionality
+    };
+    const depGraph = buildDepGraph(mockMavenGraph, context);
 
     const depGraphJson = depGraph.toJSON();
 
@@ -124,8 +129,8 @@ describe('fingerprint integration', () => {
     expect(missingPkg).toBeDefined();
     expect((missingPkg?.info as any)?.purl).toBeDefined();
 
-  // Check that PURL does not contain checksum when there's an error
-  const purl = (missingPkg?.info as any)?.purl;
+    // Check that PURL does not contain checksum when there's an error
+    const purl = (missingPkg?.info as any)?.purl;
     expect(purl).not.toContain('checksum=');
   });
 
@@ -147,12 +152,13 @@ describe('fingerprint integration', () => {
     };
 
     // Build with empty fingerprint map
-    const depGraph = buildDepGraph(
-      mockMavenGraph,
-      false,
-      false,
-      new Map(), // empty fingerprint map
-    );
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: false,
+      fingerprintMap: new Map(),
+      includePurl: true, // Testing PURL functionality
+    };
+    const depGraph = buildDepGraph(mockMavenGraph, context);
 
     const depGraphJson = depGraph.toJSON();
 
@@ -170,8 +176,8 @@ describe('fingerprint integration', () => {
     expect(slf4jPkg).toBeDefined();
     expect((slf4jPkg?.info as any)?.purl).toBeDefined();
 
-  // Check that PURL does not contain checksum when no fingerprint data
-  const purl = (slf4jPkg?.info as any)?.purl;
+    // Check that PURL does not contain checksum when no fingerprint data
+    const purl = (slf4jPkg?.info as any)?.purl;
     expect(purl).not.toContain('checksum=');
   });
 
@@ -206,12 +212,13 @@ describe('fingerprint integration', () => {
     ]);
 
     // Test verbose mode
-    const depGraph = buildDepGraph(
-      mockMavenGraph,
-      false,
-      true, // verbose enabled
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: true,
       fingerprintMap,
-    );
+      includePurl: true, // Testing PURL functionality
+    };
+    const depGraph = buildDepGraph(mockMavenGraph, context);
 
     const depGraphJson = depGraph.toJSON();
 
@@ -251,7 +258,9 @@ describe('fingerprint integration', () => {
     );
 
     expect(purl).toContain('checksum=sha256%3Atestfingerprint123');
-    expect(purl.startsWith('pkg:maven/com.example/test-artifact@1.0.0')).toBe(true);
+    expect(purl.startsWith('pkg:maven/com.example/test-artifact@1.0.0')).toBe(
+      true,
+    );
 
     const errorData: FingerprintData = {
       hash: '',

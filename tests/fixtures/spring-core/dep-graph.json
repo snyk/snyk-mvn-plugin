@@ -15,8 +15,7 @@
       "id": "org.springframework:spring-core@5.1.8.RELEASE",
       "info": {
         "name": "org.springframework:spring-core",
-        "version": "5.1.8.RELEASE",
-        "purl": "pkg:maven/org.springframework/spring-core@5.1.8.RELEASE"
+        "version": "5.1.8.RELEASE"
       }
     }
   ],
