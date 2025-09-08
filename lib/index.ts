@@ -1,6 +1,7 @@
 import { legacyPlugin } from '@snyk/cli-interface';
 import * as fs from 'fs';
 import * as path from 'path';
+import { executeMavenDependencyResolve } from './maven/dependency-resolve';
 import { executeMavenDependencyTree } from './maven/dependency-tree';
 import { createMavenContext } from './maven/context';
 import {
@@ -17,6 +18,7 @@ import {
   HashAlgorithm,
   FingerprintOptions,
 } from './parse/types';
+import { createVersionResolver } from './parse/version-resolver';
 
 // To enable debugging output, use `snyk -d`
 let logger: debugModule.Debugger | null = null;
@@ -131,6 +133,21 @@ export async function inspect(
     args.includes('-Dverbose=true') ||
     !!options['print-graph'];
 
+  let versionResolver;
+  try {
+    const resolveResult = await executeMavenDependencyResolve(mavenContext, {
+      mavenAggregateProject: options.mavenAggregateProject,
+      args,
+    });
+    debug(`Resolve result: ${resolveResult.resolveResult}`);
+
+    // Parse immediately and fail fast if there's an issue
+    versionResolver = createVersionResolver(resolveResult.resolveResult);
+  } catch (err) {
+    debug(`Version resolution failed: ${err}`);
+    // Continue without version resolution - graceful degradation
+  }
+
   let executionResult;
   try {
     executionResult = await executeMavenDependencyTree(mavenContext, {
@@ -148,6 +165,7 @@ export async function inspect(
       options.mavenVerboseIncludeAllVersions,
       fingerprintOptions,
       mavenContext.command,
+      versionResolver,
     );
     return {
       plugin: {

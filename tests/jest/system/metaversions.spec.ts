@@ -126,7 +126,6 @@ describe('metaversion resolution', () => {
       (pkg) => pkg.name === 'javax.servlet:javax.servlet-api',
     );
 
-    // DEBUG: Check for transitive dependencies from module-core
     const webHttpclient = webDepPkgs?.find(
       (pkg) => pkg.name === 'org.apache.httpcomponents:httpclient',
     );

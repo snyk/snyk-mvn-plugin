@@ -5,6 +5,7 @@ import { parseDigraphs } from './digraph';
 import { buildDepGraph } from './dep-graph';
 import { FingerprintOptions, ParseContext } from './types';
 import { generateFingerprints, reportFingerprintTiming } from '../fingerprint';
+import type { VersionResolver } from './version-resolver';
 export { parsePluginVersionFromStdout } from './stdout';
 
 export async function parse(
@@ -14,11 +15,16 @@ export async function parse(
   mavenVerboseIncludeAllVersions = false,
   fingerprintOptions?: FingerprintOptions,
   mavenCommand?: string,
+  versionResolver?: VersionResolver,
 ): Promise<{ scannedProjects: ScannedProject[] }> {
   const digraphs = parseDigraphsFromStdout(stdout);
-  const mavenGraphs = parseDigraphs(digraphs, {
-    mavenVerboseIncludeAllVersions,
-  });
+  const mavenGraphs = parseDigraphs(
+    digraphs,
+    {
+      mavenVerboseIncludeAllVersions,
+    },
+    versionResolver,
+  );
 
   // Generate fingerprints between parsing and building dep-graphs
   let fingerprintMap = new Map();
