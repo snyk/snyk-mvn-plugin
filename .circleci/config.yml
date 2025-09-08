@@ -28,18 +28,18 @@ osx_defaults: &osx_defaults
     xcode: 16.4.0
 
 test_matrix_unix: &test_matrix_unix
-  jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca']
-  maven_version: ['3.3.9', '3.6.3', '3.8.4']
+  jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca', '21.0.8.fx-librca']
+  maven_version: ['3.3.9', '3.6.3', '3.9.11']
   node_version: ['20.19.1']
 
 test_matrix_win: &test_matrix_win
-  jdk_version: ['8', '17']
-  maven_version: ['3.3.9.2', '3.6.3', '3.8.4']
+  jdk_version: ['8', '17', '21']
+  maven_version: ['3.3.9.2', '3.6.3', '3.9.11']
   node_version: ['20.19.1']
 
 test_matrix_os: &test_matrix_osx
-  jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca']
-  maven_version: ['3.3.9', '3.6.3', '3.8.4']
+  jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca', '21.0.8.fx-librca']
+  maven_version: ['3.3.9', '3.6.3', '3.9.11']
   node_version: ['20.19.1']
 
 commands:

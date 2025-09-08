@@ -4,7 +4,7 @@ const logLabel = /^\[\w+\]\s*/gm;
 const errorLabel = /^\[ERROR\]/gm;
 const successLabel = /^\[INFO\] BUILD SUCCESS/gm;
 const mavenDependencyPluginRegex =
-  /maven-dependency-plugin:(\d\.\d)(\.\d)?:tree/gm;
+  /(?:maven-dependency-plugin|dependency):(\d+\.\d+)(\.\d+)?:tree/m;
 
 function cleanStdout(stdout: string): string {
   if (errorLabel.test(stdout) && !successLabel.test(stdout)) {

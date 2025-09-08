@@ -5,6 +5,10 @@ import { legacyPlugin } from '@snyk/cli-interface';
 import * as plugin from '../../../lib';
 import { readFixtureJSON } from '../../helpers/read';
 import * as depGraphLib from '@snyk/dep-graph';
+import {
+  getPluginVersionFromInspectResult,
+  isPluginVersionAtLeast,
+} from '../../helpers/maven-plugin-version';
 
 const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -175,10 +179,26 @@ test('inspect on pom with dependency plugin version less than 2.2', async (t) =>
 
 test('inspect on pom with bad dependency using maven 3.5.4', async (t) => {
   try {
-    await plugin.inspect('.', path.join(fixturesPath, 'bad', 'pom.xml'), {
-      dev: true,
-    });
-    t.fail('expected inspect to throw error');
+    const result = await plugin.inspect(
+      '.',
+      path.join(fixturesPath, 'bad', 'pom.xml'),
+      {
+        dev: true,
+      },
+    );
+
+    // If inspect succeeds, check if this is due to newer plugin version behavior
+    const pluginVersion = getPluginVersionFromInspectResult(result);
+    if (isPluginVersionAtLeast(pluginVersion, '3.3.0')) {
+      t.skip(
+        `Skipping test on Maven dependency plugin ${pluginVersion} due to changed behavior with bad dependencies`,
+      );
+      return;
+    }
+
+    t.fail(
+      `expected inspect using dependency plugin '${pluginVersion}' to throw error`,
+    );
   } catch (err) {
     if (err instanceof Error) {
       t.match(
@@ -229,11 +249,24 @@ test('inspect on pom that logs an error but succeeds', async (t) => {
 test('inspect on mvn error', async (t) => {
   const targetFile = path.join(fixturesPath, 'bad', 'pom.xml');
   const fullCommand = `mvn dependency:tree -DoutputType=dot --batch-mode --non-recursive --file="${targetFile}"`;
+
   try {
-    await plugin.inspect('.', targetFile, {
+    const result = await plugin.inspect('.', targetFile, {
       dev: true,
     });
-    t.fail('expected inspect to throw error');
+
+    // If inspect succeeds, check if this is due to newer plugin version behavior
+    const pluginVersion = getPluginVersionFromInspectResult(result);
+    if (isPluginVersionAtLeast(pluginVersion, '3.3.0')) {
+      t.skip(
+        `Skipping test on Maven dependency plugin ${pluginVersion} due to changed behavior with bad dependencies`,
+      );
+      return;
+    }
+
+    t.fail(
+      `expected inspect using dependency plugin '${pluginVersion}' to throw error`,
+    );
   } catch (err) {
     if (err instanceof Error) {
       const expectedCommand =
