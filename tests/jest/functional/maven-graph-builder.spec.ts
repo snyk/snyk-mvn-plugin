@@ -1,13 +1,9 @@
-import tap from 'tap';
 import { MavenGraphBuilder } from '../../../lib/parse/maven-graph-builder';
 
-const test = tap.test;
-
-test('default constructor', async (t) => {
-  const builder = new MavenGraphBuilder('root');
-  t.same(
-    builder.graph,
-    {
+describe('MavenGraphBuilder', () => {
+  test('should create empty graph with default constructor', async () => {
+    const builder = new MavenGraphBuilder('root');
+    expect(builder.graph).toEqual({
       rootId: 'root',
       nodes: {
         root: {
@@ -16,18 +12,14 @@ test('default constructor', async (t) => {
           reachesProdDep: false,
         },
       },
-    },
-    'builds empty graph',
-  );
-});
+    });
+  });
 
-test('connect nodes', async (t) => {
-  const builder = new MavenGraphBuilder('root');
-  builder.connect('root', 'a');
-  builder.connect('a', 'b');
-  t.same(
-    builder.graph,
-    {
+  test('should connect nodes correctly', async () => {
+    const builder = new MavenGraphBuilder('root');
+    builder.connect('root', 'a');
+    builder.connect('a', 'b');
+    expect(builder.graph).toEqual({
       rootId: 'root',
       nodes: {
         root: {
@@ -46,19 +38,15 @@ test('connect nodes', async (t) => {
           reachesProdDep: true,
         },
       },
-    },
-    'builds connected graph',
-  );
-});
+    });
+  });
 
-test('skips duplicate connections', async (t) => {
-  const builder = new MavenGraphBuilder('root');
-  builder.connect('root', 'a');
-  builder.connect('root', 'a');
-  builder.connect('root', 'a');
-  t.same(
-    builder.graph,
-    {
+  test('should skip duplicate connections', async () => {
+    const builder = new MavenGraphBuilder('root');
+    builder.connect('root', 'a');
+    builder.connect('root', 'a');
+    builder.connect('root', 'a');
+    expect(builder.graph).toEqual({
       rootId: 'root',
       nodes: {
         root: {
@@ -72,7 +60,6 @@ test('skips duplicate connections', async (t) => {
           reachesProdDep: true,
         },
       },
-    },
-    'builds expected graph',
-  );
+    });
+  });
 });

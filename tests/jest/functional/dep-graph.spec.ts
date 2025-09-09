@@ -1,31 +1,27 @@
-import * as tap from 'tap';
 import { parseDigraphs } from '../../../lib/parse/digraph';
 import { buildDepGraph } from '../../../lib/parse/dep-graph';
 
-const test = tap.test;
-
-test('buildDepGraph', async (t) => {
-  // input:
-  //   root -> a -> b -> a (cycle)
-  //   root -> c -> d
-  //   root -> d
-  // expected:
-  //   root -> a -> b -> a:pruned(cyclic)
-  //   root -> c -> d:pruned(seen at top level)
-  //   root -> d
-  const diGraph = `"test:root:jar:1.2.3" {
-    "test:root:jar:1.2.3" -> "test:a:jar:1.0.0" ;
-    "test:root:jar:1.2.3" -> "test:c:jar:1.0.0" ;
-    "test:root:jar:1.2.3" -> "test:d:jar:1.0.0" ;
-    "test:a:jar:1.0.0" -> "test:b:jar:1.0.0" ;
-    "test:b:jar:1.0.0" -> "test:a:jar:1.0.0" ; // pruned (cyclic)
-    "test:c:jar:1.0.0" -> "test:d:jar:1.0.3" ; // pruned (first seen at top level)
-  }`;
-  const mavenGraph = parseDigraphs([diGraph])[0];
-  const depGraph = buildDepGraph(mavenGraph);
-  t.same(
-    depGraph.toJSON(),
-    {
+describe('buildDepGraph', () => {
+  test('should build dependency graph correctly', async () => {
+    // input:
+    //   root -> a -> b -> a (cycle)
+    //   root -> c -> d
+    //   root -> d
+    // expected:
+    //   root -> a -> b -> a:pruned(cyclic)
+    //   root -> c -> d:pruned(seen at top level)
+    //   root -> d
+    const diGraph = `"test:root:jar:1.2.3" {
+      "test:root:jar:1.2.3" -> "test:a:jar:1.0.0" ;
+      "test:root:jar:1.2.3" -> "test:c:jar:1.0.0" ;
+      "test:root:jar:1.2.3" -> "test:d:jar:1.0.0" ;
+      "test:a:jar:1.0.0" -> "test:b:jar:1.0.0" ;
+      "test:b:jar:1.0.0" -> "test:a:jar:1.0.0" ; // pruned (cyclic)
+      "test:c:jar:1.0.0" -> "test:d:jar:1.0.3" ; // pruned (first seen at top level)
+    }`;
+    const mavenGraph = parseDigraphs([diGraph])[0];
+    const depGraph = buildDepGraph(mavenGraph);
+    expect(depGraph.toJSON()).toEqual({
       schemaVersion: '1.2.0',
       pkgManager: {
         name: 'maven',
@@ -139,33 +135,29 @@ test('buildDepGraph', async (t) => {
           },
         ],
       },
-    },
-    'contains expected dep-graph',
-  );
-});
+    });
+  });
 
-/**
- * Maven output hides previously seen dependencies.
- * We need to ensure that we don't drop non-test dependencies that are
- * transitively nested under `test` scoped dependencies.
- */
-test('buildDepGraph with `test` deps that introduce prod deps', async (t) => {
-  // input:
-  //   root -> a:test -> b:test -> c:compile -> d:test -> e:test
-  // expected:
-  //   root -> a:test -> b:test -> c:compile
-  const diGraph = `"example:root:jar:1.2.3" {
-    "example:root:jar:1.2.3" -> "example:a:jar:1.0.0:test" ;
-    "example:a:jar:1.0.0:test" -> "example:b:jar:1.0.0:test" ;
-    "example:b:jar:1.0.0:test" -> "example:c:jar:1.0.0:compile" ;
-    "example:c:jar:1.0.0:compile" -> "example:d:jar:1.0.0:test" ;
-    "example:d:jar:1.0.0:test" -> "example:e:jar:1.0.0:test" ;
-  }`;
-  const mavenGraph = parseDigraphs([diGraph])[0];
-  const depGraph = buildDepGraph(mavenGraph);
-  t.same(
-    depGraph.toJSON(),
-    {
+  /**
+   * Maven output hides previously seen dependencies.
+   * We need to ensure that we don't drop non-test dependencies that are
+   * transitively nested under `test` scoped dependencies.
+   */
+  test('should build dependency graph with test deps that introduce prod deps', async () => {
+    // input:
+    //   root -> a:test -> b:test -> c:compile -> d:test -> e:test
+    // expected:
+    //   root -> a:test -> b:test -> c:compile
+    const diGraph = `"example:root:jar:1.2.3" {
+      "example:root:jar:1.2.3" -> "example:a:jar:1.0.0:test" ;
+      "example:a:jar:1.0.0:test" -> "example:b:jar:1.0.0:test" ;
+      "example:b:jar:1.0.0:test" -> "example:c:jar:1.0.0:compile" ;
+      "example:c:jar:1.0.0:compile" -> "example:d:jar:1.0.0:test" ;
+      "example:d:jar:1.0.0:test" -> "example:e:jar:1.0.0:test" ;
+    }`;
+    const mavenGraph = parseDigraphs([diGraph])[0];
+    const depGraph = buildDepGraph(mavenGraph);
+    expect(depGraph.toJSON()).toEqual({
       schemaVersion: '1.2.0',
       pkgManager: {
         name: 'maven',
@@ -237,7 +229,6 @@ test('buildDepGraph with `test` deps that introduce prod deps', async (t) => {
           },
         ],
       },
-    },
-    'contains expected dep-graph',
-  );
+    });
+  });
 });

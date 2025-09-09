@@ -23,10 +23,9 @@
     "lint": "npm run format:check && npm run lint:eslint",
     "lint:eslint": "eslint --color --cache 'lib/**/*.{js,ts}'",
     "prepare": "npm run build",
-    "test:jest": "npm run prepare && jest",
-    "test": "npm run prepare && npm run test:functional && npm run test:system && npm run test:jest",
-    "test:functional": "tap --disable-coverage --allow-incomplete-coverage --allow-empty-coverage ./tests/tap/functional/*.test.ts",
-    "test:system": "tap --disable-coverage --allow-incomplete-coverage --allow-empty-coverage --timeout=180 ./tests/tap/system/*.test.ts",
+    "test": "npm run prepare && npm run test:functional && npm run test:system",
+    "test:functional": "jest tests/jest/functional/",
+    "test:system": "jest --runInBand --testTimeout=180000 tests/jest/system/",
     "semantic-release": "semantic-release"
   },
   "author": "snyk.io",
@@ -44,8 +43,6 @@
     "prettier": "^2.7.1",
     "semantic-release": "^15",
     "sinon": "^2.4.1",
-    "tap": "^18.5.0",
-    "tap-only": "0.0.5",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2"
