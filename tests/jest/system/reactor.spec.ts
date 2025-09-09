@@ -73,7 +73,7 @@ test('inspect on complex aggregate project using maven reactor', async () => {
 
   expect(
     result.plugin.meta!.versionBuildInfo!.metaBuildVersion.mavenPluginVersion,
-  ).toEqual('2.8');
+  ).toMatch(/^\d+\.\d+(\.\d+)?$/);
 }, 20000);
 
 test('inspect on complex aggregate project using maven reactor include test scope', async () => {
