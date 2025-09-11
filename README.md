@@ -49,7 +49,7 @@ const result = await inspect(rootPath, targetFile, options);
 | `mavenAggregateProject` | boolean | `false` | Treat as Maven aggregate project |
 | `mavenVerboseIncludeAllVersions` | boolean | `false` | Include all dependency versions in verbose mode |
 | `fingerprintArtifacts` | boolean | `false` | Generate cryptographic fingerprints for artifacts |
-| `fingerprintAlgorithm` | string | `'sha256'` | Hash algorithm ('sha1', 'sha256', 'sha512') |
+| `fingerprintAlgorithm` | string | `'sha1'` | Hash algorithm ('sha1', 'sha256', 'sha512') |
 | `mavenRepository` | string | - | Custom Maven repository path |
 
 ## Artifact Fingerprinting

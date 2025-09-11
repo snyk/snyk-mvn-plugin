@@ -117,7 +117,7 @@ function buildFingerprintOptions(
 
   return {
     enabled: true,
-    algorithm: options.fingerprintAlgorithm || 'sha256',
+    algorithm: options.fingerprintAlgorithm || 'sha1',
     mavenRepository: options.mavenRepository,
   };
 }
@@ -142,10 +142,10 @@ export async function inspect(
       mavenVerboseIncludeAllVersions: false,
     };
   }
+  const fingerprintOptions = buildFingerprintOptions(options);
 
   if (targetPath && isArchive(targetPath)) {
     debug(`Creating dep-graph from ${targetPath}`);
-    const fingerprintOptions = buildFingerprintOptions(options);
     const depGraph = await createDepGraphFromArchive(
       root,
       targetPath,
@@ -167,7 +167,6 @@ export async function inspect(
     const archives = findArchives(root);
     if (archives.length > 0) {
       debug(`Creating dep-graph from archives in ${root}`);
-      const fingerprintOptions = buildFingerprintOptions(options);
       const depGraph = await createDepGraphFromArchives(
         root,
         archives,
@@ -223,7 +222,6 @@ export async function inspect(
         cwd: mvnWorkingDirectory,
       },
     );
-    const fingerprintOptions = buildFingerprintOptions(options);
 
     const parseResult = await parse(
       result,
