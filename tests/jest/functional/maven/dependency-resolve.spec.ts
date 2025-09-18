@@ -44,7 +44,8 @@ describe('buildArgs', () => {
       'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:resolve',
       '--batch-mode',
       '--non-recursive',
-      '--file="pom.xml"',
+      '--file',
+      'pom.xml',
       '-Paxis',
       '-Pjaxen',
     ]);

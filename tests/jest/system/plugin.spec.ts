@@ -139,7 +139,7 @@ describe('plugin.inspect', () => {
     }
 
     expect(thrownError.message).toMatch(
-      'Child process failed with exit code: 1.',
+      /Child process failed with exit code: [1-9]\d*\./,
     );
     expect(thrownError.message).toMatch('there is no POM in this directory');
   });
@@ -218,45 +218,52 @@ describe('plugin.inspect', () => {
     ).toBeTruthy();
   });
 
-  test('should throw error on mvn error', async () => {
-    const targetFile = path.join(fixturesPath, 'bad', 'pom.xml');
-    const fullCommand = `mvn dependency:tree -DoutputType=dot --batch-mode --non-recursive --file="${targetFile}"`;
+  test.each([
+    ['bad', false],
+    ['bad with spaces', true],
+  ])(
+    'should throw error on mvn error (%s)',
+    async (fixtureName, shouldQuote) => {
+      const targetFile = path.join(fixturesPath, fixtureName, 'pom.xml');
+      const quotedTargetFile = shouldQuote ? `"${targetFile}"` : targetFile;
+      const fullCommand = `mvn dependency:tree -DoutputType=dot --batch-mode --non-recursive --file ${quotedTargetFile}`;
 
-    try {
-      const result = await plugin.inspect('.', targetFile, {
-        dev: true,
-      });
+      try {
+        const result = await plugin.inspect('.', targetFile, {
+          dev: true,
+        });
 
-      // If inspect succeeds, check if this is due to newer plugin version behavior
-      const pluginVersion = getPluginVersionFromInspectResult(result);
-      if (isPluginVersionAtLeast(pluginVersion, '3.3.0')) {
-        // Skip test due to newer plugin behavior
-        return;
+        // If inspect succeeds, check if this is due to newer plugin version behavior
+        const pluginVersion = getPluginVersionFromInspectResult(result);
+        if (isPluginVersionAtLeast(pluginVersion, '3.3.0')) {
+          // Skip test due to newer plugin behavior
+          return;
+        }
+
+        // If we get here, the test should have failed
+        throw new Error(
+          `expected inspect using dependency plugin '${pluginVersion}' to throw error`,
+        );
+      } catch (err) {
+        if (err instanceof Error) {
+          const expectedCommand =
+            '\n\n' +
+            'Please make sure that Apache Maven Dependency Plugin ' +
+            'version 2.2 or above is installed, and that `' +
+            fullCommand +
+            '` executes successfully ' +
+            'on this project.\n\n' +
+            'If the problem persists, collect the output of `' +
+            'DEBUG=* ' +
+            fullCommand +
+            '` and contact support@snyk.io\n';
+          expect(err.message).toMatch(expectedCommand);
+        } else {
+          throw new Error('error is not instance of Error');
+        }
       }
-
-      // If we get here, the test should have failed
-      throw new Error(
-        `expected inspect using dependency plugin '${pluginVersion}' to throw error`,
-      );
-    } catch (err) {
-      if (err instanceof Error) {
-        const expectedCommand =
-          '\n\n' +
-          'Please make sure that Apache Maven Dependency Plugin ' +
-          'version 2.2 or above is installed, and that `' +
-          fullCommand +
-          '` executes successfully ' +
-          'on this project.\n\n' +
-          'If the problem persists, collect the output of `' +
-          'DEBUG=* ' +
-          fullCommand +
-          '` and contact support@snyk.io\n';
-        expect(err.message).toMatch(expectedCommand);
-      } else {
-        throw new Error('error is not instance of Error');
-      }
-    }
-  });
+    },
+  );
 
   test('should throw error on mvnw error', async () => {
     const targetFile = path.join(
