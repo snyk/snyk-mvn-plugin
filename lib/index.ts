@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { executeMavenDependencyResolve } from './maven/dependency-resolve';
 import { executeMavenDependencyTree } from './maven/dependency-tree';
+import { DependencyTreeError } from './maven/errors';
 import { createMavenContext } from './maven/context';
 import {
   createDepGraphFromArchive,
@@ -167,6 +168,7 @@ export async function inspect(
       mavenContext.command,
       versionResolver,
     );
+
     return {
       plugin: {
         name: 'bundled:maven',
@@ -184,13 +186,31 @@ export async function inspect(
       ...parseResult,
     };
   } catch (err) {
-    if (executionResult)
+    if (executionResult) {
       debug(`>>> Output from mvn: ${executionResult.dependencyTreeResult}`);
-    if (err instanceof Error) {
-      // Use the context for error formatting instead of re-detecting command
-      const msg = formatGenericPluginError(err, mavenContext.command, []);
+    }
+
+    // Handle Maven execution errors with proper command information
+    if (err instanceof DependencyTreeError) {
+      const msg = formatGenericPluginError(
+        err.originalError,
+        err.command,
+        err.args,
+      );
       throw new Error(msg);
     }
+
+    // Handle parsing errors (when Maven succeeded but output can't be parsed)
+    if (err instanceof Error && executionResult) {
+      const msg = formatGenericPluginError(
+        err,
+        executionResult.command,
+        executionResult.args,
+      );
+      throw new Error(msg);
+    }
+
+    // Handle other errors generically
     throw err;
   }
 }

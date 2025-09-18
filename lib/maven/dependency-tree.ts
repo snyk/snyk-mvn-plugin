@@ -4,12 +4,15 @@ import { debug } from '../index';
 import { parseVersions } from '../parse-versions';
 import { parsePluginVersionFromStdout } from '../parse';
 import { MavenContext } from './context';
+import { DependencyTreeError } from './errors';
 
 export interface MavenDependencyTreeResult {
   dependencyTreeResult: string;
   javaVersion?: string;
   mavenVersion?: string;
   mavenPluginVersion?: string;
+  command: string;
+  args: string[];
 }
 
 export interface DependencyTreeOptions {
@@ -95,29 +98,36 @@ export async function executeMavenDependencyTree(
   debug(`Maven working directory: ${context.workingDirectory}`);
   debug(`Verbose enabled: ${verboseEnabled}`);
 
-  const dependencyTreeResult = await subProcess.execute(
-    context.command,
-    mvnArgs,
-    {
-      cwd: context.workingDirectory,
-    },
-  );
+  try {
+    const dependencyTreeResult = await subProcess.execute(
+      context.command,
+      mvnArgs,
+      {
+        cwd: context.workingDirectory,
+      },
+    );
 
-  const versionResult = await subProcess.execute(
-    context.command,
-    ['--version'],
-    {
-      cwd: context.workingDirectory,
-    },
-  );
+    const versionResult = await subProcess.execute(
+      context.command,
+      ['--version'],
+      {
+        cwd: context.workingDirectory,
+      },
+    );
 
-  const { javaVersion, mavenVersion } = parseVersions(versionResult);
-  const mavenPluginVersion = parsePluginVersionFromStdout(dependencyTreeResult);
+    const { javaVersion, mavenVersion } = parseVersions(versionResult);
+    const mavenPluginVersion =
+      parsePluginVersionFromStdout(dependencyTreeResult);
 
-  return {
-    dependencyTreeResult,
-    javaVersion,
-    mavenVersion,
-    mavenPluginVersion,
-  };
+    return {
+      dependencyTreeResult,
+      javaVersion,
+      mavenVersion,
+      mavenPluginVersion,
+      command: context.command,
+      args: mvnArgs,
+    };
+  } catch (error) {
+    throw new DependencyTreeError(context.command, mvnArgs, error);
+  }
 }
