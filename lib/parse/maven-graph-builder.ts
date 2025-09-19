@@ -1,12 +1,11 @@
 import type { MavenGraph, MavenGraphNode } from './types';
 import type { VersionResolver } from './version-resolver';
-import { isMetaversion } from './version-resolver';
-import { parseDependency, buildDependencyString } from './dependency';
+import { NO_OP_VERSION_RESOLVER } from './version-resolver';
 
 export class MavenGraphBuilder {
   readonly #graph: MavenGraph;
-  readonly #versionResolver?: VersionResolver;
-  readonly #projectId?: string;
+  readonly #versionResolver: VersionResolver;
+  readonly #projectId: string;
 
   constructor(rootId: string, versionResolver?: VersionResolver) {
     this.#graph = {
@@ -15,7 +14,7 @@ export class MavenGraphBuilder {
         [rootId]: { dependsOn: [], parents: [], reachesProdDep: false },
       },
     };
-    this.#versionResolver = versionResolver;
+    this.#versionResolver = versionResolver ?? NO_OP_VERSION_RESOLVER;
     this.#projectId = this.extractProjectId(rootId);
   }
 
@@ -44,9 +43,15 @@ export class MavenGraphBuilder {
   }
 
   connect(parentId: string, id: string) {
-    // Resolve versions if they are metaversions and we have a version resolver
-    const resolvedParentId = this.resolveVersion(parentId);
-    const resolvedId = this.resolveVersion(id);
+    // Delegate all version resolution complexity to VersionResolver
+    const resolvedParentId = this.#versionResolver.resolveDependencyId(
+      parentId,
+      this.#projectId,
+    );
+    const resolvedId = this.#versionResolver.resolveDependencyId(
+      id,
+      this.#projectId,
+    );
 
     const parentNode = this.findOrCreateNode(resolvedParentId);
     const childNode = this.findOrCreateNode(resolvedId);
@@ -63,43 +68,6 @@ export class MavenGraphBuilder {
 
   get graph(): MavenGraph {
     return this.#graph;
-  }
-
-  /**
-   * Resolve a dependency ID by replacing metaversions with concrete versions
-   * @param id The dependency ID to resolve
-   * @returns The resolved dependency ID with concrete versions
-   */
-  private resolveVersion(id: string): string {
-    if (!this.#versionResolver) {
-      return id;
-    }
-
-    const dependency = parseDependency(id);
-
-    // Only resolve if this is a metaversion
-    if (!isMetaversion(dependency.version)) {
-      return id;
-    }
-
-    // Try to resolve the metaversion
-    const resolvedVersion = this.#versionResolver.resolveVersion(
-      dependency.groupId,
-      dependency.artifactId,
-      this.#projectId,
-    );
-
-    if (resolvedVersion) {
-      // Build new dependency string with resolved version
-      const resolvedDependency = {
-        ...dependency,
-        version: resolvedVersion,
-      };
-      return buildDependencyString(resolvedDependency);
-    }
-
-    // If resolution failed, return original ID
-    return id;
   }
 
   /**

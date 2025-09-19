@@ -1,7 +1,7 @@
 import type { MavenDependency, MavenGraph } from './types';
 import { MavenGraphBuilder } from './maven-graph-builder';
 import { buildDependencyString, parseDependency } from './dependency';
-import type { VersionResolver } from './version-resolver';
+import { NO_OP_VERSION_RESOLVER, VersionResolver } from './version-resolver';
 
 type ParseOptions = {
   mavenVerboseIncludeAllVersions: boolean;
@@ -14,7 +14,7 @@ const newLine = /[\r\n]+/g;
 export function parseDigraphs(
   digraphs: string[],
   options: ParseOptions = DEFAULT_PARSE_OPTIONS,
-  versionResolver?: VersionResolver,
+  versionResolver: VersionResolver = NO_OP_VERSION_RESOLVER,
 ): MavenGraph[] {
   const graphs: MavenGraph[] = [];
   for (const digraph of digraphs) {

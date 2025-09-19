@@ -7,7 +7,7 @@ export { parsePluginVersionFromStdout } from './stdout';
 export function parseMavenDependencyTree(
   stdout: string,
   mavenVerboseIncludeAllVersions = false,
-  versionResolver?: VersionResolver,
+  versionResolver: VersionResolver,
 ): { mavenGraphs: MavenGraph[] } {
   const digraphs = parseDigraphsFromStdout(stdout);
   const mavenGraphs = parseDigraphs(

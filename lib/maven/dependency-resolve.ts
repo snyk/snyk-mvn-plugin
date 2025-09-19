@@ -59,11 +59,21 @@ export async function executeMavenDependencyResolve(
   debug(`Maven command: ${context.command} ${mvnArgs.join(' ')}`);
   debug(`Maven working directory: ${context.workingDirectory}`);
 
-  const resolveResult = await subProcess.execute(context.command, mvnArgs, {
-    cwd: context.workingDirectory,
-  });
+  try {
+    const resolveResult = await subProcess.execute(context.command, mvnArgs, {
+      cwd: context.workingDirectory,
+    });
 
-  return {
-    resolveResult,
-  };
+    return {
+      resolveResult,
+    };
+  } catch (error) {
+    debug(
+      `dependency:resolve execution failed - command: ${
+        context.command
+      } ${mvnArgs.join(' ')}`,
+    );
+    debug(`dependency:resolve working directory: ${context.workingDirectory}`);
+    throw error; // Re-throw for upstream handling in executor.ts
+  }
 }

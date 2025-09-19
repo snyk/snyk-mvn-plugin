@@ -1,7 +1,4 @@
-import {
-  createVersionResolver,
-  isMetaversion,
-} from '../../../lib/parse/version-resolver';
+import { createVersionResolver } from '../../../lib/parse/version-resolver';
 
 describe('version-resolver', () => {
   describe('createVersionResolver', () => {
@@ -13,14 +10,22 @@ describe('version-resolver', () => {
 
       const resolver = createVersionResolver(resolveOutput);
 
-      // Test resolveVersion
+      // Test resolveDependencyId with metaversions
       expect(
-        resolver.resolveVersion('org.jboss.resteasy', 'resteasy-core'),
-      ).toBe('7.0.0.Beta1');
+        resolver.resolveDependencyId(
+          'org.jboss.resteasy:resteasy-core:jar:RELEASE:compile',
+        ),
+      ).toBe('org.jboss.resteasy:resteasy-core:jar:7.0.0.Beta1:compile');
       expect(
-        resolver.resolveVersion('org.jboss.logging', 'jboss-logging'),
-      ).toBe('3.6.1.Final');
-      expect(resolver.resolveVersion('junit', 'junit')).toBe('4.13.2');
+        resolver.resolveDependencyId(
+          'org.jboss.logging:jboss-logging:jar:LATEST:compile',
+        ),
+      ).toBe('org.jboss.logging:jboss-logging:jar:3.6.1.Final:compile');
+
+      // Test with concrete version (should pass through unchanged)
+      expect(resolver.resolveDependencyId('junit:junit:jar:4.13.2:test')).toBe(
+        'junit:junit:jar:4.13.2:test',
+      );
     });
 
     test('should create resolver from aggregate project resolve output', () => {
@@ -38,61 +43,25 @@ describe('version-resolver', () => {
 
       const resolver = createVersionResolver(resolveOutput);
 
-      // Test project-specific resolution
+      // Test project-specific resolution with metaversions
       expect(
-        resolver.resolveVersion(
-          'org.apache.httpcomponents',
-          'httpclient',
+        resolver.resolveDependencyId(
+          'org.apache.httpcomponents:httpclient:jar:RELEASE:compile',
           'io.snyk.example:module-core',
         ),
-      ).toBe('4.5.14');
+      ).toBe('org.apache.httpcomponents:httpclient:jar:4.5.14:compile');
       expect(
-        resolver.resolveVersion(
-          'org.springframework',
-          'spring-core',
+        resolver.resolveDependencyId(
+          'org.springframework:spring-core:jar:LATEST:compile',
           'io.snyk.example:module-core',
         ),
-      ).toBe('7.0.0-M8');
+      ).toBe('org.springframework:spring-core:jar:7.0.0-M8:compile');
       expect(
-        resolver.resolveVersion(
-          'org.slf4j',
-          'slf4j-api',
+        resolver.resolveDependencyId(
+          'org.slf4j:slf4j-api:jar:LATEST:compile',
           'io.snyk.example:module-web',
         ),
-      ).toBe('2.1.0-alpha1');
-
-      // Test resolution from specific project
-      expect(
-        resolver.resolveVersion(
-          'org.apache.httpcomponents',
-          'httpclient',
-          'io.snyk.example:module-core',
-        ),
-      ).toBe('4.5.14');
-      expect(
-        resolver.resolveVersion(
-          'org.springframework',
-          'spring-core',
-          'io.snyk.example:module-core',
-        ),
-      ).toBe('7.0.0-M8');
-
-      // Test getResolutionsForProject
-      const coreResolutions = resolver.getResolutionsForProject(
-        'io.snyk.example:module-core',
-      );
-      expect(coreResolutions.size).toBe(2);
-      expect(
-        coreResolutions.get('org.apache.httpcomponents:httpclient')?.version,
-      ).toBe('4.5.14');
-
-      const webResolutions = resolver.getResolutionsForProject(
-        'io.snyk.example:module-web',
-      );
-      expect(webResolutions.size).toBe(4);
-      expect(webResolutions.get('org.slf4j:slf4j-api')?.version).toBe(
-        '2.1.0-alpha1',
-      );
+      ).toBe('org.slf4j:slf4j-api:jar:2.1.0-alpha1:compile');
     });
 
     test('should handle empty resolve output', () => {
@@ -101,7 +70,9 @@ describe('version-resolver', () => {
 
       const resolver = createVersionResolver(resolveOutput);
 
-      expect(resolver.resolveVersion('any', 'dependency')).toBeUndefined();
+      expect(
+        resolver.resolveDependencyId('any:dependency:jar:RELEASE:compile'),
+      ).toBe('any:dependency:jar:RELEASE:compile');
     });
 
     test('should handle malformed resolve output gracefully', () => {
@@ -112,25 +83,17 @@ describe('version-resolver', () => {
 
       const resolver = createVersionResolver(resolveOutput);
 
-      // Global map is now empty
+      // Should still resolve correctly despite malformed lines
       expect(
-        resolver.resolveVersion('org.jboss.resteasy', 'resteasy-core'),
-      ).toBe('7.0.0.Beta1');
+        resolver.resolveDependencyId(
+          'org.jboss.resteasy:resteasy-core:jar:RELEASE:compile',
+        ),
+      ).toBe('org.jboss.resteasy:resteasy-core:jar:7.0.0.Beta1:compile');
       expect(
-        resolver.resolveVersion('org.jboss.logging', 'jboss-logging'),
-      ).toBe('3.6.1.Final');
-    });
-  });
-
-  describe('isMetaversion', () => {
-    test('should identify metaversions correctly', () => {
-      expect(isMetaversion('RELEASE')).toBe(true);
-      expect(isMetaversion('LATEST')).toBe(true);
-      expect(isMetaversion('1.0.0')).toBe(false);
-      expect(isMetaversion('1.0.0-SNAPSHOT')).toBe(false);
-      expect(isMetaversion('2.3.4.Final')).toBe(false);
-      expect(isMetaversion('1.2.3.RELEASE')).toBe(false);
-      expect(isMetaversion('')).toBe(false);
+        resolver.resolveDependencyId(
+          'org.jboss.logging:jboss-logging:jar:LATEST:compile',
+        ),
+      ).toBe('org.jboss.logging:jboss-logging:jar:3.6.1.Final:compile');
     });
   });
 });

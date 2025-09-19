@@ -1,28 +1,36 @@
 import { parseResolveResult, type ResolvedVersion } from './resolve-parser';
+import { parseDependency, buildDependencyString } from './dependency';
+
+/**
+ * Create a dependency key for lookups
+ * @param groupId The dependency group ID
+ * @param artifactId The dependency artifact ID
+ * @returns A key string for the dependency
+ */
+function createDependencyKey(groupId: string, artifactId: string): string {
+  return `${groupId}:${artifactId}`;
+}
+
+/**
+ * Check if a version is a metaversion that needs resolution
+ * @param version The version string to check
+ * @returns True if the version is a metaversion
+ */
+function isMetaversion(version: string): boolean {
+  return version === 'RELEASE' || version === 'LATEST';
+}
 
 /**
  * Interface for resolving Maven dependency versions from resolveResult output
  */
 export interface VersionResolver {
   /**
-   * Resolve a metaversion (RELEASE, LATEST) to a concrete version
-   * @param groupId The dependency group ID
-   * @param artifactId The dependency artifact ID
+   * Resolve a full dependency ID, handling metaversions if present
+   * @param dependencyId The full dependency ID (e.g., "groupId:artifactId:type:version:scope")
    * @param projectId Optional project ID for aggregate projects
-   * @returns The resolved concrete version, or undefined if not found
+   * @returns The dependency ID with resolved versions, or original if no resolution needed/possible
    */
-  resolveVersion(
-    groupId: string,
-    artifactId: string,
-    projectId?: string,
-  ): string | undefined;
-
-  /**
-   * Get resolved versions for a specific project
-   * @param projectId The project ID
-   * @returns Map of dependency keys to resolved versions for the project
-   */
-  getResolutionsForProject(projectId: string): Map<string, ResolvedVersion>;
+  resolveDependencyId(dependencyId: string, projectId?: string): string;
 }
 
 /**
@@ -58,56 +66,78 @@ export function createVersionResolver(resolveResult: string): VersionResolver {
     projectResolutionMap.get(projectId)?.set(key, resolvedVersion);
   }
 
+  // Private helper function in closure - not exposed in interface
+  function resolveVersion(
+    groupId: string,
+    artifactId: string,
+    projectId?: string,
+  ): string | undefined {
+    const key = createDependencyKey(groupId, artifactId);
+
+    // Use provided projectId or fall back to 'default'
+    const targetProjectId = projectId || 'default';
+    const projectResolutions = projectResolutionMap.get(targetProjectId);
+
+    if (projectResolutions && projectResolutions.has(key)) {
+      return projectResolutions.get(key)?.version;
+    }
+
+    // Fallback: if not found in specific project, try 'default'
+    // This handles cases where older Maven versions don't provide proper project separation
+    if (targetProjectId !== 'default') {
+      const defaultResolutions = projectResolutionMap.get('default');
+      if (defaultResolutions && defaultResolutions.has(key)) {
+        return defaultResolutions.get(key)?.version;
+      }
+    }
+
+    // No resolution found
+    return undefined;
+  }
+
   return {
-    resolveVersion(
-      groupId: string,
-      artifactId: string,
-      projectId?: string,
-    ): string | undefined {
-      const key = createDependencyKey(groupId, artifactId);
+    resolveDependencyId(dependencyId: string, projectId?: string): string {
+      const dependency = parseDependency(dependencyId);
 
-      // Use provided projectId or fall back to 'default'
-      const targetProjectId = projectId || 'default';
-      const projectResolutions = projectResolutionMap.get(targetProjectId);
-
-      if (projectResolutions && projectResolutions.has(key)) {
-        return projectResolutions.get(key)?.version;
+      // Only resolve if this is a metaversion
+      if (!isMetaversion(dependency.version)) {
+        return dependencyId;
       }
 
-      // Fallback: if not found in specific project, try 'default'
-      // This handles cases where older Maven versions don't provide proper project separation
-      if (targetProjectId !== 'default') {
-        const defaultResolutions = projectResolutionMap.get('default');
-        if (defaultResolutions && defaultResolutions.has(key)) {
-          return defaultResolutions.get(key)?.version;
-        }
+      // Try to resolve the metaversion using private helper
+      const resolvedVersion = resolveVersion(
+        dependency.groupId,
+        dependency.artifactId,
+        projectId,
+      );
+
+      if (resolvedVersion) {
+        // Build new dependency string with resolved version
+        const resolvedDependency = {
+          ...dependency,
+          version: resolvedVersion,
+        };
+        return buildDependencyString(resolvedDependency);
       }
 
-      // No resolution found
-      return undefined;
-    },
-
-    getResolutionsForProject(projectId: string): Map<string, ResolvedVersion> {
-      return projectResolutionMap.get(projectId) || new Map();
+      // If resolution failed, return original ID
+      return dependencyId;
     },
   };
 }
 
 /**
- * Create a dependency key for lookups
- * @param groupId The dependency group ID
- * @param artifactId The dependency artifact ID
- * @returns A key string for the dependency
+ * Singleton no-op VersionResolver (Null Object pattern)
+ *
+ * Used when no metaversions are detected or when dependency:resolve fails.
+ * Implements the VersionResolver interface but performs no actual resolution.
+ *
+ * Since no-op resolvers are stateless, we export a singleton to avoid creating
+ * multiple instances unnecessarily.
  */
-function createDependencyKey(groupId: string, artifactId: string): string {
-  return `${groupId}:${artifactId}`;
-}
-
-/**
- * Check if a version is a metaversion that needs resolution
- * @param version The version string to check
- * @returns True if the version is a metaversion
- */
-export function isMetaversion(version: string): boolean {
-  return version === 'RELEASE' || version === 'LATEST';
-}
+export const NO_OP_VERSION_RESOLVER: VersionResolver = {
+  resolveDependencyId(dependencyId: string): string {
+    // No-op: never resolves, always returns original
+    return dependencyId;
+  },
+};
