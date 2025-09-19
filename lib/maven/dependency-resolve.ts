@@ -7,11 +7,6 @@ export interface MavenDependencyResolveResult {
   resolveResult: string;
 }
 
-export interface DependencyResolveOptions {
-  mavenAggregateProject?: boolean;
-  args?: string[];
-}
-
 export function buildArgs(
   context: MavenContext,
   mavenArgs: string[],
@@ -56,10 +51,9 @@ export function buildArgs(
 
 export async function executeMavenDependencyResolve(
   context: MavenContext,
-  options: DependencyResolveOptions = {},
+  mavenAggregateProject: boolean,
+  args: string[],
 ): Promise<MavenDependencyResolveResult> {
-  const { mavenAggregateProject = false, args = [] } = options;
-
   const mvnArgs = buildArgs(context, args, mavenAggregateProject);
 
   debug(`Maven command: ${context.command} ${mvnArgs.join(' ')}`);

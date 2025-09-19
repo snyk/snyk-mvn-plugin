@@ -12,7 +12,7 @@ export interface MavenContext {
   targetPath: string;
 }
 
-export function getCommand(root: string, targetFile: string | undefined) {
+export function getCommand(root: string, targetFile?: string) {
   if (!targetFile) {
     return 'mvn';
   }

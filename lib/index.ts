@@ -1,10 +1,9 @@
 import { legacyPlugin } from '@snyk/cli-interface';
 import * as fs from 'fs';
 import * as path from 'path';
-import { executeMavenDependencyResolve } from './maven/dependency-resolve';
-import { executeMavenDependencyTree } from './maven/dependency-tree';
 import { DependencyTreeError } from './maven/errors';
 import { createMavenContext } from './maven/context';
+import { executeMavenPipeline } from './maven/executor';
 import {
   createDepGraphFromArchive,
   createDepGraphFromArchives,
@@ -13,13 +12,14 @@ import {
 } from './archive';
 import { formatGenericPluginError } from './error-format';
 import * as debugModule from 'debug';
-import { parse } from './parse';
+import { parseMavenDependencyTree } from './parse/dependency-tree-parser';
+import { buildScannedProjects } from './parse/scanned-project-builder';
+import { generateMavenFingerprints } from './fingerprint';
 import {
   SnykHttpClient,
   HashAlgorithm,
   FingerprintOptions,
 } from './parse/types';
-import { createVersionResolver } from './parse/version-resolver';
 
 // To enable debugging output, use `snyk -d`
 let logger: debugModule.Debugger | null = null;
@@ -134,39 +134,41 @@ export async function inspect(
     args.includes('-Dverbose=true') ||
     !!options['print-graph'];
 
-  let versionResolver;
-  try {
-    const resolveResult = await executeMavenDependencyResolve(mavenContext, {
-      mavenAggregateProject: options.mavenAggregateProject,
-      args,
-    });
-    debug(`Resolve result: ${resolveResult.resolveResult}`);
-
-    // Parse immediately and fail fast if there's an issue
-    versionResolver = createVersionResolver(resolveResult.resolveResult);
-  } catch (err) {
-    debug(`Version resolution failed: ${err}`);
-    // Continue without version resolution - graceful degradation
-  }
-
   let executionResult;
   try {
-    executionResult = await executeMavenDependencyTree(mavenContext, {
-      mavenAggregateProject: options.mavenAggregateProject,
+    // Execute Maven pipeline (resolve + tree)
+    executionResult = await executeMavenPipeline(
+      mavenContext,
+      options.mavenAggregateProject,
       verboseEnabled,
       args,
-    });
+    );
     debug(
       `Verbose enabled with all versions: ${options.mavenVerboseIncludeAllVersions}`,
     );
-    const parseResult = await parse(
+    const { mavenGraphs } = parseMavenDependencyTree(
       executionResult.dependencyTreeResult,
+      options.mavenVerboseIncludeAllVersions,
+      executionResult.versionResolver,
+    );
+
+    // Generate fingerprints if enabled
+    let fingerprintMap = new Map();
+    if (fingerprintOptions?.enabled) {
+      fingerprintMap = await generateMavenFingerprints(
+        mavenGraphs,
+        fingerprintOptions,
+        mavenContext.command,
+      );
+    }
+
+    // Build scanned projects
+    const { scannedProjects } = buildScannedProjects(
+      mavenGraphs,
       options.dev,
       verboseEnabled,
-      options.mavenVerboseIncludeAllVersions,
-      fingerprintOptions,
-      mavenContext.command,
-      versionResolver,
+      fingerprintMap,
+      !!fingerprintOptions?.enabled,
     );
 
     return {
@@ -176,14 +178,14 @@ export async function inspect(
         meta: {
           versionBuildInfo: {
             metaBuildVersion: {
-              mavenVersion: executionResult.mavenVersion,
-              javaVersion: executionResult.javaVersion,
-              mavenPluginVersion: executionResult.mavenPluginVersion,
+              mavenVersion: executionResult.mavenVersion || '',
+              javaVersion: executionResult.javaVersion || '',
+              mavenPluginVersion: executionResult.mavenPluginVersion || '',
             },
           },
         },
       },
-      ...parseResult,
+      ...{ scannedProjects },
     };
   } catch (err) {
     if (executionResult) {

@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as subProcess from '../sub-process';
 import { debug } from '../index';
 import { parseVersions } from '../parse-versions';
-import { parsePluginVersionFromStdout } from '../parse';
+import { parsePluginVersionFromStdout } from '../parse/dependency-tree-parser';
 import { MavenContext } from './context';
 import { DependencyTreeError } from './errors';
 
@@ -13,12 +13,6 @@ export interface MavenDependencyTreeResult {
   mavenPluginVersion?: string;
   command: string;
   args: string[];
-}
-
-export interface DependencyTreeOptions {
-  mavenAggregateProject?: boolean;
-  verboseEnabled?: boolean;
-  args?: string[];
 }
 
 export function buildArgs(
@@ -79,14 +73,10 @@ export function buildArgs(
 
 export async function executeMavenDependencyTree(
   context: MavenContext,
-  options: DependencyTreeOptions = {},
+  mavenAggregateProject: boolean,
+  verboseEnabled: boolean,
+  args: string[],
 ): Promise<MavenDependencyTreeResult> {
-  const {
-    mavenAggregateProject = false,
-    verboseEnabled = false,
-    args = [],
-  } = options;
-
   const mvnArgs = buildArgs(
     context,
     args,

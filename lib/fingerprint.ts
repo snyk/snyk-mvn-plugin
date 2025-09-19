@@ -277,6 +277,24 @@ export function reportFingerprintTiming(
 }
 
 /**
+ * Generate Maven fingerprints with reporting
+ */
+export async function generateMavenFingerprints(
+  mavenGraphs: MavenGraph[],
+  fingerprintOptions: FingerprintOptions,
+  mavenCommand: string,
+): Promise<Map<string, FingerprintData>> {
+  const fingerprintMap = await generateFingerprints(
+    mavenGraphs,
+    fingerprintOptions,
+    mavenCommand,
+  );
+
+  reportFingerprintTiming(fingerprintMap);
+  return fingerprintMap;
+}
+
+/**
  * Create a Maven PURL with checksum qualifier from dependency information and fingerprint data
  */
 export function createMavenPurlWithChecksum(
