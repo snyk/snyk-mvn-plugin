@@ -4,8 +4,14 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as glob from 'glob';
 import * as debugLib from 'debug';
-import { MavenPackage, SnykHttpClient } from './parse/types';
+import {
+  MavenPackage,
+  SnykHttpClient,
+  FingerprintOptions,
+  HashAlgorithm,
+} from './parse/types';
 import { getMavenPackageInfo } from './search';
+import { createMavenPurlWithChecksum } from './fingerprint';
 
 const debug = debugLib('snyk-mvn-plugin');
 
@@ -14,6 +20,14 @@ const DIGEST = 'hex';
 
 function getSha1(buf: Buffer) {
   return crypto.createHash(ALGORITHM).update(buf).digest(DIGEST);
+}
+
+function getHash(buf: Buffer, algorithm: HashAlgorithm): string {
+  return crypto.createHash(algorithm).update(buf).digest(DIGEST);
+}
+
+interface MavenPackageWithPath extends MavenPackage {
+  archivePath: string;
 }
 
 async function getMavenPackages(
@@ -25,15 +39,19 @@ async function getMavenPackages(
   return getMavenPackageInfo(sha1, targetPath, snykHttpClient);
 }
 
-async function getDependencies(
+async function getDependenciesWithPaths(
   paths: string[],
   snykHttpClient: SnykHttpClient,
-): Promise<MavenPackage[]> {
-  let dependencies: MavenPackage[] = [];
+): Promise<MavenPackageWithPath[]> {
+  let dependencies: MavenPackageWithPath[] = [];
   for (const p of paths) {
     try {
       const mavenPackages = await getMavenPackages(p, snykHttpClient);
-      dependencies = dependencies.concat(mavenPackages);
+      const packagesWithPaths = mavenPackages.map((pkg) => ({
+        ...pkg,
+        archivePath: p,
+      }));
+      dependencies = dependencies.concat(packagesWithPaths);
     } catch (err) {
       // log error and continue with other paths
       if (err instanceof Error) {
@@ -51,9 +69,15 @@ export async function createDepGraphFromArchive(
   root: string,
   targetPath: string,
   snykHttpClient?: SnykHttpClient,
+  fingerprintOptions?: FingerprintOptions,
 ): Promise<DepGraph> {
   try {
-    return await createDepGraphFromArchives(root, [targetPath], snykHttpClient);
+    return await createDepGraphFromArchives(
+      root,
+      [targetPath],
+      snykHttpClient,
+      fingerprintOptions,
+    );
   } catch (err) {
     const msg = `There was a problem generating a dep-graph for '${targetPath}'.`;
     debug(msg, err);
@@ -68,13 +92,17 @@ export async function createDepGraphFromArchives(
   root: string,
   archivePaths: string[],
   snykHttpClient?: SnykHttpClient,
+  fingerprintOptions?: FingerprintOptions,
 ): Promise<DepGraph> {
   if (!snykHttpClient) {
     throw new Error('No HTTP client provided!');
   }
 
   try {
-    const dependencies = await getDependencies(archivePaths, snykHttpClient);
+    const dependencies = await getDependenciesWithPaths(
+      archivePaths,
+      snykHttpClient,
+    );
     if (!dependencies.length) {
       throw new Error(`No Maven artifacts found!`);
     }
@@ -87,13 +115,40 @@ export async function createDepGraphFromArchives(
     const builder = new DepGraphBuilder({ name: 'maven' }, rootPkg);
     for (const dependency of dependencies) {
       const nodeId = `${dependency.groupId}:${dependency.artifactId}@${dependency.version}`;
-      builder.addPkgNode(
-        {
-          name: `${dependency.groupId}:${dependency.artifactId}`,
-          version: dependency.version,
-        },
-        nodeId,
-      );
+
+      // Create package info
+      const pkgInfo: { name: string; version: string; purl?: string } = {
+        name: `${dependency.groupId}:${dependency.artifactId}`,
+        version: dependency.version,
+      };
+      // Generate fingerprint data if fingerprinting is enabled
+      if (fingerprintOptions?.enabled) {
+        try {
+          const archiveContents = fs.readFileSync(dependency.archivePath);
+          const hash = getHash(archiveContents, fingerprintOptions.algorithm);
+          const fingerprintData = {
+            hash,
+            algorithm: fingerprintOptions.algorithm,
+            filePath: dependency.archivePath,
+            fileSize: archiveContents.length,
+            processingTime: 0, // Not tracking timing for archive files
+          };
+          debug(`Generated fingerprint for ${dependency.archivePath}: ${hash}`);
+          pkgInfo.purl = createMavenPurlWithChecksum(
+            dependency.groupId,
+            dependency.artifactId,
+            dependency.version,
+            fingerprintData,
+          );
+        } catch (err) {
+          debug(
+            `Failed to generate fingerprint for ${dependency.archivePath}:`,
+            err,
+          );
+        }
+      }
+
+      builder.addPkgNode(pkgInfo, nodeId);
       builder.connectDep(builder.rootNodeId, nodeId);
     }
     const depGraph = builder.build();

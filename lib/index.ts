@@ -14,7 +14,11 @@ import {
 import { formatGenericPluginError } from './error-format';
 import * as debugModule from 'debug';
 import { parse, parsePluginVersionFromStdout } from './parse';
-import { SnykHttpClient } from './parse/types';
+import {
+  SnykHttpClient,
+  HashAlgorithm,
+  FingerprintOptions,
+} from './parse/types';
 
 const WRAPPERS = ['mvnw', 'mvnw.cmd'];
 // To enable debugging output, use `snyk -d`
@@ -36,6 +40,9 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   allProjects?: boolean;
   mavenAggregateProject?: boolean;
   mavenVerboseIncludeAllVersions?: boolean;
+  fingerprintArtifacts?: boolean;
+  fingerprintAlgorithm?: HashAlgorithm;
+  mavenRepository?: string;
 }
 
 export function getCommand(root: string, targetFile: string | undefined) {
@@ -101,6 +108,20 @@ function findWrapper(
   return currentFolder;
 }
 
+function buildFingerprintOptions(
+  options: MavenOptions,
+): FingerprintOptions | undefined {
+  if (!options.fingerprintArtifacts) {
+    return undefined;
+  }
+
+  return {
+    enabled: true,
+    algorithm: options.fingerprintAlgorithm || 'sha1',
+    mavenRepository: options.mavenRepository,
+  };
+}
+
 export async function inspect(
   root: string,
   targetFile?: string,
@@ -121,6 +142,7 @@ export async function inspect(
       mavenVerboseIncludeAllVersions: false,
     };
   }
+  const fingerprintOptions = buildFingerprintOptions(options);
 
   if (targetPath && isArchive(targetPath)) {
     debug(`Creating dep-graph from ${targetPath}`);
@@ -128,6 +150,7 @@ export async function inspect(
       root,
       targetPath,
       snykHttpClient,
+      fingerprintOptions,
     );
     return {
       plugin: {
@@ -148,6 +171,7 @@ export async function inspect(
         root,
         archives,
         snykHttpClient,
+        fingerprintOptions,
       );
       return {
         plugin: {
@@ -198,11 +222,14 @@ export async function inspect(
         cwd: mvnWorkingDirectory,
       },
     );
-    const parseResult = parse(
+
+    const parseResult = await parse(
       result,
       options.dev,
       verboseEnabled,
       options.mavenVerboseIncludeAllVersions,
+      fingerprintOptions,
+      mavenCommand,
     );
     const { javaVersion, mavenVersion } = parseVersions(versionResult);
     const mavenPluginVersion = parsePluginVersionFromStdout(result);

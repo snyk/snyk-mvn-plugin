@@ -1,5 +1,6 @@
 import { parseDigraphs } from '../../../lib/parse/digraph';
 import { buildDepGraph } from '../../../lib/parse/dep-graph';
+import type { ParseContext } from '../../../lib/parse/types';
 
 describe('buildDepGraph', () => {
   test('should build dependency graph correctly', async () => {
@@ -20,9 +21,15 @@ describe('buildDepGraph', () => {
       "test:c:jar:1.0.0" -> "test:d:jar:1.0.3" ; // pruned (first seen at top level)
     }`;
     const mavenGraph = parseDigraphs([diGraph])[0];
-    const depGraph = buildDepGraph(mavenGraph);
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: false,
+      fingerprintMap: new Map(),
+      includePurl: false,
+    };
+    const depGraph = buildDepGraph(mavenGraph, context);
     expect(depGraph.toJSON()).toEqual({
-      schemaVersion: '1.2.0',
+      schemaVersion: '1.3.0',
       pkgManager: {
         name: 'maven',
       },
@@ -156,9 +163,15 @@ describe('buildDepGraph', () => {
       "example:d:jar:1.0.0:test" -> "example:e:jar:1.0.0:test" ;
     }`;
     const mavenGraph = parseDigraphs([diGraph])[0];
-    const depGraph = buildDepGraph(mavenGraph);
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: false,
+      fingerprintMap: new Map(),
+      includePurl: false,
+    };
+    const depGraph = buildDepGraph(mavenGraph, context);
     expect(depGraph.toJSON()).toEqual({
-      schemaVersion: '1.2.0',
+      schemaVersion: '1.3.0',
       pkgManager: {
         name: 'maven',
       },

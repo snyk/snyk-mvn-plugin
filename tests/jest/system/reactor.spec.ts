@@ -34,24 +34,29 @@ test('inspect on complex aggregate project using maven reactor', async () => {
   expect(getDepPkgs('io.snyk:aggregate-project', result)?.length).toEqual(0);
   expect(getDepPkgs('io.snyk:core', result)?.sort(byPkgName)).toEqual(
     [
-      { name: 'org.apache.logging.log4j:log4j-api', version: '2.17.2' },
-      { name: 'org.apache.logging.log4j:log4j-core', version: '2.17.2' },
+      {
+        name: 'org.apache.logging.log4j:log4j-api',
+        version: '2.17.2',
+      },
+      {
+        name: 'org.apache.logging.log4j:log4j-core',
+        version: '2.17.2',
+      },
     ].sort(byPkgName),
   );
   expect(getDepPkgs('io.snyk:web', result)?.sort(byPkgName)).toEqual(
     [
       // depends on another module
-      { name: 'io.snyk:core', version: '1.0.0' },
+      {
+        name: 'io.snyk:core',
+        version: '1.0.0',
+      },
       // and that modules transitives
       {
         name: 'org.apache.logging.log4j:log4j-api',
         version: '2.17.2',
       },
       // as well as its own dependencies
-      {
-        name: 'org.apache.logging.log4j:log4j-core',
-        version: '2.17.2',
-      },
       {
         name: 'org.springframework:spring-web',
         version: '5.3.21',
@@ -67,6 +72,10 @@ test('inspect on complex aggregate project using maven reactor', async () => {
       {
         name: 'org.springframework:spring-jcl',
         version: '5.3.21',
+      },
+      {
+        name: 'org.apache.logging.log4j:log4j-core',
+        version: '2.17.2',
       },
     ].sort(byPkgName),
   );
@@ -92,7 +101,10 @@ test('inspect on complex aggregate project using maven reactor include test scop
   expect(getDepPkgs('io.snyk:web', result)?.sort(byPkgName)).toEqual(
     [
       // depends on another module
-      { name: 'io.snyk:core', version: '1.0.0' },
+      {
+        name: 'io.snyk:core',
+        version: '1.0.0',
+      },
       // and that modules transitives
       {
         name: 'org.apache.logging.log4j:log4j-api',
