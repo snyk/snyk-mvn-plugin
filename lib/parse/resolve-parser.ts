@@ -35,11 +35,25 @@ export function parseResolveResult(resolveResult: string): ResolvedVersion[] {
     }
 
     // Extract project ID from project header lines
+    // Modern Maven format: [INFO] --------------------< groupId:artifactId >---------------------
     const projectMatch = trimmedLine.match(
       /\[INFO\]\s*[-<]+\s*<([^>]+)>\s*[-<]+/,
     );
     if (projectMatch) {
       currentProjectId = projectMatch[1].trim();
+      continue;
+    }
+
+    // Older Maven format: look for resolve command with @ module-name
+    // e.g., "--- maven-dependency-plugin:3.6.1:resolve (default-cli) @ module-web ---"
+    const oldProjectMatch = trimmedLine.match(
+      /\[INFO\]\s*---\s*maven-dependency-plugin[^@]*@\s*([^-\s]+)\s*---/,
+    );
+    if (oldProjectMatch) {
+      // For older Maven, we only have the module name, not the full coordinates
+      // We'll store this as a temporary identifier and resolve it later
+      const moduleName = oldProjectMatch[1].trim();
+      currentProjectId = moduleName; // Just use the module name for now
       continue;
     }
 

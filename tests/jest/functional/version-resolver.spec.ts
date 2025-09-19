@@ -21,15 +21,6 @@ describe('version-resolver', () => {
         resolver.resolveVersion('org.jboss.logging', 'jboss-logging'),
       ).toBe('3.6.1.Final');
       expect(resolver.resolveVersion('junit', 'junit')).toBe('4.13.2');
-
-      // Test hasResolution
-      expect(
-        resolver.hasResolution('org.jboss.resteasy', 'resteasy-core'),
-      ).toBe(true);
-      expect(resolver.hasResolution('org.jboss.logging', 'jboss-logging')).toBe(
-        true,
-      );
-      expect(resolver.hasResolution('nonexistent', 'dependency')).toBe(false);
     });
 
     test('should create resolver from aggregate project resolve output', () => {
@@ -111,7 +102,6 @@ describe('version-resolver', () => {
       const resolver = createVersionResolver(resolveOutput);
 
       expect(resolver.resolveVersion('any', 'dependency')).toBeUndefined();
-      expect(resolver.hasResolution('any', 'dependency')).toBe(false);
     });
 
     test('should handle malformed resolve output gracefully', () => {

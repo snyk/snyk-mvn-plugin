@@ -18,19 +18,6 @@ export interface VersionResolver {
   ): string | undefined;
 
   /**
-   * Check if a resolution exists for a given dependency
-   * @param groupId The dependency group ID
-   * @param artifactId The dependency artifact ID
-   * @param projectId Optional project ID for aggregate projects
-   * @returns True if a resolution exists
-   */
-  hasResolution(
-    groupId: string,
-    artifactId: string,
-    projectId?: string,
-  ): boolean;
-
-  /**
    * Get resolved versions for a specific project
    * @param projectId The project ID
    * @returns Map of dependency keys to resolved versions for the project
@@ -43,6 +30,13 @@ export interface VersionResolver {
  *
  * @param resolveResult The raw output from `mvn dependency:resolve`
  * @returns A VersionResolver instance
+ *
+ * Note: For older Maven versions (e.g., 3.3.9) that don't provide proper project
+ * separation in resolve output, all resolutions are stored under 'default' project.
+ * This can cause issues in rare edge cases where multiple modules have conflicting
+ * versions of the same dependency (e.g., one uses LATEST, another uses fixed version).
+ * In such cases, the last resolved version wins. This requires: EOL Maven version +
+ * metaversions + conflicting version strategies - an extremely unlikely scenario.
  */
 export function createVersionResolver(resolveResult: string): VersionResolver {
   const resolvedVersions = parseResolveResult(resolveResult);
@@ -80,22 +74,17 @@ export function createVersionResolver(resolveResult: string): VersionResolver {
         return projectResolutions.get(key)?.version;
       }
 
+      // Fallback: if not found in specific project, try 'default'
+      // This handles cases where older Maven versions don't provide proper project separation
+      if (targetProjectId !== 'default') {
+        const defaultResolutions = projectResolutionMap.get('default');
+        if (defaultResolutions && defaultResolutions.has(key)) {
+          return defaultResolutions.get(key)?.version;
+        }
+      }
+
       // No resolution found
       return undefined;
-    },
-
-    hasResolution(
-      groupId: string,
-      artifactId: string,
-      projectId?: string,
-    ): boolean {
-      const key = createDependencyKey(groupId, artifactId);
-
-      // Use provided projectId or fall back to 'default'
-      const targetProjectId = projectId || 'default';
-      const projectResolutions = projectResolutionMap.get(targetProjectId);
-
-      return projectResolutions ? projectResolutions.has(key) : false;
     },
 
     getResolutionsForProject(projectId: string): Map<string, ResolvedVersion> {
