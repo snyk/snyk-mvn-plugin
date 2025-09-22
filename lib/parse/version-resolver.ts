@@ -1,3 +1,4 @@
+import { debug } from '../index';
 import { parseResolveResult, type ResolvedVersion } from './resolve-parser';
 import { parseDependency, buildDependencyString } from './dependency';
 
@@ -121,6 +122,7 @@ export function createVersionResolver(resolveResult: string): VersionResolver {
       }
 
       // If resolution failed, return original ID
+      debug(`Resolution failed for ${dependencyId}`);
       return dependencyId;
     },
   };

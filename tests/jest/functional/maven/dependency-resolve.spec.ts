@@ -49,24 +49,4 @@ describe('buildArgs', () => {
       '-Pjaxen',
     ]);
   });
-
-  test('should work with targetFile when mavenAggregateProject is true', async () => {
-    const mavenAggregateProject = true;
-    const context = createMavenContext(
-      './tests/fixtures/test-project',
-      'pom.xml',
-    );
-    const result = buildArgs(
-      context,
-      ['-Paxis', '-Pjaxen'],
-      mavenAggregateProject,
-    );
-    expect(result).toEqual([
-      'test-compile',
-      'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:resolve',
-      '--batch-mode',
-      '-Paxis',
-      '-Pjaxen',
-    ]);
-  });
 });

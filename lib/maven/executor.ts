@@ -65,10 +65,10 @@ export async function executeMavenPipeline(
         mavenAggregateProject,
         args,
       );
-      debug(`Resolve result: ${resolveResult.resolveResult}`);
+      debug(`Resolve result: ${resolveResult}`);
 
       // Parse immediately and fail fast if there's an issue
-      versionResolver = createVersionResolver(resolveResult.resolveResult);
+      versionResolver = createVersionResolver(resolveResult);
     } catch (err) {
       debug(`Version resolution failed: ${err}`);
       // Graceful degradation using no-op version resolver

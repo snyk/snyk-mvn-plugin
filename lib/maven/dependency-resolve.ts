@@ -3,10 +3,6 @@ import * as subProcess from '../sub-process';
 import { debug } from '../index';
 import { MavenContext } from './context';
 
-export interface MavenDependencyResolveResult {
-  resolveResult: string;
-}
-
 export function buildArgs(
   context: MavenContext,
   mavenArgs: string[],
@@ -53,20 +49,16 @@ export async function executeMavenDependencyResolve(
   context: MavenContext,
   mavenAggregateProject: boolean,
   args: string[],
-): Promise<MavenDependencyResolveResult> {
+): Promise<string> {
   const mvnArgs = buildArgs(context, args, mavenAggregateProject);
 
   debug(`Maven command: ${context.command} ${mvnArgs.join(' ')}`);
   debug(`Maven working directory: ${context.workingDirectory}`);
 
   try {
-    const resolveResult = await subProcess.execute(context.command, mvnArgs, {
+    return await subProcess.execute(context.command, mvnArgs, {
       cwd: context.workingDirectory,
     });
-
-    return {
-      resolveResult,
-    };
   } catch (error) {
     debug(
       `dependency:resolve execution failed - command: ${

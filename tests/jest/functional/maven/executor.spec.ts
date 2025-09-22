@@ -87,11 +87,9 @@ describe('executeMavenPipeline conditional logic', () => {
     });
 
     // Mock resolve result with resolved versions
-    mockExecuteMavenDependencyResolve.mockResolvedValue({
-      resolveResult: `[INFO] The following files have been resolved:
+    mockExecuteMavenDependencyResolve.mockResolvedValue(`[INFO] The following files have been resolved:
 [INFO]    junit:junit:jar:4.13.2:test -- module junit [auto]
-[INFO]    org.slf4j:slf4j-api:jar:1.7.36:compile -- module org.slf4j.api`,
-    });
+[INFO]    org.slf4j:slf4j-api:jar:1.7.36:compile -- module org.slf4j.api`);
 
     const result = await executeMavenPipeline(context, false, false, []);
 
@@ -160,10 +158,8 @@ describe('executeMavenPipeline conditional logic', () => {
       args: ['test-compile', 'dependency:tree', '--batch-mode'],
     });
 
-    mockExecuteMavenDependencyResolve.mockResolvedValue({
-      resolveResult: `[INFO] The following files have been resolved:
-[INFO]    com.example:module-a:jar:1.0.0:compile -- module com.example.module.a`,
-    });
+    mockExecuteMavenDependencyResolve.mockResolvedValue(`[INFO] The following files have been resolved:
+[INFO]    com.example:module-a:jar:1.0.0:compile -- module com.example.module.a`);
 
     const result = await executeMavenPipeline(context, true, false, [
       '-Pprofile',
