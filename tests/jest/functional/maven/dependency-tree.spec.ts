@@ -15,6 +15,24 @@ describe('buildArgs', () => {
     ]);
   });
 
+  test('should work with targetFile', async () => {
+    const context = createMavenContext(
+      './tests/fixtures/test-project',
+      'pom.xml',
+    );
+    const result = buildArgs(context, ['-Paxis', '-Pjaxen']);
+    expect(result).toEqual([
+      'dependency:tree',
+      '-DoutputType=dot',
+      '--batch-mode',
+      '--non-recursive',
+      '--file',
+      'pom.xml',
+      '-Paxis',
+      '-Pjaxen',
+    ]);
+  });
+
   test('should work with option mavenAggregateProject', async () => {
     const mavenAggregateProject = true;
     const context = createMavenContext(

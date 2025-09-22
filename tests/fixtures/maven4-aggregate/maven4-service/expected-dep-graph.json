@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "1.2.0",
+  "pkgManager": {
+    "name": "maven"
+  },
+  "pkgs": [
+    {
+      "id": "com.example:maven4-service@1.0.0",
+      "info": {
+        "name": "com.example:maven4-service",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "id": "org.springframework:spring-context@6.1.0",
+      "info": {
+        "name": "org.springframework:spring-context",
+        "version": "6.1.0"
+      }
+    },
+    {
+      "id": "org.springframework:spring-web@6.1.0",
+      "info": {
+        "name": "org.springframework:spring-web",
+        "version": "6.1.0"
+      }
+    },
+    {
+      "id": "org.springframework:spring-aop@6.1.0",
+      "info": {
+        "name": "org.springframework:spring-aop",
+        "version": "6.1.0"
+      }
+    },
+    {
+      "id": "org.springframework:spring-beans@6.1.0",
+      "info": {
+        "name": "org.springframework:spring-beans",
+        "version": "6.1.0"
+      }
+    },
+    {
+      "id": "org.springframework:spring-core@6.1.0",
+      "info": {
+        "name": "org.springframework:spring-core",
+        "version": "6.1.0"
+      }
+    },
+    {
+      "id": "org.springframework:spring-expression@6.1.0",
+      "info": {
+        "name": "org.springframework:spring-expression",
+        "version": "6.1.0"
+      }
+    },
+    {
+      "id": "io.micrometer:micrometer-observation@1.12.0",
+      "info": {
+        "name": "io.micrometer:micrometer-observation",
+        "version": "1.12.0"
+      }
+    },
+    {
+      "id": "org.springframework:spring-jcl@6.1.0",
+      "info": {
+        "name": "org.springframework:spring-jcl",
+        "version": "6.1.0"
+      }
+    },
+    {
+      "id": "io.micrometer:micrometer-commons@1.12.0",
+      "info": {
+        "name": "io.micrometer:micrometer-commons",
+        "version": "1.12.0"
+      }
+    }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "com.example:maven4-service@1.0.0",
+        "deps": [
+          {
+            "nodeId": "org.springframework:spring-context:jar:6.1.0:compile"
+          },
+          {
+            "nodeId": "org.springframework:spring-web:jar:6.1.0:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.springframework:spring-context:jar:6.1.0:compile",
+        "pkgId": "org.springframework:spring-context@6.1.0",
+        "deps": [
+          {
+            "nodeId": "org.springframework:spring-aop:jar:6.1.0:compile"
+          },
+          {
+            "nodeId": "org.springframework:spring-beans:jar:6.1.0:compile"
+          },
+          {
+            "nodeId": "org.springframework:spring-core:jar:6.1.0:compile"
+          },
+          {
+            "nodeId": "org.springframework:spring-expression:jar:6.1.0:compile"
+          },
+          {
+            "nodeId": "io.micrometer:micrometer-observation:jar:1.12.0:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.springframework:spring-web:jar:6.1.0:compile",
+        "pkgId": "org.springframework:spring-web@6.1.0",
+        "deps": []
+      },
+      {
+        "nodeId": "org.springframework:spring-aop:jar:6.1.0:compile",
+        "pkgId": "org.springframework:spring-aop@6.1.0",
+        "deps": []
+      },
+      {
+        "nodeId": "org.springframework:spring-beans:jar:6.1.0:compile",
+        "pkgId": "org.springframework:spring-beans@6.1.0",
+        "deps": []
+      },
+      {
+        "nodeId": "org.springframework:spring-core:jar:6.1.0:compile",
+        "pkgId": "org.springframework:spring-core@6.1.0",
+        "deps": [
+          {
+            "nodeId": "org.springframework:spring-jcl:jar:6.1.0:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.springframework:spring-expression:jar:6.1.0:compile",
+        "pkgId": "org.springframework:spring-expression@6.1.0",
+        "deps": []
+      },
+      {
+        "nodeId": "io.micrometer:micrometer-observation:jar:1.12.0:compile",
+        "pkgId": "io.micrometer:micrometer-observation@1.12.0",
+        "deps": [
+          {
+            "nodeId": "io.micrometer:micrometer-commons:jar:1.12.0:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.springframework:spring-jcl:jar:6.1.0:compile",
+        "pkgId": "org.springframework:spring-jcl@6.1.0",
+        "deps": []
+      },
+      {
+        "nodeId": "io.micrometer:micrometer-commons:jar:1.12.0:compile",
+        "pkgId": "io.micrometer:micrometer-commons@1.12.0",
+        "deps": []
+      }
+    ]
+  }
+}

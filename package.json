@@ -26,6 +26,10 @@
     "test": "npm run prepare && npm run test:functional && npm run test:system",
     "test:functional": "jest --maxWorkers=2 tests/jest/functional/",
     "test:system": "jest --runInBand --testTimeout=180000 tests/jest/system/",
+    "test:system-maven3": "jest --runInBand --testTimeout=180000 tests/jest/system/ --testPathIgnorePatterns=maven4.spec.ts",
+    "test:system-maven4": "jest --runInBand --testTimeout=180000 tests/jest/system/",
+    "test:maven3": "npm run prepare && npm run test:functional && npm run test:system-maven3",
+    "test:maven4": "npm run prepare && npm run test:functional && npm run test:system-maven4",
     "semantic-release": "semantic-release"
   },
   "author": "snyk.io",
