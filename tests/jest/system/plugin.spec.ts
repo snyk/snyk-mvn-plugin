@@ -213,7 +213,6 @@ describe('plugin.inspect', () => {
       'expected-dep-graph.json',
     );
     const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
-    console.log(JSON.stringify(result.scannedProjects[0].depGraph));
     expect(
       result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
     ).toBeTruthy();

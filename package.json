@@ -24,7 +24,7 @@
     "lint:eslint": "eslint --color --cache 'lib/**/*.{js,ts}'",
     "prepare": "npm run build",
     "test": "npm run prepare && npm run test:functional && npm run test:system",
-    "test:functional": "jest tests/jest/functional/",
+    "test:functional": "jest --maxWorkers=2 tests/jest/functional/",
     "test:system": "jest --runInBand --testTimeout=180000 tests/jest/system/",
     "semantic-release": "semantic-release"
   },

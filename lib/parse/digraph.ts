@@ -1,6 +1,7 @@
 import type { MavenDependency, MavenGraph } from './types';
 import { MavenGraphBuilder } from './maven-graph-builder';
 import { buildDependencyString, parseDependency } from './dependency';
+import { NO_OP_VERSION_RESOLVER, VersionResolver } from './version-resolver';
 
 type ParseOptions = {
   mavenVerboseIncludeAllVersions: boolean;
@@ -13,6 +14,7 @@ const newLine = /[\r\n]+/g;
 export function parseDigraphs(
   digraphs: string[],
   options: ParseOptions = DEFAULT_PARSE_OPTIONS,
+  versionResolver: VersionResolver = NO_OP_VERSION_RESOLVER,
 ): MavenGraph[] {
   const graphs: MavenGraph[] = [];
   for (const digraph of digraphs) {
@@ -23,7 +25,9 @@ export function parseDigraphs(
         `Unexpected digraph could not find root node. Could not parse "${lines[0]}".`,
       );
     }
-    const builder = new MavenGraphBuilder(rootId);
+
+    const builder = new MavenGraphBuilder(rootId, versionResolver);
+
     for (let i = 1; i < lines.length - 1; i++) {
       const line = parseLine(options, lines[i]);
       if (!line) {

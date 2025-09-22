@@ -1,0 +1,10 @@
+
+The following files have been resolved:
+   org.apache.httpcomponents:httpclient:jar:4.5.14:compile[36m -- module org.apache.httpcomponents.httpclient[0;1m [auto][m
+   org.apache.httpcomponents:httpcore:jar:4.4.16:compile[36m -- module org.apache.httpcomponents.httpcore[0;1m [auto][m
+   commons-logging:commons-logging:jar:1.2:compile[36m -- module commons.logging[0;1;33m (auto)[m
+   commons-codec:commons-codec:jar:1.11:compile[36m -- module org.apache.commons.codec[0;1m [auto][m
+   org.springframework:spring-core:jar:7.0.0-M8:compile[36m -- module spring.core[0;1m [auto][m
+   org.jspecify:jspecify:jar:1.0.0:compile[36m -- module org.jspecify[m
+   com.fasterxml.jackson.core:jackson-core:jar:2.20.0:compile[36m -- module com.fasterxml.jackson.core[m
+

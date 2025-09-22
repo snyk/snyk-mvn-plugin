@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <parent>
+    <groupId>io.snyk.example</groupId>
+    <artifactId>metaversion-aggregate</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>module-web</artifactId>
+
+  <name>Web Module with Metaversions</name>
+  <description>Web module demonstrating metaversion dependencies</description>
+
+  <dependencies>
+    <!-- Dependency on sibling module -->
+    <dependency>
+      <groupId>io.snyk.example</groupId>
+      <artifactId>module-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Direct LATEST metaversion -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>LATEST</version>
+    </dependency>
+
+    <!-- Dependency managed by parent with metaversion -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
+      <!-- version inherited from parent dependencyManagement -->
+    </dependency>
+
+    <!-- RELEASE metaversion in web module -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>RELEASE</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+</project>
