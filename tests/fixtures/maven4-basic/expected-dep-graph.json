@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.2.0",
+  "pkgManager": {
+    "name": "maven"
+  },
+  "pkgs": [
+    {
+      "id": "com.example:maven4-basic@1.0.0",
+      "info": {
+        "name": "com.example:maven4-basic",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "id": "org.apache.commons:commons-lang3@3.12.0",
+      "info": {
+        "name": "org.apache.commons:commons-lang3",
+        "version": "3.12.0"
+      }
+    }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "com.example:maven4-basic@1.0.0",
+        "deps": [
+          {
+            "nodeId": "org.apache.commons:commons-lang3:jar:3.12.0:compile"
+          }
+        ]
+      },
+      {
+        "nodeId": "org.apache.commons:commons-lang3:jar:3.12.0:compile",
+        "pkgId": "org.apache.commons:commons-lang3@3.12.0",
+        "deps": []
+      }
+    ]
+  }
+}

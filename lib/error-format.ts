@@ -3,7 +3,11 @@ export function formatGenericPluginError(
   mavenCommand: string,
   mvnArgs: string[],
 ): string {
-  const fullCommand = [mavenCommand, ...mvnArgs].join(' ');
+  // Quote arguments that contain spaces for display purposes
+  const quotedArgs = mvnArgs.map((arg) =>
+    arg.includes(' ') ? `"${arg}"` : arg,
+  );
+  const fullCommand = [mavenCommand, ...quotedArgs].join(' ');
   const mvnwCommandTipMessage =
     'Currently, you cannot run `mvnw` outside your current directory, you will have to go inside the directory of your project (see: https://github.com/takari/maven-wrapper/issues/133)\n\n';
   return (

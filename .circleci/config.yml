@@ -42,6 +42,12 @@ test_matrix_os: &test_matrix_osx
   maven_version: ['3.3.9', '3.6.3', '3.9.11']
   node_version: ['20.19.1']
 
+# Maven 4 matrices (requires Java 17+)
+test_matrix_maven4_unix: &test_matrix_maven4_unix
+  jdk_version: ['17.0.4.1.fx-librca', '21.0.8.fx-librca']
+  maven_version: ['4.0.0-rc-4']
+  node_version: ['20.19.1']
+
 commands:
   install_deps:
     description: Install dependencies
@@ -171,7 +177,7 @@ jobs:
       - show_node_version
       - run:
           name: Run tests
-          command: npm test
+          command: npm run test:maven3
 
   test-unix:
     <<: *defaults
@@ -191,7 +197,27 @@ jobs:
       - show_node_version
       - run:
           name: Run tests
-          command: npm test
+          command: npm run test:maven3
+
+  test-unix-maven4:
+    <<: *defaults
+    docker:
+      - image: cimg/node:<< parameters.node_version >>
+    environment:
+      MAVEN_VERSION: << parameters.maven_version >>
+      JDK: << parameters.jdk_version >>
+    steps:
+      - checkout
+      - install_sdkman
+      - install_jdk_unix:
+          jdk_version: << parameters.jdk_version >>
+      - install_maven_unix:
+          maven_version: << parameters.maven_version >>
+      - install_deps
+      - show_node_version
+      - run:
+          name: Run tests
+          command: npm run test:maven4
 
   test-osx:
     <<: *defaults
@@ -210,7 +236,26 @@ jobs:
       - show_node_version
       - run:
           name: Run tests
-          command: npm test
+          command: npm run test:maven3
+
+  test-osx-maven4:
+    <<: *defaults
+    <<: *osx_defaults
+    environment:
+      MAVEN_VERSION: << parameters.maven_version >>
+      JDK: << parameters.jdk_version >>
+    steps:
+      - checkout
+      - install_sdkman
+      - install_jdk_unix:
+          jdk_version: << parameters.jdk_version >>
+      - install_maven_unix:
+          maven_version: << parameters.maven_version >>
+      - install_deps
+      - show_node_version
+      - run:
+          name: Run tests
+          command: npm run test:maven4
 
   release:
     <<: *defaults
@@ -289,6 +334,28 @@ workflows:
           name: OSX Tests for Maven=<< matrix.maven_version >> JDK=<< matrix.jdk_version >> Node=<< matrix.node_version >>
           context: nodejs-install
 
+      # Maven 4 tests (Unix)
+      - test-unix-maven4:
+          requires:
+            - Lint
+            - Security Scans
+          matrix:
+            parameters:
+              <<: *test_matrix_maven4_unix
+          name: Unix Tests for Maven=<< matrix.maven_version >> JDK=<< matrix.jdk_version >> Node=<< matrix.node_version >>
+          context: nodejs-install
+
+      # Maven 4 tests (OSX)
+      - test-osx-maven4:
+          requires:
+            - Lint
+            - Security Scans
+          matrix:
+            parameters:
+              <<: *test_matrix_maven4_unix
+          name: OSX Tests for Maven=<< matrix.maven_version >> JDK=<< matrix.jdk_version >> Node=<< matrix.node_version >>
+          context: nodejs-install
+
       # Release
       - release:
           name: Release
@@ -298,6 +365,8 @@ workflows:
             - test-osx
             - test-windows
             - test-unix
+            - test-unix-maven4
+            - test-osx-maven4
           filters:
             branches:
               only:

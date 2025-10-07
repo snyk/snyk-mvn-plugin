@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.2.0",
+  "pkgManager": {
+    "name": "maven"
+  },
+  "pkgs": [
+    {
+      "id": "com.example:maven4-aggregate@1.0.0",
+      "info": {
+        "name": "com.example:maven4-aggregate",
+        "version": "1.0.0"
+      }
+    }
+  ],
+  "graph": {
+    "rootNodeId": "root-node",
+    "nodes": [
+      {
+        "nodeId": "root-node",
+        "pkgId": "com.example:maven4-aggregate@1.0.0",
+        "deps": []
+      }
+    ]
+  }
+}
