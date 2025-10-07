@@ -101,7 +101,7 @@ commands:
     steps:
       - run:
           name: Installing JDK
-          command: sdk install java $(sdk list java | grep -o -m1 "<< parameters.jdk_version >>\.[0-9\.]\+hs-adpt")
+          command: sdk install java << parameters.jdk_version >>
 
   install_jdk_windows:
     description: Install JDK
