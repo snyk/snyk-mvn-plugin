@@ -13,7 +13,7 @@ test('fingerprinting disabled vs enabled comparison', async () => {
     path.join(testProjectPath, 'pom.xml'),
     {
       dev: false,
-      fingerprintArtifacts: false,
+      includeProvenance: false,
     },
   );
 
@@ -32,7 +32,7 @@ test('fingerprinting disabled vs enabled comparison', async () => {
     path.join(testProjectPath, 'pom.xml'),
     {
       dev: false,
-      fingerprintArtifacts: true,
+      includeProvenance: true,
     },
   );
 
@@ -65,7 +65,7 @@ describe.each(['sha1', 'sha256', 'sha512'] as const)(
     test(`should work with ${algorithm}`, async () => {
       const result = await inspect('.', path.join(testProjectPath, 'pom.xml'), {
         dev: false,
-        fingerprintArtifacts: true,
+        includeProvenance: true,
         fingerprintAlgorithm: algorithm,
       });
 
@@ -95,7 +95,7 @@ test('fingerprinting graceful failure handling', async () => {
   // Force fingerprinting to fail by using non-existent repository
   const result = await inspect('.', path.join(testProjectPath, 'pom.xml'), {
     dev: false,
-    fingerprintArtifacts: true,
+    includeProvenance: true,
     mavenRepository: '/completely/nonexistent/path',
   });
 

@@ -48,11 +48,11 @@ const result = await inspect(rootPath, targetFile, options);
 | `allProjects` | boolean | `false` | Include all projects in multi-module builds |
 | `mavenAggregateProject` | boolean | `false` | Treat as Maven aggregate project |
 | `mavenVerboseIncludeAllVersions` | boolean | `false` | Include all dependency versions in verbose mode |
-| `fingerprintArtifacts` | boolean | `false` | Generate cryptographic fingerprints for artifacts |
+| `includeProvenance` | boolean | `false` | Generate cryptographic fingerprints for artifacts to prove origin |
 | `fingerprintAlgorithm` | string | `'sha1'` | Hash algorithm ('sha1', 'sha256', 'sha512') |
 | `mavenRepository` | string | - | Custom Maven repository path |
 
-## Artifact Fingerprinting
+## Package Provenance
 
 The plugin can generate cryptographic fingerprints (hashes) for Maven artifacts to enhance security and integrity verification.
 
@@ -64,11 +64,11 @@ The plugin can generate cryptographic fingerprints (hashes) for Maven artifacts 
 
 ### Configuration
 
-Enable fingerprinting by setting `fingerprintArtifacts: true`:
+Enable fingerprinting by setting `includeProvenance: true`:
 
 ```typescript
 const result = await inspect(rootPath, 'pom.xml', {
-  fingerprintArtifacts: true,
+  includeProvenance: true,
   fingerprintAlgorithm: 'sha256',
   mavenRepository: '/path/to/custom/repo'
 });
@@ -76,13 +76,13 @@ const result = await inspect(rootPath, 'pom.xml', {
 
 ### Supported Hash Algorithms
 
-- `sha1` - SHA-1 (160-bit)
-- `sha256` - SHA-256 (256-bit) - **Default**
+- `sha1` - SHA-1 (160-bit) - **Default**
+- `sha256` - SHA-256 (256-bit)
 - `sha512` - SHA-512 (512-bit)
 
 ### Output Format
 
-When fingerprinting is enabled, the dependency graph includes PURL (Package URL) identifiers with checksum qualifiers:
+When provenance is enabled, the dependency graph includes PURL (Package URL) identifiers with checksum qualifiers:
 
 ```json
 {
@@ -117,7 +117,7 @@ Package URLs follow the standard format with checksum qualifiers:
 
 ### Error Handling
 
-If fingerprinting fails for an artifact, the PURL will not include a checksum qualifier:
+If  fails for an artifact, the PURL will not include a checksum qualifier:
 
 ```json
 {
@@ -129,18 +129,12 @@ If fingerprinting fails for an artifact, the PURL will not include a checksum qu
 }
 ```
 
-### Performance Considerations
-
-- Fingerprinting adds processing time depending on artifact sizes
-- Fingerprinting processes up to 5 artifacts concurrently by default
-- Consider using `sha1` for faster processing of large artifacts
-
 ### Example Timing Output
 
 Timing information is available via debug logging (DEBUG=snyk-mvn-plugin or -d from cli):
 
 ```
-=== Fingerprint Timing Summary ===
+=== Provenance Timing Summary ===
 Total artifacts: 25
 Successful: 23
 Failed: 2
