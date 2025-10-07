@@ -1,10 +1,10 @@
 import * as plugin from '../../../lib';
 import * as path from 'path';
 import { readFixtureJSON } from '../../helpers/read';
-import * as subProcess from '../../../lib/sub-process';
 import { sortDependencyGraphDeps } from '../../helpers/sort';
 import { DepGraphData } from '@snyk/dep-graph';
 import { legacyPlugin } from '@snyk/cli-interface';
+import { MultiProjectResult } from '@snyk/cli-interface/legacy/plugin';
 
 const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -36,7 +36,7 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
       const result = res.scannedProjects[0].depGraph.toJSON();
       const expectedGraphSorted = sortDependencyGraphDeps(expectedJSON);
       const actualGraphSorted = sortDependencyGraphDeps(result);
-      expect(expectedGraphSorted).toEqual(actualGraphSorted);
+      expect(actualGraphSorted).toEqual(expectedGraphSorted);
       expect(
         res.plugin.meta.versionBuildInfo.metaBuildVersion.mavenPluginVersion,
       ).toEqual('3.6.1');
@@ -63,7 +63,7 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
       );
       const expectedGraphSorted = sortDependencyGraphDeps(expectedJSON);
       const actualGraphSorted = sortDependencyGraphDeps(result);
-      expect(expectedGraphSorted).toEqual(actualGraphSorted);
+      expect(actualGraphSorted).toEqual(expectedGraphSorted);
     },
     TESTS_TIMEOUT,
   );
@@ -71,7 +71,7 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
   test(
     'inspect on dverbose-dependency-management pom using -Dverbose and --dev deps',
     async () => {
-      const res: Record<string, any> = await plugin.inspect(
+      const res = (await plugin.inspect(
         '.',
         path.join(testManagedProjectPath, 'pom.xml'),
         {
@@ -79,21 +79,27 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
           args: ['-Dverbose'],
           mavenVerboseIncludeAllVersions: true,
         },
-      );
-      const result = res.scannedProjects[0].depGraph.toJSON();
+      )) as MultiProjectResult;
+      const result = res.scannedProjects[0].depGraph?.toJSON() as DepGraphData;
 
-      // if running windows with an older version of maven 3.3.9.2 - one of the deps will be omitted
-      const mavenVersion = await subProcess.execute('mvn', ['--version'], {});
-      let expectedJSON = await readFixtureJSON(
+      const javaVersion =
+        res.plugin.meta?.versionBuildInfo?.metaBuildVersion.javaVersion || '';
+      const isJava8 =
+        javaVersion.includes('1.8.') || javaVersion.includes('version: 8');
+
+      // Java 8 has a missing dependency
+      const expectedFileName = isJava8
+        ? 'expected-dverbose-dep-graph-dev-java8.json'
+        : 'expected-dverbose-dep-graph-dev.json';
+
+      const expectedJSON = await readFixtureJSON(
         'dverbose-dependency-management',
-        mavenVersion.includes('3.3.9') && mavenVersion.includes('C:')
-          ? 'expected-dverbose-dep-graph-dev-old-maven.json'
-          : 'expected-dverbose-dep-graph-dev.json',
+        expectedFileName,
       );
 
       const expectedGraphSorted = sortDependencyGraphDeps(expectedJSON);
       const actualGraphSorted = sortDependencyGraphDeps(result);
-      expect(expectedGraphSorted).toEqual(actualGraphSorted);
+      expect(actualGraphSorted).toEqual(expectedGraphSorted);
     },
     TESTS_TIMEOUT,
   );
@@ -125,7 +131,7 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
           expectedJSON.scannedProjects[i].depGraph,
         );
         const actualGraphSorted = sortDependencyGraphDeps(depGraph);
-        expect(expectedGraphSorted).toEqual(actualGraphSorted);
+        expect(actualGraphSorted).toEqual(expectedGraphSorted);
       }
     },
     TESTS_TIMEOUT,
@@ -150,7 +156,7 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
       const result = res.scannedProjects[0].depGraph.toJSON();
       const expectedGraphSorted = sortDependencyGraphDeps(expectedJSON);
       const actualGraphSorted = sortDependencyGraphDeps(result);
-      expect(expectedGraphSorted).toEqual(actualGraphSorted);
+      expect(actualGraphSorted).toEqual(expectedGraphSorted);
     },
     TESTS_TIMEOUT,
   );
@@ -176,7 +182,7 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
       const result = res.scannedProjects[0].depGraph.toJSON();
       const expectedGraphSorted = sortDependencyGraphDeps(expectedJSON);
       const actualGraphSorted = sortDependencyGraphDeps(result);
-      expect(expectedGraphSorted).toEqual(actualGraphSorted);
+      expect(actualGraphSorted).toEqual(expectedGraphSorted);
     },
     TESTS_TIMEOUT,
   );
@@ -202,7 +208,7 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
       const result = res.scannedProjects[0].depGraph.toJSON();
       const expectedGraphSorted = sortDependencyGraphDeps(expectedJSON);
       const actualGraphSorted = sortDependencyGraphDeps(result);
-      expect(expectedGraphSorted).toEqual(actualGraphSorted);
+      expect(actualGraphSorted).toEqual(expectedGraphSorted);
     },
     TESTS_TIMEOUT,
   );
@@ -230,7 +236,7 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
       }
       const expectedGraphSorted = sortDependencyGraphDeps(expectedJSON);
       const actualGraphSorted = sortDependencyGraphDeps(res);
-      expect(expectedGraphSorted).toEqual(actualGraphSorted);
+      expect(actualGraphSorted).toEqual(expectedGraphSorted);
     },
     TESTS_TIMEOUT,
   );
@@ -258,7 +264,7 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
       }
       const expectedGraphSorted = sortDependencyGraphDeps(expectedJSON);
       const actualGraphSorted = sortDependencyGraphDeps(res);
-      expect(expectedGraphSorted).toEqual(actualGraphSorted);
+      expect(actualGraphSorted).toEqual(expectedGraphSorted);
     },
     TESTS_TIMEOUT,
   );
