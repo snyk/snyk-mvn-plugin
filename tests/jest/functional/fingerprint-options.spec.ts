@@ -6,57 +6,57 @@ import { MavenOptions } from '../../../lib/index';
 
 describe('Fingerprint Helper Functions', () => {
   describe('buildFingerprintOptions', () => {
-    it('should return undefined when fingerprintArtifacts is false', () => {
+    it('should return undefined when includeProvenance is false', () => {
       const options: MavenOptions = {
-        fingerprintArtifacts: false,
+        includeProvenance: false,
       };
 
       // Since buildFingerprintOptions is not exported, we'll need to test this indirectly
       // or make it a named export. For now, let's test the expected behavior through integration
-      expect(options.fingerprintArtifacts).toBe(false);
+      expect(options.includeProvenance).toBe(false);
     });
 
-    it('should return undefined when fingerprintArtifacts is not provided', () => {
+    it('should return undefined when includeProvenance is not provided', () => {
       const options: MavenOptions = {};
 
-      expect(options.fingerprintArtifacts).toBeUndefined();
+      expect(options.includeProvenance).toBeUndefined();
     });
 
     it('should build FingerprintOptions with default values', () => {
       const options: MavenOptions = {
-        fingerprintArtifacts: true,
+        includeProvenance: true,
       };
 
-      expect(options.fingerprintArtifacts).toBe(true);
+      expect(options.includeProvenance).toBe(true);
       expect(options.fingerprintAlgorithm).toBeUndefined(); // Should default to 'sha256'
       expect(options.mavenRepository).toBeUndefined();
     });
 
     it('should build FingerprintOptions with custom values', () => {
       const options: MavenOptions = {
-        fingerprintArtifacts: true,
+        includeProvenance: true,
         fingerprintAlgorithm: 'sha1',
         mavenRepository: '/custom/repo',
       };
 
-      expect(options.fingerprintArtifacts).toBe(true);
+      expect(options.includeProvenance).toBe(true);
       expect(options.fingerprintAlgorithm).toBe('sha1');
       expect(options.mavenRepository).toBe('/custom/repo');
     });
 
     it('should handle all supported hash algorithms', () => {
       const sha256Options: MavenOptions = {
-        fingerprintArtifacts: true,
+        includeProvenance: true,
         fingerprintAlgorithm: 'sha256',
       };
 
       const sha1Options: MavenOptions = {
-        fingerprintArtifacts: true,
+        includeProvenance: true,
         fingerprintAlgorithm: 'sha1',
       };
 
       const sha512Options: MavenOptions = {
-        fingerprintArtifacts: true,
+        includeProvenance: true,
         fingerprintAlgorithm: 'sha512',
       };
 
@@ -80,13 +80,13 @@ describe('MavenOptions Type Tests', () => {
       mavenVerboseIncludeAllVersions: false,
 
       // New fingerprint options
-      fingerprintArtifacts: true,
+      includeProvenance: true,
       fingerprintAlgorithm: 'sha256',
       mavenRepository: '/path/to/repo',
     };
 
     // Verify all properties exist and have correct types
-    expect(typeof fullOptions.fingerprintArtifacts).toBe('boolean');
+    expect(typeof fullOptions.includeProvenance).toBe('boolean');
     expect(
       ['sha1', 'sha256', 'sha512'].includes(fullOptions.fingerprintAlgorithm!),
     ).toBe(true);

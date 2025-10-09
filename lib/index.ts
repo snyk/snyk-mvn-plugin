@@ -40,7 +40,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   allProjects?: boolean;
   mavenAggregateProject?: boolean;
   mavenVerboseIncludeAllVersions?: boolean;
-  fingerprintArtifacts?: boolean;
+  includeProvenance?: boolean;
   fingerprintAlgorithm?: HashAlgorithm;
   mavenRepository?: string;
 }
@@ -48,7 +48,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
 function buildFingerprintOptions(
   options: MavenOptions,
 ): FingerprintOptions | undefined {
-  if (!options.fingerprintArtifacts) {
+  if (!options.includeProvenance) {
     return undefined;
   }
 

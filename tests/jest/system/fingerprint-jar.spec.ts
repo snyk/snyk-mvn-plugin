@@ -18,7 +18,7 @@ describe('Fingerprinting Jar Tests', () => {
         undefined,
         {
           scanAllUnmanaged: true,
-          fingerprintArtifacts: true,
+          includeProvenance: true,
           fingerprintAlgorithm: 'sha256',
         },
         mockSnykSearchClient,
@@ -52,7 +52,7 @@ describe('Fingerprinting Jar Tests', () => {
         undefined,
         {
           scanAllUnmanaged: true,
-          fingerprintArtifacts: false,
+          includeProvenance: false,
         },
         mockSnykSearchClient,
       );
@@ -84,7 +84,7 @@ describe('Fingerprinting Jar Tests', () => {
         undefined,
         {
           scanAllUnmanaged: true,
-          fingerprintArtifacts: true,
+          includeProvenance: true,
         },
         mockSnykSearchClient,
       );
@@ -114,7 +114,7 @@ describe('Fingerprinting Jar Tests', () => {
           root,
           'spring-core-5.1.8.RELEASE.jar',
           {
-            fingerprintArtifacts: true,
+            includeProvenance: true,
             fingerprintAlgorithm: algorithm,
           },
           mockSnykSearchClient,
@@ -144,7 +144,7 @@ describe('Fingerprinting Jar Tests', () => {
         root,
         'spring-core-5.1.8.RELEASE.jar',
         {
-          fingerprintArtifacts: true,
+          includeProvenance: true,
           fingerprintAlgorithm: 'sha256',
         },
         mockSnykSearchClient,
