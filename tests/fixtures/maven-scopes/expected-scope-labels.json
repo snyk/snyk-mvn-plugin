@@ -1,0 +1,43 @@
+{
+  "description": "Expected scope labels for different Maven scope test scenarios",
+  "testCases": {
+    "allScopes": {
+      "file": "pom-all-scopes.xml",
+      "expectedLabels": {
+        "org.apache.commons:commons-lang3": "maven:compile",
+        "javax.servlet:javax.servlet-api": "maven:provided",
+        "mysql:mysql-connector-java": "maven:runtime",
+        "junit:junit": "maven:test",
+        "com.example:system-lib": "maven:system"
+      }
+    },
+    "compileOnly": {
+      "file": "pom-compile-only.xml",
+      "expectedLabels": {
+        "org.apache.commons:commons-lang3": "maven:compile",
+        "com.google.guava:guava": "maven:compile",
+        "org.slf4j:slf4j-api": "maven:compile"
+      },
+      "notes": "guava has no explicit scope, so it defaults to 'compile' scope"
+    },
+    "mixedTransitive": {
+      "file": "pom-mixed-transitive.xml",
+      "expectedLabels": {
+        "org.springframework.boot:spring-boot-starter": "maven:compile",
+        "com.fasterxml.jackson.core:jackson-databind": "maven:runtime",
+        "org.springframework.boot:spring-boot-starter-test": "maven:test",
+        "org.springframework.boot:spring-boot-starter-tomcat": "maven:provided",
+        "com.h2database:h2": "maven:runtime"
+      },
+      "notes": "Transitive dependencies should inherit appropriate scopes"
+    }
+  },
+  "scopeDefinitions": {
+    "compile": "Default scope when no scope is specified. Available in all classpaths. Propagated to dependent projects.",
+    "provided": "Available only at compile time and test classpath. Not transitive.",
+    "runtime": "Not needed for compilation, but required at runtime. Available in runtime and test classpaths.",
+    "test": "Only available for test compilation and execution. Not transitive.",
+    "system": "Similar to provided but must provide explicit path to JAR. Not recommended.",
+    "import": "Only supported on dependency type 'pom' in dependencyManagement section."
+  }
+}

@@ -91,4 +91,5 @@ export interface ParseContext {
   verboseEnabled: boolean;
   fingerprintMap: Map<string, FingerprintData>;
   includePurl: boolean;
+  sbomMavenScopeProperties?: boolean;
 }
