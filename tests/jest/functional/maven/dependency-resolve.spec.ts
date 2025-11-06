@@ -29,6 +29,8 @@ describe('buildArgs', () => {
       'test-compile',
       'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:resolve',
       '--batch-mode',
+      '-Dmaven.test.skip=true',
+      '-Dmaven.main.skip=true',
       '-Paxis',
       '-Pjaxen',
     ]);

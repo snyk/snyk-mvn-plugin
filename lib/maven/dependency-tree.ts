@@ -58,6 +58,10 @@ export function buildArgs(
     }
   }
 
+  if (mavenAggregateProject && !verboseEnabled) {
+    args = args.concat('-Dmaven.test.skip=true', '-Dmaven.main.skip=true');
+  }
+
   if (
     verboseEnabled &&
     !mavenArgs.includes('-Dverbose') &&
