@@ -40,6 +40,10 @@ export function buildArgs(
     }
   }
 
+  if (mavenAggregateProject) {
+    args = args.concat('-Dmaven.test.skip=true', '-Dmaven.main.skip=true');
+  }
+
   args = args.concat(mavenArgs);
 
   return args;

@@ -49,6 +49,8 @@ describe('buildArgs', () => {
       'dependency:tree',
       '-DoutputType=dot',
       '--batch-mode',
+      '-Dmaven.test.skip=true',
+      '-Dmaven.main.skip=true',
       '-Paxis',
       '-Pjaxen',
     ]);
