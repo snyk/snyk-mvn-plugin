@@ -132,10 +132,15 @@ export function buildWithVerbose(
   return builder.build();
 }
 
-function createNodeInfo(depInfo: DepInfo, context: ParseContext): NodeInfo | undefined {
-  if (context.sbomMavenScopeProperties) {
+function createNodeInfo(
+  depInfo: DepInfo,
+  context: ParseContext,
+): NodeInfo | undefined {
+  if (context.showMavenBuildScope) {
     return {
-      labels: { 'snyk:build:scope': `maven:${depInfo.scope ? depInfo.scope : 'compile'}` },
+      labels: {
+        'maven:build_scope': depInfo.scope ? depInfo.scope : 'compile',
+      },
     };
   }
   return;
