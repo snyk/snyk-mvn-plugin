@@ -7,14 +7,14 @@ import type { MavenOptions } from '../../../lib';
 describe('Maven Scope Integration Tests', () => {
   const fixturesPath = path.resolve(__dirname, '../../fixtures/maven-scopes');
 
-  describe('when sbomMavenScopeProperties enabled', () => {
+  describe('when showMavenBuildScope enabled', () => {
     describe('when includeTestScope enabled', () => {
       const baseOptions: MavenOptions = {
         dev: true,
         scanAllUnmanaged: false,
         'print-graph': true,
         mavenVerboseIncludeAllVersions: false,
-        sbomMavenScopeProperties: true, // Enable scope labels
+        showMavenBuildScope: true, // Enable scope labels
       };
   
       test('should handle all Maven scopes correctly', async () => {
@@ -41,14 +41,14 @@ describe('Maven Scope Integration Tests', () => {
         const dependencyNodes = nodes.filter(node => node.nodeId !== 'root-node');
   
         const scopes = dependencyNodes.map(node =>
-          node.info?.labels?.['snyk:build:scope']
+          node.info?.labels?.['maven:build_scope']
         );
   
-        expect(scopes).toContain('maven:compile');
-        expect(scopes).toContain('maven:provided');
-        expect(scopes).toContain('maven:runtime');
-        expect(scopes).toContain('maven:test');
-        expect(scopes).toContain('maven:system');
+        expect(scopes).toContain('compile');
+        expect(scopes).toContain('provided');
+        expect(scopes).toContain('runtime');
+        expect(scopes).toContain('test');
+        expect(scopes).toContain('system');
       });
   
       test('should handle compile-only dependencies', async () => {
@@ -74,7 +74,7 @@ describe('Maven Scope Integration Tests', () => {
         const dependencyNodes = nodes.filter(node => node.nodeId !== 'root-node');
   
         dependencyNodes.forEach(node => {
-          expect(node.info?.labels?.['snyk:build:scope']).toBe('maven:compile');
+          expect(node.info?.labels?.['maven:build_scope']).toBe('compile');
         });
       });
     });
@@ -85,7 +85,7 @@ describe('Maven Scope Integration Tests', () => {
         scanAllUnmanaged: false,
         'print-graph': true,
         mavenVerboseIncludeAllVersions: false,
-        sbomMavenScopeProperties: true,
+        showMavenBuildScope: true,
       };
 
       test('should handle all Maven scopes correctly', async () => {
@@ -112,25 +112,25 @@ describe('Maven Scope Integration Tests', () => {
         const dependencyNodes = nodes.filter(node => node.nodeId !== 'root-node');
   
         const scopes = dependencyNodes.map(node =>
-          node.info?.labels?.['snyk:build:scope']
+          node.info?.labels?.['maven:build_scope']
         );
   
-        expect(scopes).toContain('maven:compile');
-        expect(scopes).toContain('maven:provided');
-        expect(scopes).toContain('maven:runtime');
-        expect(scopes).not.toContain('maven:test');
-        expect(scopes).toContain('maven:system');
+        expect(scopes).toContain('compile');
+        expect(scopes).toContain('provided');
+        expect(scopes).toContain('runtime');
+        expect(scopes).not.toContain('test');
+        expect(scopes).toContain('system');
       });
     });
   });
 
-  describe('when sbomMavenScopeProperties disabled', () => {
+  describe('when showMavenBuildScope disabled', () => {
     const baseOptions: MavenOptions = {
       dev: true,
       scanAllUnmanaged: false,
       'print-graph': true,
       mavenVerboseIncludeAllVersions: false,
-      sbomMavenScopeProperties: false, // Disable scope labels
+      showMavenBuildScope: false, // Disable scope labels
     };
 
     test('should not add scope labels when disabled', async () => {
@@ -153,19 +153,19 @@ describe('Maven Scope Integration Tests', () => {
       const nodes = graphJson.graph.nodes;
 
       nodes.forEach(node => {
-        expect(node.info?.labels?.['snyk:build:scope']).toBeUndefined();
+        expect(node.info?.labels?.['maven:build_scope']).toBeUndefined();
       });
     });
   });
 
   describe('when verbose mode is enabled', () => {
-    describe('when sbomMavenScopeProperties enabled', () => {
+    describe('when showMavenBuildScope enabled', () => {
       const baseOptions: MavenOptions = {
         dev: true,
         scanAllUnmanaged: false,
         'print-graph': true,
         mavenVerboseIncludeAllVersions: true, // Enable verbose mode
-        sbomMavenScopeProperties: true, // Enable scope labels
+        showMavenBuildScope: true, // Enable scope labels
       };
 
       test('should handle all Maven scopes correctly', async () => {
@@ -192,13 +192,13 @@ describe('Maven Scope Integration Tests', () => {
         const dependencyNodes = nodes.filter(node => node.nodeId !== 'root-node');
 
         const scopes = dependencyNodes.map(node =>
-          node.info?.labels?.['snyk:build:scope']
+          node.info?.labels?.['maven:build_scope']
         );
-        expect(scopes).toContain('maven:compile');
-        expect(scopes).toContain('maven:provided');
-        expect(scopes).toContain('maven:runtime');
-        expect(scopes).toContain('maven:test');
-        expect(scopes).toContain('maven:system');
+        expect(scopes).toContain('compile');
+        expect(scopes).toContain('provided');
+        expect(scopes).toContain('runtime');
+        expect(scopes).toContain('test');
+        expect(scopes).toContain('system');
       });
 
       test('should handle compile-only dependencies', async () => {
@@ -224,18 +224,18 @@ describe('Maven Scope Integration Tests', () => {
         const dependencyNodes = nodes.filter(node => node.nodeId !== 'root-node');
 
         dependencyNodes.forEach(node => {
-          expect(node.info?.labels?.['snyk:build:scope']).toBe('maven:compile');
+          expect(node.info?.labels?.['maven:build_scope']).toBe('compile');
         });
       });
     });
 
-    describe('when sbomMavenScopeProperties disabled', () => {
+    describe('when showMavenBuildScope disabled', () => {
       const baseOptions: MavenOptions = {
         dev: true,
         scanAllUnmanaged: false,
         'print-graph': true,
         mavenVerboseIncludeAllVersions: true, // Enable verbose mode
-        sbomMavenScopeProperties: false, // Disable scope labels
+        showMavenBuildScope: false, // Disable scope labels
       };
 
       test('should not add scope labels when disabled', async () => {
@@ -258,7 +258,7 @@ describe('Maven Scope Integration Tests', () => {
         const nodes = graphJson.graph.nodes;
 
         nodes.forEach(node => {
-          expect(node.info?.labels?.['snyk:build:scope']).toBeUndefined();
+          expect(node.info?.labels?.['maven:build_scope']).toBeUndefined();
         });
       });
     });

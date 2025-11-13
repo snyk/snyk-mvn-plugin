@@ -133,9 +133,9 @@ export function buildWithVerbose(
 }
 
 function createNodeInfo(depInfo: DepInfo, context: ParseContext): NodeInfo | undefined {
-  if (context.sbomMavenScopeProperties) {
+  if (context.showMavenBuildScope) {
     return {
-      labels: { 'snyk:build:scope': `maven:${depInfo.scope ? depInfo.scope : 'compile'}` },
+      labels: { 'maven:build_scope': depInfo.scope ? depInfo.scope : 'compile' },
     };
   }
   return;
