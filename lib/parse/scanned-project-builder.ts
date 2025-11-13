@@ -9,12 +9,14 @@ export function buildScannedProjects(
   verboseEnabled = false,
   fingerprintMap = new Map<string, FingerprintData>(),
   includePurl = false,
+  showMavenBuildScope = false,
 ): { scannedProjects: ScannedProject[] } {
   const context: ParseContext = {
     includeTestScope,
     verboseEnabled,
     fingerprintMap,
     includePurl,
+    showMavenBuildScope,
   };
 
   const scannedProjects: ScannedProject[] = [];
