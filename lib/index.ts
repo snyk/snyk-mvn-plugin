@@ -43,6 +43,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   includeProvenance?: boolean;
   fingerprintAlgorithm?: HashAlgorithm;
   mavenRepository?: string;
+  showMavenBuildScope?: boolean;
 }
 
 function buildFingerprintOptions(
@@ -169,6 +170,7 @@ export async function inspect(
       verboseEnabled,
       fingerprintMap,
       !!fingerprintOptions?.enabled,
+      !!options.showMavenBuildScope,
     );
 
     return {

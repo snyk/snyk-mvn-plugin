@@ -7,6 +7,7 @@ import type {
 
 import Queue from '@common.js/yocto-queue';
 import { DepGraph, DepGraphBuilder, PkgInfo } from '@snyk/dep-graph';
+import type { NodeInfo } from '@snyk/dep-graph/dist/core/types';
 import { parseDependency } from './dependency';
 import { createMavenPurlWithChecksum } from '../fingerprint';
 
@@ -61,7 +62,7 @@ export function buildWithoutVerbose(
 
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
 
-    builder.addPkgNode(parsed.pkgInfo, id);
+    builder.addPkgNode(parsed.pkgInfo, id, createNodeInfo(parsed, context));
     builder.connectDep(parentNodeId, id);
     visitedMap[parsed.key] = parsed;
     getItems(id, node).forEach((item) => queue.enqueue(item));
@@ -120,7 +121,7 @@ export function buildWithVerbose(
         ...getVerboseItems(visited.id, [...ancestry, parsed.key], node),
       );
     } else {
-      builder.addPkgNode(parsed.pkgInfo, id);
+      builder.addPkgNode(parsed.pkgInfo, id, createNodeInfo(parsed, context));
       builder.connectDep(parentNodeId, id);
       visitedMap[parsed.key] = parsed;
       // Remember to push updated ancestry here
@@ -129,6 +130,20 @@ export function buildWithVerbose(
   }
 
   return builder.build();
+}
+
+function createNodeInfo(
+  depInfo: DepInfo,
+  context: ParseContext,
+): NodeInfo | undefined {
+  if (context.showMavenBuildScope) {
+    return {
+      labels: {
+        'maven:build_scope': depInfo.scope ? depInfo.scope : 'compile',
+      },
+    };
+  }
+  return;
 }
 
 interface QueueItem {
