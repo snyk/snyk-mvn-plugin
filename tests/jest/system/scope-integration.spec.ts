@@ -89,6 +89,36 @@ describe('Maven Scope Integration Tests', () => {
           expect(node.info?.labels?.['maven:build_scope']).toBe('compile');
         });
       });
+
+      test('should set root node scope to "unknown"', async () => {
+        const result = await inspect(
+          fixturesPath,
+          'pom-all-scopes.xml',
+          baseOptions,
+        );
+
+        if (!legacyPlugin.isMultiResult(result)) {
+          throw new Error('expected multi inspect result');
+        }
+
+        expect(result.scannedProjects).toBeDefined();
+        expect(result.scannedProjects.length).toBeGreaterThan(0);
+
+        const depGraph = result.scannedProjects[0].depGraph;
+        expect(depGraph).toBeDefined();
+
+        if (!depGraph) {
+          throw new Error('depGraph is undefined');
+        }
+
+        const graphJson = depGraph.toJSON();
+        const nodes = graphJson.graph.nodes;
+
+        // Find the root node
+        const rootNode = nodes.find((node) => node.nodeId === 'root-node');
+        expect(rootNode).toBeDefined();
+        expect(rootNode?.info?.labels?.['maven:build_scope']).toBe('unknown');
+      });
     });
 
     describe('when includeTestScope disabled', () => {
@@ -260,6 +290,36 @@ describe('Maven Scope Integration Tests', () => {
         dependencyNodes.forEach((node) => {
           expect(node.info?.labels?.['maven:build_scope']).toBe('compile');
         });
+      });
+
+      test('should set root node scope to "unknown" in verbose mode', async () => {
+        const result = await inspect(
+          fixturesPath,
+          'pom-all-scopes.xml',
+          baseOptions,
+        );
+
+        if (!legacyPlugin.isMultiResult(result)) {
+          throw new Error('expected multi inspect result');
+        }
+
+        expect(result.scannedProjects).toBeDefined();
+        expect(result.scannedProjects.length).toBeGreaterThan(0);
+
+        const depGraph = result.scannedProjects[0].depGraph;
+        expect(depGraph).toBeDefined();
+
+        if (!depGraph) {
+          throw new Error('depGraph is undefined');
+        }
+
+        const graphJson = depGraph.toJSON();
+        const nodes = graphJson.graph.nodes;
+
+        // Find the root node
+        const rootNode = nodes.find((node) => node.nodeId === 'root-node');
+        expect(rootNode).toBeDefined();
+        expect(rootNode?.info?.labels?.['maven:build_scope']).toBe('unknown');
       });
     });
 

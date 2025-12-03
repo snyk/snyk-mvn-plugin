@@ -11,6 +11,8 @@ import type { NodeInfo } from '@snyk/dep-graph/dist/core/types';
 import { parseDependency } from './dependency';
 import { createMavenPurlWithChecksum } from '../fingerprint';
 
+const MAVEN_BUILD_SCOPE_UNKNOWN = 'unknown';
+
 export function buildDepGraph(
   mavenGraph: MavenGraph,
   context: ParseContext,
@@ -34,7 +36,11 @@ export function buildWithoutVerbose(
     includePurl,
     fingerprintMap.get(rootId),
   );
-  const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
+  const builder = new DepGraphBuilder(
+    { name: 'maven' },
+    parsedRoot.pkgInfo,
+    createNodeInfo(parsedRoot, context, MAVEN_BUILD_SCOPE_UNKNOWN),
+  );
   const visitedMap: Record<string, DepInfo> = {};
   const queue = new Queue<QueueItem>();
   getItems(rootId, nodes[rootId]).forEach((item) => queue.enqueue(item));
@@ -83,7 +89,11 @@ export function buildWithVerbose(
     includePurl,
     fingerprintMap.get(rootId),
   );
-  const builder = new DepGraphBuilder({ name: 'maven' }, parsedRoot.pkgInfo);
+  const builder = new DepGraphBuilder(
+    { name: 'maven' },
+    parsedRoot.pkgInfo,
+    createNodeInfo(parsedRoot, context, MAVEN_BUILD_SCOPE_UNKNOWN),
+  );
   const visitedMap: Record<string, DepInfo> = {};
   const stack: StackItemVerbose[] = [];
   stack.push(...getVerboseItems(rootId, [], nodes[rootId]));
@@ -135,11 +145,12 @@ export function buildWithVerbose(
 function createNodeInfo(
   depInfo: DepInfo,
   context: ParseContext,
+  defaultScope = 'compile',
 ): NodeInfo | undefined {
   if (context.showMavenBuildScope) {
     return {
       labels: {
-        'maven:build_scope': depInfo.scope ? depInfo.scope : 'compile',
+        'maven:build_scope': depInfo.scope ? depInfo.scope : defaultScope,
       },
     };
   }

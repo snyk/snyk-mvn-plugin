@@ -171,6 +171,141 @@ describe('buildDepGraph - scope labels', () => {
       const bNode = nodes.find((n) => n.nodeId === 'test:b:jar:1.0.0:runtime');
       expect(bNode?.info?.labels).toEqual({ 'maven:build_scope': 'runtime' });
     });
+
+    test('should set root node scope to "unknown" in non-verbose mode', () => {
+      const diGraph = `"test:root:jar:1.0.0" {
+        "test:root:jar:1.0.0" -> "test:compile-dep:jar:1.0.0:compile" ;
+      }`;
+
+      const mavenGraph = parseDigraphs([diGraph])[0];
+      const context: ParseContext = {
+        includeTestScope: false,
+        verboseEnabled: false,
+        fingerprintMap: new Map(),
+        includePurl: false,
+        showMavenBuildScope: true,
+      };
+
+      const depGraph = buildDepGraph(mavenGraph, context);
+      const graphJson = depGraph.toJSON();
+
+      // Root node should have 'unknown' scope
+      const rootNode = graphJson.graph.nodes.find(
+        (n) => n.nodeId === 'root-node',
+      );
+      expect(rootNode?.info?.labels).toEqual({
+        'maven:build_scope': 'unknown',
+      });
+
+      // Child dependencies should still default to 'compile'
+      const compileNode = graphJson.graph.nodes.find(
+        (n) => n.nodeId === 'test:compile-dep:jar:1.0.0:compile',
+      );
+      expect(compileNode?.info?.labels).toEqual({
+        'maven:build_scope': 'compile',
+      });
+    });
+
+    test('should set root node scope to "unknown" in verbose mode', () => {
+      const diGraph = `"test:root:jar:1.0.0" {
+        "test:root:jar:1.0.0" -> "test:runtime-dep:jar:1.0.0:runtime" ;
+      }`;
+
+      const mavenGraph = parseDigraphs([diGraph])[0];
+      const context: ParseContext = {
+        includeTestScope: false,
+        verboseEnabled: true,
+        fingerprintMap: new Map(),
+        includePurl: false,
+        showMavenBuildScope: true,
+      };
+
+      const depGraph = buildDepGraph(mavenGraph, context);
+      const graphJson = depGraph.toJSON();
+
+      // Root node should have 'unknown' scope in verbose mode
+      const rootNode = graphJson.graph.nodes.find(
+        (n) => n.nodeId === 'root-node',
+      );
+      expect(rootNode?.info?.labels).toEqual({
+        'maven:build_scope': 'unknown',
+      });
+
+      // Child dependencies should use their declared scope
+      const runtimeNode = graphJson.graph.nodes.find(
+        (n) => n.nodeId === 'test:runtime-dep:jar:1.0.0:runtime',
+      );
+      expect(runtimeNode?.info?.labels).toEqual({
+        'maven:build_scope': 'runtime',
+      });
+    });
+
+    test('should set root node scope to "unknown" even when root has no dependencies', () => {
+      const diGraph = `"test:root:jar:1.0.0" {
+      }`;
+
+      const mavenGraph = parseDigraphs([diGraph])[0];
+      const context: ParseContext = {
+        includeTestScope: false,
+        verboseEnabled: false,
+        fingerprintMap: new Map(),
+        includePurl: false,
+        showMavenBuildScope: true,
+      };
+
+      const depGraph = buildDepGraph(mavenGraph, context);
+      const graphJson = depGraph.toJSON();
+
+      // Root node with no dependencies should still have 'unknown' scope
+      const rootNode = graphJson.graph.nodes.find(
+        (n) => n.nodeId === 'root-node',
+      );
+      expect(rootNode?.info?.labels).toEqual({
+        'maven:build_scope': 'unknown',
+      });
+    });
+
+    test('should distinguish between root node "unknown" scope and child "compile" default scope', () => {
+      const diGraph = `"test:root:jar:1.0.0" {
+        "test:root:jar:1.0.0" -> "test:dep-no-scope:jar:1.0.0" ;
+        "test:root:jar:1.0.0" -> "test:dep-explicit-compile:jar:1.0.0:compile" ;
+      }`;
+
+      const mavenGraph = parseDigraphs([diGraph])[0];
+      const context: ParseContext = {
+        includeTestScope: false,
+        verboseEnabled: false,
+        fingerprintMap: new Map(),
+        includePurl: false,
+        showMavenBuildScope: true,
+      };
+
+      const depGraph = buildDepGraph(mavenGraph, context);
+      const graphJson = depGraph.toJSON();
+
+      const rootNode = graphJson.graph.nodes.find(
+        (n) => n.nodeId === 'root-node',
+      );
+      expect(rootNode?.info?.labels).toEqual({
+        'maven:build_scope': 'unknown',
+      });
+
+      // Dependency without explicit scope defaults to 'compile'
+      const noScopeNode = graphJson.graph.nodes.find(
+        (n) => n.nodeId === 'test:dep-no-scope:jar:1.0.0',
+      );
+      expect(noScopeNode?.info?.labels).toEqual({
+        'maven:build_scope': 'compile',
+      });
+
+      // Dependency with explicit compile scope
+      const explicitCompileNode = graphJson.graph.nodes.find(
+        (n) => n.nodeId === 'test:dep-explicit-compile:jar:1.0.0:compile',
+      );
+      expect(explicitCompileNode?.info?.labels).toEqual({
+        'maven:build_scope': 'compile',
+      });
+    });
   });
 
   describe('with showMavenBuildScope disabled', () => {
