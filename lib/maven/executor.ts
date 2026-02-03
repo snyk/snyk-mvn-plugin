@@ -1,6 +1,7 @@
 import { executeMavenDependencyResolve } from './dependency-resolve';
 import { executeMavenDependencyTree } from './dependency-tree';
 import { MavenContext } from './context';
+import { getMavenVersion, selectPluginVersion } from './version';
 import {
   createVersionResolver,
   VersionResolver,
@@ -44,12 +45,20 @@ export async function executeMavenPipeline(
   verboseEnabled: boolean,
   args: string[],
 ): Promise<MavenExecutionResult> {
-  // Execute dependency:tree first (always required)
+  // Get Maven version to select appropriate maven-dependency-plugin version
+  // This is used for verbose mode (dependency:tree) and dependency:resolve
+  const { javaVersion, mavenVersion } = await getMavenVersion(context);
+  const explicitPluginVersion = selectPluginVersion(mavenVersion);
+  debug(
+    `Maven version: ${mavenVersion}, explicit plugin version: ${explicitPluginVersion}`,
+  );
+
   const treeResult = await executeMavenDependencyTree(
     context,
     mavenAggregateProject,
     verboseEnabled,
     args,
+    explicitPluginVersion,
   );
 
   const hasMetaversions = detectMetaversions(treeResult.dependencyTreeResult);
@@ -64,6 +73,7 @@ export async function executeMavenPipeline(
         context,
         mavenAggregateProject,
         args,
+        explicitPluginVersion,
       );
       debug(`Resolve result: ${resolveResult}`);
 
@@ -84,8 +94,8 @@ export async function executeMavenPipeline(
   return {
     versionResolver,
     dependencyTreeResult: treeResult.dependencyTreeResult,
-    javaVersion: treeResult.javaVersion,
-    mavenVersion: treeResult.mavenVersion,
+    javaVersion,
+    mavenVersion,
     mavenPluginVersion: treeResult.mavenPluginVersion,
     command: treeResult.command,
     args: treeResult.args,

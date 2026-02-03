@@ -6,7 +6,7 @@ describe('buildArgs', () => {
     const context = createMavenContext('.', undefined);
     const result = buildArgs(context, ['-Paxis', '-Pjaxen']);
     expect(result).toEqual([
-      'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:resolve',
+      'org.apache.maven.plugins:maven-dependency-plugin:3.9.0:resolve',
       '--batch-mode',
       '--non-recursive',
       '-Paxis',
@@ -27,7 +27,7 @@ describe('buildArgs', () => {
     );
     expect(result).toEqual([
       'test-compile',
-      'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:resolve',
+      'org.apache.maven.plugins:maven-dependency-plugin:3.9.0:resolve',
       '--batch-mode',
       '-Dmaven.test.skip=true',
       '-Dmaven.main.skip=true',
@@ -43,7 +43,7 @@ describe('buildArgs', () => {
     );
     const result = buildArgs(context, ['-Paxis', '-Pjaxen']);
     expect(result).toEqual([
-      'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:resolve',
+      'org.apache.maven.plugins:maven-dependency-plugin:3.9.0:resolve',
       '--batch-mode',
       '--non-recursive',
       '--file',

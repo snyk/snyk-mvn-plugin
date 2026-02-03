@@ -5,6 +5,7 @@ import { sortDependencyGraphDeps } from '../../helpers/sort';
 import { DepGraphData } from '@snyk/dep-graph';
 import { legacyPlugin } from '@snyk/cli-interface';
 import { MultiProjectResult } from '@snyk/cli-interface/legacy/plugin';
+import { selectPluginVersion } from '../../../lib/maven/version';
 
 const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
@@ -37,9 +38,11 @@ describe('Dverbose reuturning all considered versions for dependencies tests', (
       const expectedGraphSorted = sortDependencyGraphDeps(expectedJSON);
       const actualGraphSorted = sortDependencyGraphDeps(result);
       expect(actualGraphSorted).toEqual(expectedGraphSorted);
+      const mavenVersion =
+        res.plugin.meta.versionBuildInfo.metaBuildVersion.mavenVersion;
       expect(
         res.plugin.meta.versionBuildInfo.metaBuildVersion.mavenPluginVersion,
-      ).toEqual('3.6.1');
+      ).toEqual(selectPluginVersion(mavenVersion));
     },
     TESTS_TIMEOUT,
   );
