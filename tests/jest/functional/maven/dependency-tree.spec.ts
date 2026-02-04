@@ -69,7 +69,7 @@ describe('buildArgs', () => {
       true,
     );
     expect(result).toEqual([
-      'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:tree',
+      'org.apache.maven.plugins:maven-dependency-plugin:3.9.0:tree',
       '-DoutputType=dot',
       '--batch-mode',
       '-Dverbose',

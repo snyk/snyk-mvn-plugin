@@ -2,11 +2,13 @@ import * as path from 'path';
 import * as subProcess from '../sub-process';
 import { debug } from '../index';
 import { MavenContext } from './context';
+import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from './version';
 
 export function buildArgs(
   context: MavenContext,
   mavenArgs: string[],
   mavenAggregateProject = false,
+  pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
 ) {
   let args: string[] = [];
 
@@ -18,8 +20,7 @@ export function buildArgs(
   }
 
   // Ensure recent maven-dependency-plugin is used
-  const mavenDependencyPlugin =
-    'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:resolve';
+  const mavenDependencyPlugin = `org.apache.maven.plugins:maven-dependency-plugin:${pluginVersion}:resolve`;
 
   args = args.concat([
     mavenDependencyPlugin,
@@ -53,8 +54,14 @@ export async function executeMavenDependencyResolve(
   context: MavenContext,
   mavenAggregateProject: boolean,
   args: string[],
+  pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
 ): Promise<string> {
-  const mvnArgs = buildArgs(context, args, mavenAggregateProject);
+  const mvnArgs = buildArgs(
+    context,
+    args,
+    mavenAggregateProject,
+    pluginVersion,
+  );
 
   debug(`Maven command: ${context.command} ${mvnArgs.join(' ')}`);
   debug(`Maven working directory: ${context.workingDirectory}`);

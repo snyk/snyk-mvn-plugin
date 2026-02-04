@@ -1,15 +1,13 @@
 import * as path from 'path';
 import * as subProcess from '../sub-process';
 import { debug } from '../index';
-import { parseVersions } from '../parse-versions';
 import { parsePluginVersionFromStdout } from '../parse/dependency-tree-parser';
 import { MavenContext } from './context';
 import { DependencyTreeError } from './errors';
+import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from './version';
 
 export interface MavenDependencyTreeResult {
   dependencyTreeResult: string;
-  javaVersion?: string;
-  mavenVersion?: string;
   mavenPluginVersion?: string;
   command: string;
   args: string[];
@@ -20,6 +18,7 @@ export function buildArgs(
   mavenArgs: string[],
   mavenAggregateProject = false,
   verboseEnabled = false,
+  pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
 ) {
   let args: string[] = [];
 
@@ -34,7 +33,7 @@ export function buildArgs(
   // when using verbose ensure maven-dependency-plugin version 3 is used
   // lower versions do not work with -DoutputType=dot
   const mavenDependencyPlugin = verboseEnabled
-    ? 'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:tree'
+    ? `org.apache.maven.plugins:maven-dependency-plugin:${pluginVersion}:tree`
     : 'dependency:tree';
 
   // Requires Maven >= 2.2
@@ -80,12 +79,14 @@ export async function executeMavenDependencyTree(
   mavenAggregateProject: boolean,
   verboseEnabled: boolean,
   args: string[],
+  pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
 ): Promise<MavenDependencyTreeResult> {
   const mvnArgs = buildArgs(
     context,
     args,
     mavenAggregateProject,
     verboseEnabled,
+    pluginVersion,
   );
 
   debug(`Maven command: ${context.command} ${mvnArgs.join(' ')}`);
@@ -101,22 +102,11 @@ export async function executeMavenDependencyTree(
       },
     );
 
-    const versionResult = await subProcess.execute(
-      context.command,
-      ['--version'],
-      {
-        cwd: context.workingDirectory,
-      },
-    );
-
-    const { javaVersion, mavenVersion } = parseVersions(versionResult);
     const mavenPluginVersion =
       parsePluginVersionFromStdout(dependencyTreeResult);
 
     return {
       dependencyTreeResult,
-      javaVersion,
-      mavenVersion,
       mavenPluginVersion,
       command: context.command,
       args: mvnArgs,
