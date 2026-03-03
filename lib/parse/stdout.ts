@@ -1,8 +1,8 @@
 import { parseDigraph } from '../parse-digraph';
 
 const logLabel = /^\[\w+\]\s*/gm;
-const errorLabel = /^\[ERROR\]/m;
-const successLabel = /^\[INFO\] BUILD SUCCESS/m;
+const errorLabel = /^\[ERROR\]/gm;
+const successLabel = /^\[INFO\] BUILD SUCCESS/gm;
 const mavenDependencyPluginRegex =
   /(?:maven-dependency-plugin|dependency):(\d+\.\d+)(\.\d+)?:tree/m;
 

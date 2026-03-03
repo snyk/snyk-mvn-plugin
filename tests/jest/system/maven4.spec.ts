@@ -43,6 +43,35 @@ describe('plugin.inspect - Maven 4', () => {
     });
   });
 
+  describe('Maven 4 project with error log but successful build', () => {
+    test('should inspect maven4 pom that logs an error but succeeds', async () => {
+      const result = await plugin.inspect(
+        path.join(fixturesPath, 'maven4-successful-build-with-error-log'),
+        'pom.xml',
+        { mavenAggregateProject: true },
+      );
+
+      if (!legacyPlugin.isMultiResult(result)) {
+        throw new Error('expected multi inspect result');
+      }
+
+      expect(result.scannedProjects.length).toBe(1);
+
+      const mavenVersion =
+        result.plugin.meta?.versionBuildInfo?.metaBuildVersion?.mavenVersion;
+      expect(mavenVersion).toMatch(/^Apache Maven 4\./);
+
+      const expectedJSON = await readFixtureJSON(
+        'maven4-successful-build-with-error-log',
+        'expected-dep-graph.json',
+      );
+      const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
+      expect(
+        result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
+      ).toBeTruthy();
+    });
+  });
+
   describe('Maven 4 aggregate project with subprojects', () => {
     test('should inspect maven4-aggregate root pom', async () => {
       const result = await plugin.inspect(
