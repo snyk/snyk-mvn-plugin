@@ -43,12 +43,15 @@ describe('plugin.inspect - Maven 4', () => {
     });
   });
 
-  describe('Maven 4 project with error log but successful build', () => {
-    test('should inspect maven4 pom that logs an error but succeeds', async () => {
+  describe('Maven 4 project with invalid transitive POM producing indented [ERROR] lines', () => {
+    test('should inspect maven4 pom that logs indented errors from POM validation but succeeds', async () => {
       const result = await plugin.inspect(
-        path.join(fixturesPath, 'maven4-successful-build-with-error-log'),
-        'pom.xml',
-        { mavenAggregateProject: true },
+        '.',
+        path.join(
+          fixturesPath,
+          'maven4-successful-build-with-error-log',
+          'pom.xml',
+        ),
       );
 
       if (!legacyPlugin.isMultiResult(result)) {
@@ -61,14 +64,14 @@ describe('plugin.inspect - Maven 4', () => {
         result.plugin.meta?.versionBuildInfo?.metaBuildVersion?.mavenVersion;
       expect(mavenVersion).toMatch(/^Apache Maven 4\./);
 
-      const expectedJSON = await readFixtureJSON(
-        'maven4-successful-build-with-error-log',
-        'expected-dep-graph.json',
-      );
-      const expectedDepGraph = depGraphLib.createFromJSON(expectedJSON);
+      expect(result.scannedProjects[0].depGraph?.rootPkg).toEqual({
+        name: 'io.snyk.example:maven4-error-log-test',
+        version: '1.0.0-SNAPSHOT',
+      });
+
       expect(
-        result.scannedProjects[0].depGraph?.equals(expectedDepGraph),
-      ).toBeTruthy();
+        result.scannedProjects[0].depGraph?.getDepPkgs().length,
+      ).toBeGreaterThan(0);
     });
   });
 

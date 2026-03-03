@@ -1,13 +1,18 @@
 import { parseDigraph } from '../parse-digraph';
 
 const logLabel = /^\[\w+\]\s*/gm;
-const errorLabel = /^\[ERROR\]/gm;
-const successLabel = /^\[INFO\] BUILD SUCCESS/gm;
+const errorLabel = /^\[ERROR\]/m;
+const successLabel = /^\[INFO\] BUILD SUCCESS/m;
 const mavenDependencyPluginRegex =
   /(?:maven-dependency-plugin|dependency):(\d+\.\d+)(\.\d+)?:tree/m;
 
 function cleanStdout(stdout: string): string {
-  if (errorLabel.test(stdout) && !successLabel.test(stdout)) {
+  const hasError = errorLabel.test(stdout);
+  const hasSuccess = successLabel.test(stdout);
+  console.log('[DEBUG cleanStdout] errorLabel matched:', hasError);
+  console.log('[DEBUG cleanStdout] successLabel matched:', hasSuccess);
+  console.log('[DEBUG cleanStdout] raw stdout:\n', stdout);
+  if (hasError && !hasSuccess) {
     throw new Error('Maven output contains errors.');
   }
   return stdout.replace(logLabel, '');

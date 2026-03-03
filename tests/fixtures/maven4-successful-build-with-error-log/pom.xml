@@ -10,34 +10,11 @@
     <version>1.0.0-SNAPSHOT</version>
     <name>maven4-error-log-test</name>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.4.1</version>
-                <executions>
-                    <execution>
-                        <id>enforce-error-without-failing-build</id>
-                        <configuration>
-                            <rules>
-                                <requireMavenVersion>
-                                    <version>9000.1</version>
-                                    <message>[ERROR] Always ERROR</message>
-                                </requireMavenVersion>
-                                <requireJavaVersion>
-                                    <version>9000.1</version>
-                                    <message>[ERROR] Always ERROR 2</message>
-                                </requireJavaVersion>
-                            </rules>
-                            <fail>false</fail>
-                        </configuration>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>5.14.3</version>
+        </dependency>
+    </dependencies>
 </project>
