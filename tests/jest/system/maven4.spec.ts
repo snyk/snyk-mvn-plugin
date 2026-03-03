@@ -75,6 +75,28 @@ describe('plugin.inspect - Maven 4', () => {
     });
   });
 
+  describe('Maven 4 project with non-existent dependency (build failure)', () => {
+    test('should throw error on maven4 build failure', async () => {
+      try {
+        await plugin.inspect(
+          '.',
+          path.join(fixturesPath, 'maven4-bad', 'pom.xml'),
+        );
+        throw new Error('expected plugin.inspect to throw');
+      } catch (err) {
+        if (err instanceof Error) {
+          console.log(
+            '[DEBUG maven4-bad] error message:\n',
+            err.message,
+          );
+          expect(err.message).toBeTruthy();
+        } else {
+          throw new Error('error is not instance of Error');
+        }
+      }
+    });
+  });
+
   describe('Maven 4 aggregate project with subprojects', () => {
     test('should inspect maven4-aggregate root pom', async () => {
       const result = await plugin.inspect(

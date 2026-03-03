@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.1.0
+         http://maven.apache.org/xsd/maven-4.1.0.xsd">
+    <modelVersion>4.1.0</modelVersion>
+
+    <groupId>io.snyk.example</groupId>
+    <artifactId>maven4-bad-test-project</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>Maven 4 bad test project</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>no.such.groupId</groupId>
+            <artifactId>no.such.artifactId</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
+</project>
