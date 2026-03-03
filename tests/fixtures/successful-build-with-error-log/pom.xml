@@ -24,6 +24,10 @@
                                     <version>9000.1</version>
                                     <message>[ERROR] Always ERROR</message>
                                 </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>9000.1</version>
+                                    <message>[ERROR] Always ERROR 2</message>
+                                </requireJavaVersion>
                             </rules>
                             <fail>false</fail>
                         </configuration>
