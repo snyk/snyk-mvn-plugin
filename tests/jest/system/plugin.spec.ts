@@ -193,14 +193,9 @@ describe('plugin.inspect', () => {
 
   test('should inspect pom that logs an error but succeeds', async () => {
     const result = await plugin.inspect(
-      __dirname,
-      path.join(
-        '../..',
-        'fixtures',
-        'successful-build-with-error-log',
-        'pom.xml',
-      ),
-      {},
+      path.join(fixturesPath, 'successful-build-with-error-log'),
+      'pom.xml',
+      { mavenAggregateProject: true },
     );
 
     if (!legacyPlugin.isMultiResult(result)) {

@@ -147,7 +147,7 @@ const errorStdout = `[INFO] Scanning for projects...
 [ERROR] [ERROR] Some problems were encountered while processing the POMs:
 `;
 
-const buildSuccessErrorLogStdout = `[INFO] Scanning for projects...
+const buildSuccessErrorsLogStdout = `[INFO] Scanning for projects...
 [INFO] 
 [INFO] --------------------< io.snyk.example:test-project >--------------------
 [INFO] Building test-project 1.0.0-SNAPSHOT
@@ -156,6 +156,7 @@ const buildSuccessErrorLogStdout = `[INFO] Scanning for projects...
 [INFO] --- maven-enforcer-plugin:3.4.1:enforce (enforce-error-without-failing-build) @ test-project ---
 [WARNING] Rule 0: org.apache.maven.enforcer.rules.version.RequireMavenVersion failed with message:
 [ERROR] Always ERROR
+[ERROR] Always ERROR 2
 [INFO] 
 [INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ test-project ---
 [INFO] No sources to compile
@@ -177,7 +178,7 @@ test('output contains errors', async () => {
 
 test('output contains error, but succeeds building', async () => {
   expect(() =>
-    parseDigraphsFromStdout(buildSuccessErrorLogStdout),
+    parseDigraphsFromStdout(buildSuccessErrorsLogStdout),
   ).toThrowError(
     expect.objectContaining({
       message: expect.stringMatching('Cannot find any digraphs.'),
