@@ -14,8 +14,16 @@ export interface MavenContext {
   targetPath: string;
 }
 
-export function getCommand(root: string, targetFile?: string): Command {
-  if (!targetFile) {
+interface GetCommandOptions {
+  skipWrapper?: boolean;
+}
+
+export function getCommand(
+  root: string,
+  targetFile?: string,
+  options?: GetCommandOptions,
+): Command {
+  if (!targetFile || options?.skipWrapper) {
     return 'mvn';
   }
   const isWinLocal = /^win/.test(os.platform()); // local check, can be stubbed in tests
@@ -76,12 +84,13 @@ function findWrapper(
 export function createMavenContext(
   root: string,
   targetFile?: string,
+  options?: GetCommandOptions,
 ): MavenContext {
   const targetPath = targetFile
     ? path.resolve(root, targetFile)
     : path.resolve(root);
 
-  const command = getCommand(root, targetFile);
+  const command = getCommand(root, targetFile, options);
   const workingDirectory = findWrapper(command, root, targetPath);
 
   return {

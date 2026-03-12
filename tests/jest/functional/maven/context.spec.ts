@@ -12,6 +12,16 @@ describe('getCommand', () => {
     expect(cmd).toBe('mvn');
   });
 
+  it("should return 'mvn' when skipWrapper is true even if mvnw exists", () => {
+    const cmd = getCommand(
+      '.',
+      path.join(__dirname, '../../..', 'fixtures/maven-with-mvnw', 'pom.xml'),
+      { skipWrapper: true },
+    );
+
+    expect(cmd).toBe('mvn');
+  });
+
   it("should return 'mvnw' when 'mvnw' present in path", async () => {
     const cmd = getCommand(
       '.',

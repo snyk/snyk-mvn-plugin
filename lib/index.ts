@@ -44,6 +44,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   fingerprintAlgorithm?: HashAlgorithm;
   mavenRepository?: string;
   showMavenBuildScope?: boolean;
+  mavenSkipWrapper?: boolean;
 }
 
 function buildFingerprintOptions(
@@ -126,7 +127,9 @@ export async function inspect(
   }
 
   // Create Maven context once - handles command detection and working directory
-  const mavenContext = createMavenContext(root, targetFile);
+  const mavenContext = createMavenContext(root, targetFile, {
+    skipWrapper: options.mavenSkipWrapper,
+  });
 
   const args = options.args || [];
 
