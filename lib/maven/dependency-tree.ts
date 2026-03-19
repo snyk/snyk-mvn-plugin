@@ -3,8 +3,8 @@ import * as subProcess from '../sub-process';
 import { debug } from '../index';
 import { parsePluginVersionFromStdout } from '../parse/dependency-tree-parser';
 import { MavenContext } from './context';
-import { DependencyTreeError } from './errors';
 import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from './version';
+import { OpenSourceEcosystems } from '@snyk/error-catalog-nodejs-public';
 
 export interface MavenDependencyTreeResult {
   dependencyTreeResult: string;
@@ -112,6 +112,17 @@ export async function executeMavenDependencyTree(
       args: mvnArgs,
     };
   } catch (error) {
-    throw new DependencyTreeError(context.command, mvnArgs, error);
+    if (error instanceof Error) {
+      const message = error.message;
+      if (message.includes('Non-parseable POM')) {
+        throw new OpenSourceEcosystems.UnableToParseXMLError(
+          'Error parsing the XML file',
+        );
+      }
+    }
+
+    throw new OpenSourceEcosystems.FailedToBuildMavenProjectError(
+      'Cannot build Maven dependency tree',
+    );
   }
 }

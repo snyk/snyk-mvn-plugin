@@ -227,6 +227,14 @@ jobs:
       JDK: << parameters.jdk_version >>
     steps:
       - checkout
+      - run:
+          name: Update bash for macOS
+          command: |
+            brew install bash
+            echo 'export PATH="$(brew --prefix bash)/bin:$PATH"' >> "$BASH_ENV"
+            source "$BASH_ENV"
+            which bash
+            bash --version
       - install_sdkman
       - install_jdk_unix:
           jdk_version: << parameters.jdk_version >>
@@ -246,6 +254,14 @@ jobs:
       JDK: << parameters.jdk_version >>
     steps:
       - checkout
+      - run:
+          name: Update bash for macOS
+          command: |
+            brew install bash
+            echo 'export PATH="$(brew --prefix bash)/bin:$PATH"' >> "$BASH_ENV"
+            source "$BASH_ENV"
+            which bash
+            bash --version
       - install_sdkman
       - install_jdk_unix:
           jdk_version: << parameters.jdk_version >>

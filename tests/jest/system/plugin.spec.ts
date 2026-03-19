@@ -138,10 +138,23 @@ describe('plugin.inspect', () => {
       thrownError = error as Error;
     }
 
-    expect(thrownError.message).toMatch(
-      /Child process failed with exit code: [1-9]\d*\./,
-    );
-    expect(thrownError.message).toMatch('there is no POM in this directory');
+    expect(thrownError.message).toMatch('Cannot build Maven dependency tree');
+  });
+
+  test('should throw error when inspecting pom.xml with invalid xml', async () => {
+    let thrownError: Error;
+
+    try {
+      await plugin.inspect('.', path.join(fixturesPath, 'bad-xml', 'pom.xml'), {
+        dev: true,
+      });
+
+      fail('Expected plugin.inspect to throw');
+    } catch (error) {
+      thrownError = error as Error;
+    }
+
+    expect(thrownError.message).toMatch('Error parsing the XML file');
   });
 
   test('should throw error when inspecting pom with dependency plugin version less than 2.2', async () => {
@@ -181,10 +194,7 @@ describe('plugin.inspect', () => {
       );
     } catch (err) {
       if (err instanceof Error) {
-        expect(err.message).toMatch('BUILD FAILURE');
-        expect(err.message).toMatch(
-          'no.such.groupId:no.such.artifactId:jar:1.0.0',
-        );
+        expect(err.message).toMatch('Cannot build Maven dependency tree');
       } else {
         throw new Error('error is not instance of Error');
       }
@@ -241,18 +251,7 @@ describe('plugin.inspect', () => {
         );
       } catch (err) {
         if (err instanceof Error) {
-          const expectedCommand =
-            '\n\n' +
-            'Please make sure that Apache Maven Dependency Plugin ' +
-            'version 2.2 or above is installed, and that `' +
-            fullCommand +
-            '` executes successfully ' +
-            'on this project.\n\n' +
-            'If the problem persists, collect the output of `' +
-            'DEBUG=* ' +
-            fullCommand +
-            '` and contact support@snyk.io\n';
-          expect(err.message).toMatch(expectedCommand);
+          expect(err.message).toMatch('Cannot build Maven dependency tree');
         } else {
           throw new Error('error is not instance of Error');
         }
@@ -273,9 +272,7 @@ describe('plugin.inspect', () => {
       }),
     ).rejects.toThrow(
       expect.objectContaining({
-        message: expect.stringMatching(
-          '\\[WARNING\\] The POM for no.such.groupId:no.such.artifactId:jar:1.0.0 is missing, no dependency information available',
-        ),
+        message: expect.stringMatching('Cannot build Maven dependency tree'),
       }),
     );
   });
