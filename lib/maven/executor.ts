@@ -1,4 +1,7 @@
-import { executeMavenDependencyResolve } from './dependency-resolve';
+import {
+  executeMavenDependencyResolve,
+  MavenDependencyResolveResult,
+} from './dependency-resolve';
 import { executeMavenDependencyTree } from './dependency-tree';
 import { MavenContext } from './context';
 import { getMavenVersion, selectPluginVersion } from './version';
@@ -33,6 +36,22 @@ export interface MavenExecutionResult {
   args: string[];
 }
 
+function logMavenCommandOutput(
+  phase: string,
+  command: string,
+  args: string[],
+  output: string,
+) {
+  if (!output) {
+    debug(
+      `>>> Maven ${phase} output (${command} ${args.join(' ')}): <no output>`,
+    );
+    return;
+  }
+
+  debug(`>>> Maven ${phase} output (${command} ${args.join(' ')}):`, output);
+}
+
 /**
  * Execute the optimal Maven pipeline: dependency:tree (required) + dependency:resolve (conditional)
  *
@@ -44,6 +63,7 @@ export async function executeMavenPipeline(
   mavenAggregateProject = false,
   verboseEnabled: boolean,
   args: string[],
+  logMavenOutput = false,
 ): Promise<MavenExecutionResult> {
   // Get Maven version to select appropriate maven-dependency-plugin version
   // This is used for verbose mode (dependency:tree) and dependency:resolve
@@ -61,6 +81,15 @@ export async function executeMavenPipeline(
     explicitPluginVersion,
   );
 
+  if (logMavenOutput) {
+    logMavenCommandOutput(
+      'dependency:tree',
+      treeResult.command,
+      treeResult.args,
+      treeResult.dependencyTreeResult,
+    );
+  }
+
   const hasMetaversions = detectMetaversions(treeResult.dependencyTreeResult);
   debug(`Metaversions detected: ${hasMetaversions}`);
 
@@ -69,16 +98,29 @@ export async function executeMavenPipeline(
   if (hasMetaversions) {
     try {
       debug('Running dependency:resolve for metaversion resolution');
-      const resolveResult = await executeMavenDependencyResolve(
-        context,
-        mavenAggregateProject,
-        args,
-        explicitPluginVersion,
-      );
-      debug(`Resolve result: ${resolveResult}`);
+      const resolveResult: MavenDependencyResolveResult =
+        await executeMavenDependencyResolve(
+          context,
+          mavenAggregateProject,
+          args,
+          explicitPluginVersion,
+        );
+
+      if (logMavenOutput) {
+        logMavenCommandOutput(
+          'dependency:resolve',
+          resolveResult.command,
+          resolveResult.args,
+          resolveResult.dependencyResolveResult,
+        );
+      } else {
+        debug(`Resolve result: ${resolveResult.dependencyResolveResult}`);
+      }
 
       // Parse immediately and fail fast if there's an issue
-      versionResolver = createVersionResolver(resolveResult);
+      versionResolver = createVersionResolver(
+        resolveResult.dependencyResolveResult,
+      );
     } catch (err) {
       debug(`Version resolution failed: ${err}`);
       // Graceful degradation using no-op version resolver
