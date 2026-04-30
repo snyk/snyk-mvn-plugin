@@ -14,7 +14,7 @@ defaults: &defaults
       default: '8'
     node_version:
       type: string
-      default: '20.19.1'
+      default: '22.22.2'
   working_directory: ~/snyk-mvn-plugin
 
 windows_defaults: &windows_defaults
@@ -30,23 +30,23 @@ osx_defaults: &osx_defaults
 test_matrix_unix: &test_matrix_unix
   jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca', '21.0.8.fx-librca']
   maven_version: ['3.3.9', '3.6.3', '3.9.11']
-  node_version: ['20.19.1']
+  node_version: ['22.22.2']
 
 test_matrix_win: &test_matrix_win
   jdk_version: ['8', '17', '21']
   maven_version: ['3.3.9.2', '3.6.3', '3.9.11']
-  node_version: ['20.19.1']
+  node_version: ['22.22.2']
 
 test_matrix_os: &test_matrix_osx
   jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca', '21.0.8.fx-librca']
   maven_version: ['3.3.9', '3.6.3', '3.9.11']
-  node_version: ['20.19.1']
+  node_version: ['22.22.2']
 
 # Maven 4 matrices (requires Java 17+)
 test_matrix_maven4_unix: &test_matrix_maven4_unix
   jdk_version: ['17.0.4.1.fx-librca', '21.0.8.fx-librca']
   maven_version: ['4.0.0-rc-4']
-  node_version: ['20.19.1']
+  node_version: ['22.22.2']
 
 commands:
   install_deps:
@@ -376,7 +376,7 @@ workflows:
       - release:
           name: Release
           context: nodejs-app-release
-          node_version: '20.19.1'
+          node_version: '22.22.2'
           requires:
             - test-osx
             - test-windows
