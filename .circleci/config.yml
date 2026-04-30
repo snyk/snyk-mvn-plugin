@@ -14,7 +14,7 @@ defaults: &defaults
       default: '8'
     node_version:
       type: string
-      default: '20.19.1'
+      default: '24.15.0'
   working_directory: ~/snyk-mvn-plugin
 
 windows_defaults: &windows_defaults
@@ -30,23 +30,23 @@ osx_defaults: &osx_defaults
 test_matrix_unix: &test_matrix_unix
   jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca', '21.0.8.fx-librca']
   maven_version: ['3.3.9', '3.6.3', '3.9.11']
-  node_version: ['20.19.1']
+  node_version: ['20.18.1', '22.22.2', '24.15.0']
 
 test_matrix_win: &test_matrix_win
   jdk_version: ['8', '17', '21']
   maven_version: ['3.3.9.2', '3.6.3', '3.9.11']
-  node_version: ['20.19.1']
+  node_version: ['20.18.1', '22.22.2', '24.15.0']
 
 test_matrix_os: &test_matrix_osx
   jdk_version: ['8.0.342-amzn', '17.0.4.1.fx-librca', '21.0.8.fx-librca']
   maven_version: ['3.3.9', '3.6.3', '3.9.11']
-  node_version: ['20.19.1']
+  node_version: ['20.18.1', '22.22.2', '24.15.0']
 
 # Maven 4 matrices (requires Java 17+)
 test_matrix_maven4_unix: &test_matrix_maven4_unix
   jdk_version: ['17.0.4.1.fx-librca', '21.0.8.fx-librca']
   maven_version: ['4.0.0-rc-4']
-  node_version: ['20.19.1']
+  node_version: ['20.18.1', '22.22.2', '24.15.0']
 
 commands:
   install_deps:
@@ -69,6 +69,31 @@ commands:
       - run:
           name: Use correct version of Node
           command: nvm use << parameters.node_version >>
+
+  install_node_npm_osx:
+    description: Install matrix Node version on macOS (nvm; persists via BASH_ENV)
+    parameters:
+      node_version:
+        type: string
+        default: ''
+    steps:
+      - run:
+          name: Install Node << parameters.node_version >> (macOS / nvm)
+          command: |
+            set -euo pipefail
+            export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+            if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+              curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+            fi
+            . "$NVM_DIR/nvm.sh"
+            nvm install << parameters.node_version >>
+            nvm alias default << parameters.node_version >>
+            nvm use << parameters.node_version >>
+            {
+              echo 'export NVM_DIR="$HOME/.nvm"'
+              echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
+              echo "nvm use << parameters.node_version >> >/dev/null"
+            } >> "$BASH_ENV"
 
   show_node_version:
     description: Log Node and npm version
@@ -235,6 +260,8 @@ jobs:
             source "$BASH_ENV"
             which bash
             bash --version
+      - install_node_npm_osx:
+          node_version: << parameters.node_version >>
       - install_sdkman
       - install_jdk_unix:
           jdk_version: << parameters.jdk_version >>
@@ -262,6 +289,8 @@ jobs:
             source "$BASH_ENV"
             which bash
             bash --version
+      - install_node_npm_osx:
+          node_version: << parameters.node_version >>
       - install_sdkman
       - install_jdk_unix:
           jdk_version: << parameters.jdk_version >>
@@ -276,7 +305,7 @@ jobs:
   release:
     <<: *defaults
     docker:
-      - image: cimg/node:lts
+      - image: node:24
     steps:
       - checkout
       - install_deps
@@ -376,7 +405,6 @@ workflows:
       - release:
           name: Release
           context: nodejs-app-release
-          node_version: '20.19.1'
           requires:
             - test-osx
             - test-windows
