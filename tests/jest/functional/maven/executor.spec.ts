@@ -1,4 +1,5 @@
 import { executeMavenPipeline } from '../../../../lib/maven/executor';
+import * as plugin from '../../../../lib';
 import * as dependencyTree from '../../../../lib/maven/dependency-tree';
 import * as dependencyResolve from '../../../../lib/maven/dependency-resolve';
 import * as version from '../../../../lib/maven/version';
@@ -98,9 +99,13 @@ describe('executeMavenPipeline conditional logic', () => {
     });
 
     // Mock resolve result with resolved versions
-    mockExecuteMavenDependencyResolve.mockResolvedValue(`[INFO] The following files have been resolved:
+    mockExecuteMavenDependencyResolve.mockResolvedValue({
+      dependencyResolveResult: `[INFO] The following files have been resolved:
 [INFO]    junit:junit:jar:4.13.2:test -- module junit [auto]
-[INFO]    org.slf4j:slf4j-api:jar:1.7.36:compile -- module org.slf4j.api`);
+[INFO]    org.slf4j:slf4j-api:jar:1.7.36:compile -- module org.slf4j.api`,
+      command: 'mvn',
+      args: ['dependency:resolve', '--batch-mode'],
+    });
 
     const result = await executeMavenPipeline(context, false, false, []);
 
@@ -167,8 +172,12 @@ describe('executeMavenPipeline conditional logic', () => {
       args: ['test-compile', 'dependency:tree', '--batch-mode'],
     });
 
-    mockExecuteMavenDependencyResolve.mockResolvedValue(`[INFO] The following files have been resolved:
-[INFO]    com.example:module-a:jar:1.0.0:compile -- module com.example.module.a`);
+    mockExecuteMavenDependencyResolve.mockResolvedValue({
+      dependencyResolveResult: `[INFO] The following files have been resolved:
+[INFO]    com.example:module-a:jar:1.0.0:compile -- module com.example.module.a`,
+      command: 'mvn',
+      args: ['dependency:resolve', '--batch-mode'],
+    });
 
     const result = await executeMavenPipeline(context, true, false, [
       '-Pprofile',
@@ -191,5 +200,41 @@ describe('executeMavenPipeline conditional logic', () => {
     );
 
     expect(result.versionResolver).not.toBe(NO_OP_VERSION_RESOLVER);
+  });
+
+  test('should log mvn output when requested', async () => {
+    mockExecuteMavenDependencyTree.mockResolvedValue({
+      dependencyTreeResult: `digraph "com.example:test:jar:1.0.0" {
+"com.example:test:jar:1.0.0" -> "junit:junit:jar:RELEASE:test" ;
+}`,
+      command: 'mvn',
+      args: ['dependency:tree', '--batch-mode'],
+    });
+
+    mockExecuteMavenDependencyResolve.mockResolvedValue({
+      dependencyResolveResult: `[INFO] Resolved artifacts
+[INFO] junit:junit:jar:4.13.2:test`,
+      command: 'mvn',
+      args: ['dependency:resolve', '--batch-mode'],
+    });
+
+    const debugSpy = jest
+      .spyOn(plugin, 'debug')
+      .mockImplementation(() => undefined);
+
+    try {
+      await executeMavenPipeline(context, false, false, [], true);
+
+      expect(debugSpy).toHaveBeenCalledWith(
+        expect.stringContaining('dependency:tree output'),
+        expect.stringContaining('digraph "com.example:test:jar:1.0.0"'),
+      );
+      expect(debugSpy).toHaveBeenCalledWith(
+        expect.stringContaining('dependency:resolve output'),
+        expect.stringContaining('Resolved artifacts'),
+      );
+    } finally {
+      debugSpy.mockRestore();
+    }
   });
 });

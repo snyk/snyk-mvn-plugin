@@ -45,6 +45,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   mavenRepository?: string;
   showMavenBuildScope?: boolean;
   mavenSkipWrapper?: boolean;
+  mavenDebugOutput?: boolean;
 }
 
 function buildFingerprintOptions(
@@ -79,6 +80,7 @@ export async function inspect(
       scanAllUnmanaged: false,
       'print-graph': false,
       mavenVerboseIncludeAllVersions: false,
+      mavenDebugOutput: false,
     };
   }
   const fingerprintOptions = buildFingerprintOptions(options);
@@ -138,6 +140,8 @@ export async function inspect(
     args.includes('-Dverbose=true') ||
     !!options['print-graph'];
 
+  const logMavenOutput = !!options.mavenDebugOutput;
+
   let executionResult;
   try {
     // Execute Maven pipeline (resolve + tree)
@@ -146,6 +150,7 @@ export async function inspect(
       options.mavenAggregateProject,
       verboseEnabled,
       args,
+      logMavenOutput,
     );
     debug(
       `Verbose enabled with all versions: ${options.mavenVerboseIncludeAllVersions}`,
@@ -193,7 +198,7 @@ export async function inspect(
       ...{ scannedProjects },
     };
   } catch (err) {
-    if (executionResult) {
+    if (executionResult && !logMavenOutput) {
       debug(`>>> Output from mvn: ${executionResult.dependencyTreeResult}`);
     }
 
