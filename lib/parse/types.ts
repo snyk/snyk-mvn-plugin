@@ -92,4 +92,9 @@ export interface ParseContext {
   fingerprintMap: Map<string, FingerprintData>;
   includePurl: boolean;
   showMavenBuildScope?: boolean;
+  // Per-node hash labels read from the local Maven repository's companion
+  // checksum files (e.g. `<artifact>.jar.sha1`). Each entry is keyed by Maven
+  // node ID and contains zero or more `hash:<algorithm>` -> hex digest pairs.
+  // See lib/parse/m2-hash-labels.ts.
+  hashLabelsMap?: Map<string, Record<string, string>>;
 }
