@@ -26,18 +26,29 @@ const M2_COMPANION_FILES: { ext: string; algorithm: string }[] = [
   { ext: 'sha512', algorithm: 'sha-512' },
 ];
 
+// Number of artifacts whose companion files are read concurrently. Matches the
+// concurrency limit used by `generateFingerprints` in fingerprint.ts.
+const CONCURRENCY = 5;
+
 /**
  * Read a single companion-file value. Returns undefined if the file does not
  * exist (older artifacts may not publish SHA-256/SHA-512). Returns the raw
  * hex digest, lowercased — Maven companion files contain the digest as ASCII
  * hex, sometimes followed by a space and the filename; we keep only the digest.
  */
-function readCompanionFile(artifactPath: string, ext: string): string | undefined {
+async function readCompanionFile(
+  artifactPath: string,
+  ext: string,
+): Promise<string | undefined> {
   const companionPath = `${artifactPath}.${ext}`;
-  if (!fs.existsSync(companionPath)) {
+  let raw: string;
+  try {
+    raw = (await fs.promises.readFile(companionPath, 'utf8')).trim();
+  } catch {
+    // File does not exist (older artifacts may not publish every algorithm) or
+    // is unreadable — treat both as "no recorded hash for this algorithm".
     return undefined;
   }
-  const raw = fs.readFileSync(companionPath, 'utf8').trim();
   // Maven sometimes formats as `<hex>  <filename>`; the first whitespace-delimited
   // token is the digest. Normalise to lowercase for a stable label value.
   const digest = raw.split(/\s+/, 1)[0];
@@ -52,19 +63,23 @@ function readCompanionFile(artifactPath: string, ext: string): string | undefine
  * Empty result if none are present (artifact not in .m2 yet, or no companion
  * files published).
  */
-export function readM2HashLabels(
+export async function readM2HashLabels(
   dependencyId: string,
   repositoryPath: string,
-): Record<string, string> {
+): Promise<Record<string, string>> {
   const labels: Record<string, string> = {};
   const artifactPath = dependencyIdToArtifactPath(dependencyId, repositoryPath);
 
-  for (const { ext, algorithm } of M2_COMPANION_FILES) {
-    const digest = readCompanionFile(artifactPath, ext);
+  const digests = await Promise.all(
+    M2_COMPANION_FILES.map(({ ext }) => readCompanionFile(artifactPath, ext)),
+  );
+
+  M2_COMPANION_FILES.forEach(({ algorithm }, i) => {
+    const digest = digests[i];
     if (digest) {
       labels[`hash:${algorithm}`] = digest;
     }
-  }
+  });
 
   return labels;
 }
@@ -72,24 +87,34 @@ export function readM2HashLabels(
 /**
  * Pre-compute the hash-label map for every node in a set of Maven graphs.
  * Mirrors the pattern used by `generateFingerprints` so the depgraph builder
- * can attach labels without doing I/O inside the BFS/DFS loop.
+ * can attach labels without doing I/O inside the BFS/DFS loop. Reads are run
+ * asynchronously in bounded batches so they never block the event loop.
  */
-export function buildM2HashLabelsMap(
+export async function buildM2HashLabelsMap(
   mavenGraphs: MavenGraph[],
   repositoryPath: string,
-): Map<string, Record<string, string>> {
+): Promise<Map<string, Record<string, string>>> {
   const result = new Map<string, Record<string, string>>();
-  const seen = new Set<string>();
 
+  // Collect the unique node IDs across all graphs.
+  const nodeIds = new Set<string>();
   for (const graph of mavenGraphs) {
-    for (const nodeId of Object.keys(graph.nodes)) {
-      if (seen.has(nodeId)) continue;
-      seen.add(nodeId);
-      const labels = readM2HashLabels(nodeId, repositoryPath);
+    Object.keys(graph.nodes).forEach((nodeId) => nodeIds.add(nodeId));
+  }
+  const nodeIdArray = Array.from(nodeIds);
+
+  // Read companion files in bounded-concurrency batches.
+  for (let i = 0; i < nodeIdArray.length; i += CONCURRENCY) {
+    const batch = nodeIdArray.slice(i, i + CONCURRENCY);
+    const batchResults = await Promise.all(
+      batch.map((nodeId) => readM2HashLabels(nodeId, repositoryPath)),
+    );
+    batch.forEach((nodeId, j) => {
+      const labels = batchResults[j];
       if (Object.keys(labels).length > 0) {
         result.set(nodeId, labels);
       }
-    }
+    });
   }
 
   return result;
