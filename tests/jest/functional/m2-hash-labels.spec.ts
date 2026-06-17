@@ -192,29 +192,4 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
       }
     });
   });
-
-  describe('PoC demo: depgraph with hashes', () => {
-    it('logs the full depgraph JSON for visual inspection', async () => {
-      const diGraph = `"com.google.guava:guava:jar:32.1.3-jre" {
-        "com.google.guava:guava:jar:32.1.3-jre" -> "com.google.guava:failureaccess:jar:1.0.1" ;
-      }`;
-      const mavenGraph = parseDigraphs([diGraph])[0];
-
-      const hashLabelsMap = await buildM2HashLabelsMap([mavenGraph], repoRoot);
-      const context: ParseContext = {
-        includeTestScope: false,
-        verboseEnabled: false,
-        fingerprintMap: new Map(),
-        includePurl: false,
-        hashLabelsMap,
-      };
-
-      const depGraph = buildDepGraph(mavenGraph, context);
-      // eslint-disable-next-line no-console
-      console.log(
-        '\n===== Maven depgraph with hash labels =====\n' +
-          JSON.stringify(depGraph.toJSON(), null, 2),
-      );
-    });
-  });
 });
