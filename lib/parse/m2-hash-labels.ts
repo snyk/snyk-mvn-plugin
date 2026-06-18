@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import type { MavenGraph } from './types';
 import { dependencyIdToArtifactPath } from '../fingerprint';
+import { debug } from '../index';
 
 /**
  * Read install-time-recorded hashes from the Maven local repository.
@@ -18,12 +19,20 @@ import { dependencyIdToArtifactPath } from '../fingerprint';
  */
 
 // Maps Maven companion-file extensions to the CycloneDX/SBOM hash-algorithm
-// label suffix. The label key emitted is `hash:<suffix>`.
-const M2_COMPANION_FILES: { ext: string; algorithm: string }[] = [
-  { ext: 'md5', algorithm: 'md5' },
-  { ext: 'sha1', algorithm: 'sha-1' },
-  { ext: 'sha256', algorithm: 'sha-256' },
-  { ext: 'sha512', algorithm: 'sha-512' },
+// label suffix (the label key emitted is `hash:<algorithm>`) and the pattern a
+// valid digest of that algorithm must match: exactly N lowercase hex chars.
+// The patterns are compiled once here, not per file. They carry no global/
+// sticky flag, so they hold no mutable `lastIndex` state and a single shared
+// instance is safe to reuse across the concurrent reads below.
+const M2_COMPANION_FILES: {
+  ext: string;
+  algorithm: string;
+  digestPattern: RegExp;
+}[] = [
+  { ext: 'md5', algorithm: 'md5', digestPattern: /^[0-9a-f]{32}$/ },
+  { ext: 'sha1', algorithm: 'sha-1', digestPattern: /^[0-9a-f]{40}$/ },
+  { ext: 'sha256', algorithm: 'sha-256', digestPattern: /^[0-9a-f]{64}$/ },
+  { ext: 'sha512', algorithm: 'sha-512', digestPattern: /^[0-9a-f]{128}$/ },
 ];
 
 // Number of artifacts whose companion files are read concurrently. Matches the
@@ -32,13 +41,19 @@ const CONCURRENCY = 5;
 
 /**
  * Read a single companion-file value. Returns undefined if the file does not
- * exist (older artifacts may not publish SHA-256/SHA-512). Returns the raw
- * hex digest, lowercased — Maven companion files contain the digest as ASCII
- * hex, sometimes followed by a space and the filename; we keep only the digest.
+ * exist (older artifacts may not publish every algorithm), is unreadable, or
+ * does not contain a valid digest. Returns the validated hex digest, lowercased.
+ *
+ * Maven companion files contain the digest as ASCII hex, sometimes followed by a
+ * space and the filename; we keep only the first whitespace-delimited token. The
+ * token is rejected unless it matches `digestPattern` (the algorithm's exact
+ * lowercase-hex shape) — a misconfigured mirror can store an HTML error page or
+ * truncated body in a companion file, and we must not surface that as a hash.
  */
 async function readCompanionFile(
   artifactPath: string,
   ext: string,
+  digestPattern: RegExp,
 ): Promise<string | undefined> {
   const companionPath = `${artifactPath}.${ext}`;
   let raw: string;
@@ -49,10 +64,15 @@ async function readCompanionFile(
     // is unreadable — treat both as "no recorded hash for this algorithm".
     return undefined;
   }
-  // Maven sometimes formats as `<hex>  <filename>`; the first whitespace-delimited
-  // token is the digest. Normalise to lowercase for a stable label value.
-  const digest = raw.split(/\s+/, 1)[0];
-  return digest.toLowerCase();
+  const digest = raw.split(/\s+/, 1)[0].toLowerCase();
+  if (!digestPattern.test(digest)) {
+    debug(
+      `Ignoring ${ext} companion file ${companionPath}: ` +
+        `contents are not a valid digest`,
+    );
+    return undefined;
+  }
+  return digest;
 }
 
 /**
@@ -71,7 +91,9 @@ export async function readM2HashLabels(
   const artifactPath = dependencyIdToArtifactPath(dependencyId, repositoryPath);
 
   const digests = await Promise.all(
-    M2_COMPANION_FILES.map(({ ext }) => readCompanionFile(artifactPath, ext)),
+    M2_COMPANION_FILES.map(({ ext, digestPattern }) =>
+      readCompanionFile(artifactPath, ext, digestPattern),
+    ),
   );
 
   M2_COMPANION_FILES.forEach(({ algorithm }, i) => {

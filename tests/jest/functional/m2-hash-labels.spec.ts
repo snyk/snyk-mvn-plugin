@@ -21,7 +21,7 @@ function writeFakeArtifact(
   artifactId: string,
   version: string,
   payload: Buffer,
-): void {
+): string {
   const groupPath = groupId.replace(/\./g, path.sep);
   const dir = path.join(repoRoot, groupPath, artifactId, version);
   fs.mkdirSync(dir, { recursive: true });
@@ -33,8 +33,14 @@ function writeFakeArtifact(
     const digest = crypto.createHash(algo).update(payload).digest('hex');
     // Maven's published companion files often have the form `<digest>  <filename>`
     // (two spaces). Mirror that to make sure our parser handles it.
-    fs.writeFileSync(`${jarPath}.${algo}`, `${digest}  ${artifactId}-${version}.jar\n`);
+    fs.writeFileSync(
+      `${jarPath}.${algo}`,
+      `${digest}  ${artifactId}-${version}.jar\n`,
+    );
   }
+
+  // Return the JAR path so callers can tweak individual companion files.
+  return jarPath;
 }
 
 describe('Maven hash:<alg> label emission from .m2 companion files', () => {
@@ -105,24 +111,64 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
     });
 
     it('omits algorithms whose companion file is missing', async () => {
-      // Drop the .sha256 to simulate an older artifact without SHA-256
-      // published. The other two should still come back.
-      const jarPath = path.join(
+      // A dedicated artifact missing its .sha256, simulating an older artifact
+      // that never published SHA-256. The other two should still come back.
+      const jarPath = writeFakeArtifact(
         repoRoot,
-        'com/google/guava/guava/32.1.3-jre/guava-32.1.3-jre.jar',
+        'com.example',
+        'no-sha256',
+        '1.0.0',
+        Buffer.from('no-sha256 payload'),
       );
-      const sha256Path = `${jarPath}.sha256`;
-      const sha256Backup = fs.readFileSync(sha256Path);
-      fs.unlinkSync(sha256Path);
-      try {
-        const labels = await readM2HashLabels(
-          'com.google.guava:guava:jar:32.1.3-jre',
-          repoRoot,
-        );
-        expect(Object.keys(labels).sort()).toEqual(['hash:md5', 'hash:sha-1']);
-      } finally {
-        fs.writeFileSync(sha256Path, sha256Backup);
-      }
+      fs.unlinkSync(`${jarPath}.sha256`);
+
+      const labels = await readM2HashLabels(
+        'com.example:no-sha256:jar:1.0.0',
+        repoRoot,
+      );
+      expect(Object.keys(labels).sort()).toEqual(['hash:md5', 'hash:sha-1']);
+    });
+
+    it('ignores a companion file whose contents are not a valid digest', async () => {
+      // A misconfigured mirror that stored an HTML error page (or any non-digest
+      // body) in the .sha256 companion. It must be dropped, not surfaced as a
+      // bogus hash, while the valid algorithms still come back.
+      const jarPath = writeFakeArtifact(
+        repoRoot,
+        'com.example',
+        'html-sha256',
+        '1.0.0',
+        Buffer.from('html-sha256 payload'),
+      );
+      fs.writeFileSync(
+        `${jarPath}.sha256`,
+        '<!DOCTYPE html><html><body>404 Not Found</body></html>\n',
+      );
+
+      const labels = await readM2HashLabels(
+        'com.example:html-sha256:jar:1.0.0',
+        repoRoot,
+      );
+      expect(Object.keys(labels).sort()).toEqual(['hash:md5', 'hash:sha-1']);
+      expect(labels['hash:sha-256']).toBeUndefined();
+    });
+
+    it('rejects a digest of the wrong length for its algorithm', async () => {
+      // A truncated/short hex string must not be accepted as a sha-256.
+      const jarPath = writeFakeArtifact(
+        repoRoot,
+        'com.example',
+        'short-sha256',
+        '1.0.0',
+        Buffer.from('short-sha256 payload'),
+      );
+      fs.writeFileSync(`${jarPath}.sha256`, 'deadbeef\n');
+
+      const labels = await readM2HashLabels(
+        'com.example:short-sha256:jar:1.0.0',
+        repoRoot,
+      );
+      expect(labels['hash:sha-256']).toBeUndefined();
     });
   });
 
