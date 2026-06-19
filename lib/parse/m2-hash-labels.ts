@@ -14,8 +14,10 @@ import { debug } from '../index';
  * Maven received.
  *
  * This module reads those files (no hashing happens here) and surfaces the
- * contents as depgraph labels keyed by `hash:<algorithm>` (using CycloneDX-style
- * algorithm names) for consumption by sbom-export.
+ * contents as depgraph labels keyed by `hash:<algorithm>`, where `<algorithm>`
+ * is a lowercase-normalized name (`md5`, `sha-1`, `sha-256`, `sha-512`). The
+ * downstream consumer maps these to the CycloneDX/SPDX algorithm names it
+ * requires.
  */
 
 // Maps Maven companion-file extensions to the CycloneDX/SBOM hash-algorithm
@@ -35,9 +37,18 @@ const M2_COMPANION_FILES: {
   { ext: 'sha512', algorithm: 'sha-512', digestPattern: /^[0-9a-f]{128}$/ },
 ];
 
-// Number of artifacts whose companion files are read concurrently. Matches the
-// concurrency limit used by `generateFingerprints` in fingerprint.ts.
+// Number of artifacts processed per batch. Each artifact reads its companion
+// files concurrently (up to one per entry in M2_COMPANION_FILES), so up to
+// CONCURRENCY * M2_COMPANION_FILES.length companion reads are in flight at once.
 const CONCURRENCY = 5;
+
+// Upper bound on the bytes read from a companion file. We only keep the first
+// whitespace-delimited token, and the longest valid digest is sha-512 at 128
+// hex chars; 256 bytes leaves slack for a leading BOM/whitespace while still
+// reaching that token. Reading a small prefix rather than the whole file stops
+// a misconfigured mirror that stored a large HTML error page from being
+// buffered wholesale — anything past the first token is irrelevant.
+const MAX_COMPANION_BYTES = 256;
 
 /**
  * Read a single companion-file value. Returns undefined if the file does not
@@ -57,12 +68,18 @@ async function readCompanionFile(
 ): Promise<string | undefined> {
   const companionPath = `${artifactPath}.${ext}`;
   let raw: string;
+  let handle: fs.promises.FileHandle | undefined;
   try {
-    raw = (await fs.promises.readFile(companionPath, 'utf8')).trim();
+    handle = await fs.promises.open(companionPath, 'r');
+    const buffer = Buffer.alloc(MAX_COMPANION_BYTES);
+    const { bytesRead } = await handle.read(buffer, 0, MAX_COMPANION_BYTES, 0);
+    raw = buffer.toString('utf8', 0, bytesRead).trim();
   } catch {
     // File does not exist (older artifacts may not publish every algorithm) or
     // is unreadable — treat both as "no recorded hash for this algorithm".
     return undefined;
+  } finally {
+    await handle?.close();
   }
   const digest = raw.split(/\s+/, 1)[0].toLowerCase();
   if (!digestPattern.test(digest)) {

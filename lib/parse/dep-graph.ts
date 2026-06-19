@@ -154,8 +154,8 @@ function createNodeInfo(
   }
 
   // Merge install-time-recorded hash labels (read from `.m2/.../*.sha1` etc.
-  // companion files). These are consumed downstream by sbom-export to populate
-  // CycloneDX `component.Hashes` / SPDX `Package.PackageChecksums`.
+  // companion files). These are consumed downstream to populate CycloneDX
+  // `component.Hashes` / SPDX `Package.PackageChecksums`.
   const hashLabels = context.hashLabelsMap?.get(depInfo.id);
   if (hashLabels) {
     Object.assign(labels, hashLabels);
