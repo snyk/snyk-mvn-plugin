@@ -1,11 +1,16 @@
 import { inspect } from '../../../lib/index';
 import { legacyPlugin } from '@snyk/cli-interface';
 import { execFileSync } from 'child_process';
+import * as os from 'os';
 import * as path from 'path';
 
 const testsPath = path.join(__dirname, '../..');
 const fixturesPath = path.join(testsPath, 'fixtures');
 const testProjectPath = path.join(fixturesPath, 'test-project');
+
+// On Windows the executable is `mvn.cmd`, which Node only resolves when spawned
+// through a shell — mirror lib/sub-process.ts, which sets `shell: true` there.
+const isWindows = /^win/.test(os.platform());
 
 // Hash labels are read from the JAR's companion checksum files in the local
 // Maven repository. A bare `dependency:tree` resolution does not necessarily
@@ -16,6 +21,7 @@ beforeAll(() => {
   execFileSync('mvn', ['clean', 'install', '-DskipTests'], {
     cwd: testProjectPath,
     stdio: 'ignore',
+    shell: isWindows,
   });
 }, 300000);
 
