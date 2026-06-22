@@ -14,7 +14,11 @@ import { formatGenericPluginError } from './error-format';
 import * as debugModule from 'debug';
 import { parseMavenDependencyTree } from './parse/dependency-tree-parser';
 import { buildScannedProjects } from './parse/scanned-project-builder';
-import { generateMavenFingerprints } from './fingerprint';
+import {
+  generateMavenFingerprints,
+  getMavenRepositoryPath,
+} from './fingerprint';
+import { buildM2HashLabelsMap } from './parse/m2-hash-labels';
 import {
   SnykHttpClient,
   HashAlgorithm,
@@ -41,6 +45,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   mavenAggregateProject?: boolean;
   mavenVerboseIncludeAllVersions?: boolean;
   includeProvenance?: boolean;
+  includeHashes?: boolean;
   fingerprintAlgorithm?: HashAlgorithm;
   mavenRepository?: string;
   showMavenBuildScope?: boolean;
@@ -166,6 +171,18 @@ export async function inspect(
       );
     }
 
+    // Read install-time-recorded companion-file hashes (e.g. `.jar.sha1`) from
+    // the local Maven repository and surface them as `hash:<algorithm>` labels.
+    // Gated behind its own `--include-hashes` option for now.
+    let hashLabelsMap = new Map<string, Record<string, string>>();
+    if (options.includeHashes) {
+      const repositoryPath = await getMavenRepositoryPath(
+        mavenContext.command,
+        options.mavenRepository,
+      );
+      hashLabelsMap = await buildM2HashLabelsMap(mavenGraphs, repositoryPath);
+    }
+
     // Build scanned projects
     const { scannedProjects } = buildScannedProjects(
       mavenGraphs,
@@ -174,6 +191,7 @@ export async function inspect(
       fingerprintMap,
       !!fingerprintOptions?.enabled,
       !!options.showMavenBuildScope,
+      hashLabelsMap,
     );
 
     return {

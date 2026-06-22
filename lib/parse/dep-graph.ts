@@ -147,14 +147,24 @@ function createNodeInfo(
   context: ParseContext,
   defaultScope = 'compile',
 ): NodeInfo | undefined {
+  const labels: Record<string, string> = {};
+
   if (context.showMavenBuildScope) {
-    return {
-      labels: {
-        'maven:build_scope': depInfo.scope ? depInfo.scope : defaultScope,
-      },
-    };
+    labels['maven:build_scope'] = depInfo.scope ? depInfo.scope : defaultScope;
   }
-  return;
+
+  // Merge install-time-recorded hash labels (read from `.m2/.../*.sha1` etc.
+  // companion files). These are consumed downstream to populate CycloneDX
+  // `component.Hashes` / SPDX `Package.PackageChecksums`.
+  const hashLabels = context.hashLabelsMap?.get(depInfo.id);
+  if (hashLabels) {
+    Object.assign(labels, hashLabels);
+  }
+
+  if (Object.keys(labels).length === 0) {
+    return;
+  }
+  return { labels };
 }
 
 interface QueueItem {

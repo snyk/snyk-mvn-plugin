@@ -10,6 +10,7 @@ export function buildScannedProjects(
   fingerprintMap = new Map<string, FingerprintData>(),
   includePurl = false,
   showMavenBuildScope = false,
+  hashLabelsMap = new Map<string, Record<string, string>>(),
 ): { scannedProjects: ScannedProject[] } {
   const context: ParseContext = {
     includeTestScope,
@@ -17,6 +18,7 @@ export function buildScannedProjects(
     fingerprintMap,
     includePurl,
     showMavenBuildScope,
+    hashLabelsMap,
   };
 
   const scannedProjects: ScannedProject[] = [];
