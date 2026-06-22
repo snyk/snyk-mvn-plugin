@@ -311,7 +311,9 @@ jobs:
       - install_deps
       - run:
           name: Publish to GitHub
-          command: npx semantic-release
+          command: |
+            export NPM_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "npm:registry.npmjs.org"}')
+            npx semantic-release
 
 workflows:
   version: 2
@@ -404,7 +406,9 @@ workflows:
       # Release
       - release:
           name: Release
-          context: nodejs-app-release
+          context:
+            - nodejs-install
+            - github-release
           requires:
             - test-osx
             - test-windows
