@@ -45,7 +45,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   mavenAggregateProject?: boolean;
   mavenVerboseIncludeAllVersions?: boolean;
   includeProvenance?: boolean;
-  includeHashes?: boolean;
+  includeComponentMetadata?: boolean;
   fingerprintAlgorithm?: HashAlgorithm;
   mavenRepository?: string;
   showMavenBuildScope?: boolean;
@@ -173,9 +173,9 @@ export async function inspect(
 
     // Read install-time-recorded companion-file hashes (e.g. `.jar.sha1`) from
     // the local Maven repository and surface them as `hash:<algorithm>` labels.
-    // Gated behind its own `--include-hashes` option for now.
+    // Gated behind its own `--include-component-metadata` option for now.
     let hashLabelsMap = new Map<string, Record<string, string>>();
-    if (options.includeHashes) {
+    if (options.includeComponentMetadata) {
       const repositoryPath = await getMavenRepositoryPath(
         mavenContext.command,
         options.mavenRepository,

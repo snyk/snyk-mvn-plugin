@@ -38,7 +38,7 @@ test('hash labels disabled vs enabled comparison', async () => {
     path.join(testProjectPath, 'pom.xml'),
     {
       dev: false,
-      includeHashes: false,
+      includeComponentMetadata: false,
     },
   );
 
@@ -52,7 +52,7 @@ test('hash labels disabled vs enabled comparison', async () => {
     path.join(testProjectPath, 'pom.xml'),
     {
       dev: false,
-      includeHashes: true,
+      includeComponentMetadata: true,
     },
   );
 
@@ -108,7 +108,7 @@ test('hash labels graceful failure with nonexistent repository', async () => {
   // with no hash labels rather than throwing.
   const result = await inspect('.', path.join(testProjectPath, 'pom.xml'), {
     dev: false,
-    includeHashes: true,
+    includeComponentMetadata: true,
     mavenRepository: '/completely/nonexistent/path',
   });
 
