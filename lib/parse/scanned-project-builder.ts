@@ -11,6 +11,7 @@ export function buildScannedProjects(
   includePurl = false,
   showMavenBuildScope = false,
   hashLabelsMap = new Map<string, Record<string, string>>(),
+  remoteRepositoriesMap = new Map<string, Record<string, string>>(),
 ): { scannedProjects: ScannedProject[] } {
   const context: ParseContext = {
     includeTestScope,
@@ -19,6 +20,7 @@ export function buildScannedProjects(
     includePurl,
     showMavenBuildScope,
     hashLabelsMap,
+    remoteRepositoriesMap,
   };
 
   const scannedProjects: ScannedProject[] = [];

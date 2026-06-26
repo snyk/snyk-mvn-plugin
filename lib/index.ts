@@ -20,6 +20,10 @@ import {
 } from './fingerprint';
 import { buildM2HashLabelsMap } from './parse/m2-hash-labels';
 import {
+  fetchRepositoryUrlMap,
+  buildRemoteRepositoriesMap,
+} from './parse/m2-remote-repositories';
+import {
   SnykHttpClient,
   HashAlgorithm,
   FingerprintOptions,
@@ -50,6 +54,7 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   mavenRepository?: string;
   showMavenBuildScope?: boolean;
   mavenSkipWrapper?: boolean;
+  includeDistribution?: boolean;
 }
 
 function buildFingerprintOptions(
@@ -173,14 +178,31 @@ export async function inspect(
 
     // Read install-time-recorded companion-file hashes (e.g. `.jar.sha1`) from
     // the local Maven repository and surface them as `hash:<algorithm>` labels.
-    // Gated behind its own `--include-component-metadata` option for now.
+    // Also read distribution source info from _remote.repositories files.
+    // Both require access to the local Maven repository, so we hoist that
+    // path resolution here to run once.
+    let repositoryPath: string | undefined;
+    let remoteRepositoriesMap = new Map<string, Record<string, string>>();
     let hashLabelsMap = new Map<string, Record<string, string>>();
+
     if (options.includeComponentMetadata) {
-      const repositoryPath = await getMavenRepositoryPath(
+      repositoryPath = await getMavenRepositoryPath(
         mavenContext.command,
         options.mavenRepository,
       );
+    }
+
+    if (options.includeComponentMetadata && repositoryPath) {
       hashLabelsMap = await buildM2HashLabelsMap(mavenGraphs, repositoryPath);
+    }
+
+    if (options.includeDistribution && repositoryPath) {
+      const repoUrlMap = await fetchRepositoryUrlMap(mavenContext.command);
+      remoteRepositoriesMap = await buildRemoteRepositoriesMap(
+        mavenGraphs,
+        repositoryPath,
+        repoUrlMap,
+      );
     }
 
     // Build scanned projects
@@ -192,6 +214,7 @@ export async function inspect(
       !!fingerprintOptions?.enabled,
       !!options.showMavenBuildScope,
       hashLabelsMap,
+      remoteRepositoriesMap,
     );
 
     return {

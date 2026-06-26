@@ -97,4 +97,10 @@ export interface ParseContext {
   // node ID and contains zero or more `hash:<algorithm>` -> hex digest pairs.
   // See lib/parse/m2-hash-labels.ts.
   hashLabelsMap?: Map<string, Record<string, string>>;
+  // Per-node distribution-source labels read from the local Maven repository's
+  // _remote.repositories files and resolved to full artifact URLs via Maven's
+  // dependency:list-repositories. Each entry is keyed by Maven node ID and
+  // contains zero or one `distribution:url` -> full URL pair.
+  // See lib/parse/m2-remote-repositories.ts.
+  remoteRepositoriesMap?: Map<string, Record<string, string>>;
 }

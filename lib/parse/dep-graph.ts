@@ -161,6 +161,15 @@ function createNodeInfo(
     Object.assign(labels, hashLabels);
   }
 
+  // Merge distribution-source labels (read from `.m2/.../repository/*/_remote.repositories`
+  // and resolved to full artifact URLs via Maven's dependency:list-repositories).
+  // These are consumed downstream to populate CycloneDX `component.ExternalReferences`
+  // with type="distribution".
+  const repoLabels = context.remoteRepositoriesMap?.get(depInfo.id);
+  if (repoLabels) {
+    Object.assign(labels, repoLabels);
+  }
+
   if (Object.keys(labels).length === 0) {
     return;
   }
