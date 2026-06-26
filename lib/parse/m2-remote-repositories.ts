@@ -1,12 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { promisify } from 'util';
-import { exec } from 'child_process';
+import * as subProcess from '../sub-process';
 import type { MavenGraph } from './types';
+import type { MavenContext } from '../maven/context';
 import { dependencyIdToArtifactPath } from '../fingerprint';
 import { debug } from '../index';
-
-const execAsync = promisify(exec);
 
 /**
  * Read the Maven remote repositories for a project by running
@@ -20,14 +18,34 @@ const execAsync = promisify(exec);
  * empty map if the command fails or produces no output. Never throws.
  */
 export async function fetchRepositoryUrlMap(
-  mavenCommand: string,
+  context: MavenContext,
+  mavenAggregateProject: boolean,
 ): Promise<Map<string, string>> {
   const result = new Map<string, string>();
 
   try {
-    const { stdout } = await execAsync(
-      `${mavenCommand} dependency:list-repositories`,
-    );
+    // Mirror the dependency-tree pipeline's invocation so we resolve the same
+    // project's repositories: run from the Maven working directory, scope to the
+    // target pom, and use --batch-mode to disable interactive prompts and
+    // download-progress/colour noise that would break the line parsing below.
+    const args = ['dependency:list-repositories', '--batch-mode'];
+
+    if (context.targetFile && !mavenAggregateProject) {
+      // if we are where we can execute - we preserve the original path;
+      // if not - we rely on the executor (mvnw) to be spawned at the closest
+      // directory, leaving us w/ the file itself.
+      // In aggregate (multi-module) builds we omit --file so Maven walks every
+      // module and we capture the union of their repositories.
+      if (context.root === context.workingDirectory) {
+        args.push('--file', context.targetFile);
+      } else {
+        args.push('--file', path.basename(context.targetFile));
+      }
+    }
+
+    const stdout = await subProcess.execute(context.command, args, {
+      cwd: context.workingDirectory,
+    });
 
     // Parse repository entries from Maven output.
     // Format: ` * <id> (<url>, <layout>, <policy>)`

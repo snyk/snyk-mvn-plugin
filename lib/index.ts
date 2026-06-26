@@ -54,7 +54,6 @@ export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
   mavenRepository?: string;
   showMavenBuildScope?: boolean;
   mavenSkipWrapper?: boolean;
-  includeDistribution?: boolean;
 }
 
 function buildFingerprintOptions(
@@ -196,8 +195,11 @@ export async function inspect(
       hashLabelsMap = await buildM2HashLabelsMap(mavenGraphs, repositoryPath);
     }
 
-    if (options.includeDistribution && repositoryPath) {
-      const repoUrlMap = await fetchRepositoryUrlMap(mavenContext.command);
+    if (options.includeComponentMetadata && repositoryPath) {
+      const repoUrlMap = await fetchRepositoryUrlMap(
+        mavenContext,
+        !!options.mavenAggregateProject,
+      );
       remoteRepositoriesMap = await buildRemoteRepositoriesMap(
         mavenGraphs,
         repositoryPath,
