@@ -18,11 +18,12 @@ import {
   generateMavenFingerprints,
   getMavenRepositoryPath,
 } from './fingerprint';
-import { buildM2HashLabelsMap } from './parse/m2-hash-labels';
+import { readM2HashLabels } from './parse/m2-hash-labels';
 import {
   fetchRepositoryUrlMap,
-  buildRemoteRepositoriesMap,
+  readRemoteRepositoryLabel,
 } from './parse/m2-remote-repositories';
+import { collectM2Nodes, buildLabelMap } from './parse/m2-batch';
 import {
   SnykHttpClient,
   HashAlgorithm,
@@ -192,19 +193,28 @@ export async function inspect(
     }
 
     if (options.includeComponentMetadata && repositoryPath) {
-      hashLabelsMap = await buildM2HashLabelsMap(mavenGraphs, repositoryPath);
-    }
+      // Resolve the node set and artifact paths once; both label passes reuse it.
+      const m2Nodes = collectM2Nodes(mavenGraphs, repositoryPath);
 
-    if (options.includeComponentMetadata && repositoryPath) {
+      // The hash-label reads only touch the local repository, so kick them off
+      // concurrently with the dependency:list-repositories subprocess instead
+      // of waiting for it.
+      const hashLabelsPromise = buildLabelMap(m2Nodes, (node) =>
+        readM2HashLabels(node.artifactPath),
+      );
+
       const repoUrlMap = await fetchRepositoryUrlMap(
         mavenContext,
         !!options.mavenAggregateProject,
       );
-      remoteRepositoriesMap = await buildRemoteRepositoriesMap(
-        mavenGraphs,
-        repositoryPath,
-        repoUrlMap,
+      const remoteRepositoriesPromise = buildLabelMap(m2Nodes, (node) =>
+        readRemoteRepositoryLabel(node, repositoryPath, repoUrlMap),
       );
+
+      [hashLabelsMap, remoteRepositoriesMap] = await Promise.all([
+        hashLabelsPromise,
+        remoteRepositoriesPromise,
+      ]);
     }
 
     // Build scanned projects

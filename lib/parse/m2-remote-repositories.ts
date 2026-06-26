@@ -1,9 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as subProcess from '../sub-process';
-import type { MavenGraph } from './types';
 import type { MavenContext } from '../maven/context';
-import { dependencyIdToArtifactPath } from '../fingerprint';
+import type { M2Node } from './m2-batch';
 import { debug } from '../index';
 
 /**
@@ -76,7 +75,9 @@ export async function fetchRepositoryUrlMap(
     // empty map. Artifacts whose repos aren't in the map will simply
     // not get a distribution:url label (graceful degradation).
     debug(
-      `Failed to fetch repository URLs: ${err instanceof Error ? err.message : String(err)}`,
+      `Failed to fetch repository URLs: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
     );
   }
 
@@ -152,24 +153,21 @@ async function parseRemoteRepositoriesFile(
 }
 
 /**
- * Given a Maven dependency ID, read its _remote.repositories file (if present),
- * extract the repository ID, look it up in the provided URL map, and construct
- * the full artifact URL.
+ * Given a Maven node (dependency ID + resolved artifact path), read its
+ * _remote.repositories file (if present), extract the repository ID, look it up
+ * in the provided URL map, and construct the full artifact URL.
  *
  * Returns `{ 'distribution:url': <url> }` when resolvable, empty object otherwise.
  */
-async function readRemoteRepositoryLabel(
-  dependencyId: string,
+export async function readRemoteRepositoryLabel(
+  node: M2Node,
   repositoryPath: string,
   repoUrlMap: Map<string, string>,
 ): Promise<Record<string, string>> {
+  const { nodeId, artifactPath } = node;
   const labels: Record<string, string> = {};
 
   try {
-    const artifactPath = dependencyIdToArtifactPath(
-      dependencyId,
-      repositoryPath,
-    );
     const versionDir = path.dirname(artifactPath);
     const remoteReposFile = path.join(versionDir, '_remote.repositories');
 
@@ -197,59 +195,15 @@ async function readRemoteRepositoryLabel(
     const fullUrl = `${repoUrl}/${relativePath}`;
     labels['distribution:url'] = fullUrl;
 
-    debug(
-      `Resolved distribution URL for ${dependencyId}: ${fullUrl}`,
-    );
+    debug(`Resolved distribution URL for ${nodeId}: ${fullUrl}`);
   } catch (err) {
     // Any unexpected error: just skip the label.
     debug(
-      `Failed to read remote repository label for ${dependencyId}: ${err instanceof Error ? err.message : String(err)}`,
+      `Failed to read remote repository label for ${nodeId}: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
     );
   }
 
   return labels;
-}
-
-/**
- * Number of artifacts processed per batch. We batch to avoid spawning too many
- * concurrent file reads.
- */
-const CONCURRENCY = 5;
-
-/**
- * Pre-compute the distribution-URL label map for every node in a set of Maven
- * graphs. Returns Map<nodeId, { 'distribution:url': url }>, only storing entries
- * where a URL was successfully resolved.
- */
-export async function buildRemoteRepositoriesMap(
-  mavenGraphs: MavenGraph[],
-  repositoryPath: string,
-  repoUrlMap: Map<string, string>,
-): Promise<Map<string, Record<string, string>>> {
-  const result = new Map<string, Record<string, string>>();
-
-  // Collect the unique node IDs across all graphs.
-  const nodeIds = new Set<string>();
-  for (const graph of mavenGraphs) {
-    Object.keys(graph.nodes).forEach((nodeId) => nodeIds.add(nodeId));
-  }
-  const nodeIdArray = Array.from(nodeIds);
-
-  // Read _remote.repositories files in bounded-concurrency batches.
-  for (let i = 0; i < nodeIdArray.length; i += CONCURRENCY) {
-    const batch = nodeIdArray.slice(i, i + CONCURRENCY);
-    const batchResults = await Promise.all(
-      batch.map((nodeId) =>
-        readRemoteRepositoryLabel(nodeId, repositoryPath, repoUrlMap),
-      ),
-    );
-    batch.forEach((nodeId, j) => {
-      const labels = batchResults[j];
-      if (Object.keys(labels).length > 0) {
-        result.set(nodeId, labels);
-      }
-    });
-  }
-
-  return result;
 }
