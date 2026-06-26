@@ -84,6 +84,15 @@ export async function fetchRepositoryUrlMap(
   return result;
 }
 
+// Upper bound on the bytes read from a _remote.repositories file. Each line is
+// a short `<filename>><repoId>=` record and a version directory lists only a
+// handful of artifacts, so a real file is well under 1 KiB even for heavily
+// classified artifacts. 64 KiB is generous headroom while stopping a
+// misconfigured mirror that stored a large HTML error page at this path from
+// being buffered wholesale. If a file somehow exceeds this we parse the prefix
+// we read — the .jar/.pom records are listed near the top.
+const MAX_REMOTE_REPOSITORIES_BYTES = 64 * 1024;
+
 /**
  * Read the _remote.repositories file for a given artifact version directory.
  *
@@ -98,55 +107,69 @@ export async function fetchRepositoryUrlMap(
 async function parseRemoteRepositoriesFile(
   filePath: string,
 ): Promise<string | undefined> {
+  let content: string;
+  let handle: fs.promises.FileHandle | undefined;
   try {
-    const content = await fs.promises.readFile(filePath, 'utf-8');
-    const lines = content.split('\n');
-
-    let pomRepoId: string | undefined;
-
-    for (const line of lines) {
-      // Skip comments and empty lines
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) {
-        continue;
-      }
-
-      // Parse: `<filename>><repoId>=`
-      const parts = trimmed.split('>');
-      if (parts.length !== 2) {
-        continue;
-      }
-      const filename = parts[0];
-      const repoAndRest = parts[1];
-      const repoId = repoAndRest.split('=')[0];
-
-      if (!repoId) {
-        continue;
-      }
-
-      // Prefer JAR-like artifacts over .pom
-      if (
-        filename.endsWith('.jar') ||
-        filename.endsWith('.aar') ||
-        filename.endsWith('.war') ||
-        filename.endsWith('.ear')
-      ) {
-        return repoId;
-      }
-
-      // Remember .pom as a fallback
-      if (filename.endsWith('.pom') && !pomRepoId) {
-        pomRepoId = repoId;
-      }
-    }
-
-    // Return .pom repo ID if no binary artifact was found
-    if (pomRepoId) {
-      return pomRepoId;
-    }
+    handle = await fs.promises.open(filePath, 'r');
+    const buffer = Buffer.alloc(MAX_REMOTE_REPOSITORIES_BYTES);
+    const { bytesRead } = await handle.read(
+      buffer,
+      0,
+      MAX_REMOTE_REPOSITORIES_BYTES,
+      0,
+    );
+    content = buffer.toString('utf8', 0, bytesRead);
   } catch {
     // File does not exist, is unreadable, or is malformed.
     // Return undefined to signal "no remote repository recorded".
+    return undefined;
+  } finally {
+    await handle?.close();
+  }
+
+  const lines = content.split('\n');
+
+  let pomRepoId: string | undefined;
+
+  for (const line of lines) {
+    // Skip comments and empty lines
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue;
+    }
+
+    // Parse: `<filename>><repoId>=`
+    const parts = trimmed.split('>');
+    if (parts.length !== 2) {
+      continue;
+    }
+    const filename = parts[0];
+    const repoAndRest = parts[1];
+    const repoId = repoAndRest.split('=')[0];
+
+    if (!repoId) {
+      continue;
+    }
+
+    // Prefer JAR-like artifacts over .pom
+    if (
+      filename.endsWith('.jar') ||
+      filename.endsWith('.aar') ||
+      filename.endsWith('.war') ||
+      filename.endsWith('.ear')
+    ) {
+      return repoId;
+    }
+
+    // Remember .pom as a fallback
+    if (filename.endsWith('.pom') && !pomRepoId) {
+      pomRepoId = repoId;
+    }
+  }
+
+  // Return .pom repo ID if no binary artifact was found
+  if (pomRepoId) {
+    return pomRepoId;
   }
 
   return undefined;
@@ -188,11 +211,14 @@ export async function readRemoteRepositoryLabel(
       return labels;
     }
 
-    // Construct the full artifact URL by appending the relative path from the repo root.
+    // Construct the full artifact URL by appending the relative path from the
+    // repo root. Repo URLs from settings.xml/mirrors often carry a trailing
+    // slash (e.g. `https://repo.maven.apache.org/maven2/`); strip it so we
+    // don't emit a `…/maven2//com/google/…` double slash.
     const relativePath = path
       .relative(repositoryPath, artifactPath)
       .replace(/\\/g, '/');
-    const fullUrl = `${repoUrl}/${relativePath}`;
+    const fullUrl = `${repoUrl.replace(/\/+$/, '')}/${relativePath}`;
     labels['distribution:url'] = fullUrl;
 
     debug(`Resolved distribution URL for ${nodeId}: ${fullUrl}`);
