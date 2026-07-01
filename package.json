@@ -1,10 +1,13 @@
 {
   "name": "snyk-mvn-plugin",
   "description": "Snyk CLI Maven plugin",
-  "homepage": "https://github.com/snyk/snyk-mvn-plugin",
+  "homepage": "https://github.com/snyk/snyk-mvn-plugin#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/snyk/snyk-mvn-plugin"
+    "url": "https://github.com/snyk/snyk-mvn-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/snyk/snyk-mvn-plugin/issues"
   },
   "publishConfig": {
     "access": "public"
