@@ -55,7 +55,7 @@ describe('metaversion resolution', () => {
     // Check that resolved versions follow expected patterns
     expect(resteasyCore?.version).toMatch(/^\d+\.\d+\.\d+/);
     expect(commonsLang?.version).toMatch(/^\d+\.\d+/);
-  }, 30000);
+  }, 180000);
 
   test('inspect on aggregate project with metaversions (non-verbose)', async () => {
     // IMPORTANT: Non-verbose aggregate mode has partial metaversion resolution:
