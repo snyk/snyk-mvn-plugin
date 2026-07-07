@@ -3,7 +3,10 @@ import * as os from 'os';
 import * as path from 'path';
 
 import { dependencyIdToArtifactPath } from '../../../lib/fingerprint';
-import { readRemoteRepositoryLabel } from '../../../lib/parse/m2-remote-repositories';
+import {
+  readRemoteRepositoryLabel,
+  buildRemoteRepositoryLabelMap,
+} from '../../../lib/parse/m2-remote-repositories';
 import type { M2Node } from '../../../lib/parse/m2-batch';
 
 describe('distribution:url label emission from .m2 _remote.repositories files', () => {
@@ -72,5 +75,96 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
       new Map([['central', 'https://repo.maven.apache.org/maven2']]),
     );
     expect(labels).toEqual({});
+  });
+});
+
+describe('buildRemoteRepositoryLabelMap two-phase build', () => {
+  let repoRoot: string;
+  let fooNode: M2Node; // has a _remote.repositories recording `central`
+  let jbossNode: M2Node; // records a repo id absent from the url map
+  let noFileNode: M2Node; // installed jar but no _remote.repositories file
+
+  const urlMap = new Map([
+    ['central', 'https://repo.maven.apache.org/maven2'],
+  ]);
+
+  function install(depId: string, repoId?: string): M2Node {
+    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const dir = path.dirname(artifactPath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(artifactPath, 'fake jar contents');
+    if (repoId) {
+      const jarName = path.basename(artifactPath);
+      fs.writeFileSync(
+        path.join(dir, '_remote.repositories'),
+        `#NOTE: internal Maven Resolver file\n${jarName}>${repoId}=\n`,
+      );
+    }
+    return { nodeId: depId, artifactPath };
+  }
+
+  beforeAll(() => {
+    repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'snyk-mvn-remote-map-'));
+    fooNode = install('com.example:foo:jar:1.0', 'central');
+    jbossNode = install('com.example:jboss-dep:jar:2.0', 'jboss');
+    noFileNode = install('com.example:nofile:jar:3.0');
+  });
+
+  afterAll(() => {
+    fs.rmSync(repoRoot, { recursive: true, force: true });
+  });
+
+  it('joins recorded repo ids to urls, dropping unmatched and file-less nodes', async () => {
+    const map = await buildRemoteRepositoryLabelMap(
+      [fooNode, jbossNode, noFileNode],
+      repoRoot,
+      Promise.resolve(urlMap),
+    );
+
+    expect(map.get(fooNode.nodeId)).toEqual({
+      'distribution:url':
+        'https://repo.maven.apache.org/maven2/com/example/foo/1.0/foo-1.0.jar',
+    });
+    // jboss recorded but not in the url map, nofile has no _remote.repositories.
+    expect(map.has(jbossNode.nodeId)).toBe(false);
+    expect(map.has(noFileNode.nodeId)).toBe(false);
+    expect(map.size).toBe(1);
+  });
+
+  it('reads the _remote.repositories files before the url map resolves', async () => {
+    // Phase 1 (file I/O) must not be gated on the url map — that is what lets it
+    // overlap the dependency:list-repositories subprocess. Prove it by handing in
+    // an unresolved promise and asserting the reads have already happened.
+    const openSpy = jest.spyOn(fs.promises, 'open');
+
+    let mapResolved = false;
+    let resolveMap!: (m: Map<string, string>) => void;
+    const pendingMap = new Promise<Map<string, string>>((resolve) => {
+      resolveMap = (m) => {
+        mapResolved = true;
+        resolve(m);
+      };
+    });
+
+    const resultPromise = buildRemoteRepositoryLabelMap(
+      [fooNode],
+      repoRoot,
+      pendingMap,
+    );
+
+    // Let phase 1's batched reads run without resolving the map.
+    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
+
+    expect(openSpy).toHaveBeenCalled();
+    expect(mapResolved).toBe(false);
+
+    resolveMap(urlMap);
+    const map = await resultPromise;
+    expect(map.get(fooNode.nodeId)?.['distribution:url']).toBe(
+      'https://repo.maven.apache.org/maven2/com/example/foo/1.0/foo-1.0.jar',
+    );
+
+    openSpy.mockRestore();
   });
 });

@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as subProcess from '../sub-process';
 import type { MavenContext } from '../maven/context';
 import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from '../maven/version';
-import type { M2Node } from './m2-batch';
+import { buildLabelMap, type M2Node } from './m2-batch';
 import { debug } from '../index';
 
 /**
@@ -188,6 +188,68 @@ async function parseRemoteRepositoriesFile(
 }
 
 /**
+ * Read the repository ID recorded for an artifact in its _remote.repositories
+ * file. This is the I/O half of the distribution:url pass and depends only on
+ * the local Maven repository — never on the fetched repo→URL map — so it can be
+ * run concurrently with the dependency:list-repositories subprocess.
+ *
+ * Returns the repository ID, or undefined if no file/entry is present.
+ */
+export async function readRemoteRepositoryId(
+  node: M2Node,
+): Promise<string | undefined> {
+  try {
+    const versionDir = path.dirname(node.artifactPath);
+    const remoteReposFile = path.join(versionDir, '_remote.repositories');
+    return await parseRemoteRepositoriesFile(remoteReposFile);
+  } catch (err) {
+    // Any unexpected error: treat as "no remote repository recorded".
+    debug(
+      `Failed to read remote repository id for ${node.nodeId}: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+    return undefined;
+  }
+}
+
+/**
+ * Join a recorded repository ID against the fetched repo→URL map to construct
+ * the artifact's distribution:url label. Pure in-memory work — no I/O.
+ *
+ * Returns `{ 'distribution:url': <url> }` when resolvable, empty object otherwise.
+ */
+export function buildDistributionUrlLabel(
+  node: M2Node,
+  repoId: string,
+  repositoryPath: string,
+  repoUrlMap: Map<string, string>,
+): Record<string, string> {
+  const repoUrl = repoUrlMap.get(repoId);
+  if (!repoUrl) {
+    // Repo ID found in _remote.repositories but not in our fetched URL map.
+    // This can happen if the artifact was cached by another project or if the
+    // repository is not listed in the current project's dependency:list-repositories.
+    // Gracefully degrade: no distribution:url label for this artifact.
+    debug(
+      `Repository ID '${repoId}' for ${node.nodeId} not found in fetched repo map`,
+    );
+    return {};
+  }
+
+  // Construct the full artifact URL by appending the relative path from the
+  // repo root. Repo URLs from settings.xml/mirrors often carry a trailing
+  // slash (e.g. `https://repo.maven.apache.org/maven2/`); strip it so we
+  // don't emit a `…/maven2//com/google/…` double slash.
+  const relativePath = path
+    .relative(repositoryPath, node.artifactPath)
+    .replace(/\\/g, '/');
+  const fullUrl = `${repoUrl.replace(/\/+$/, '')}/${relativePath}`;
+  debug(`Resolved distribution URL for ${node.nodeId}: ${fullUrl}`);
+  return { 'distribution:url': fullUrl };
+}
+
+/**
  * Given a Maven node (dependency ID + resolved artifact path), read its
  * _remote.repositories file (if present), extract the repository ID, look it up
  * in the provided URL map, and construct the full artifact URL.
@@ -199,49 +261,63 @@ export async function readRemoteRepositoryLabel(
   repositoryPath: string,
   repoUrlMap: Map<string, string>,
 ): Promise<Record<string, string>> {
-  const { nodeId, artifactPath } = node;
-  const labels: Record<string, string> = {};
+  const repoId = await readRemoteRepositoryId(node);
+  if (!repoId) {
+    return {};
+  }
+  return buildDistributionUrlLabel(node, repoId, repositoryPath, repoUrlMap);
+}
 
-  try {
-    const versionDir = path.dirname(artifactPath);
-    const remoteReposFile = path.join(versionDir, '_remote.repositories');
+// Internal key used to carry each node's recorded repo ID through the shared
+// buildLabelMap batching primitive during the I/O phase, before the URL join.
+const REPO_ID_KEY = 'repoId';
 
-    const repoId = await parseRemoteRepositoriesFile(remoteReposFile);
+/**
+ * Build the distribution:url label map for a set of nodes in two phases so the
+ * file I/O overlaps the (slow, JVM-startup) dependency:list-repositories
+ * subprocess:
+ *
+ *   1. Read every node's recorded repository ID from its _remote.repositories
+ *      file — bounded-concurrency I/O that needs nothing from the subprocess.
+ *   2. Once the repo→URL map resolves, join each ID to a URL in memory.
+ *
+ * `repoUrlMapPromise` is awaited only after phase 1's reads complete, so as long
+ * as the caller kicks the subprocess off before calling this, the reads run
+ * alongside it rather than serially after it.
+ */
+export async function buildRemoteRepositoryLabelMap(
+  m2Nodes: M2Node[],
+  repositoryPath: string,
+  repoUrlMapPromise: Promise<Map<string, string>>,
+): Promise<Map<string, Record<string, string>>> {
+  // Phase 1 — pure I/O, overlaps the subprocess.
+  const repoIdLabels = await buildLabelMap(
+    m2Nodes,
+    async (node): Promise<Record<string, string>> => {
+      const repoId = await readRemoteRepositoryId(node);
+      return repoId ? { [REPO_ID_KEY]: repoId } : {};
+    },
+  );
+
+  // Phase 2 — join against the fetched map (by now usually already resolved).
+  const repoUrlMap = await repoUrlMapPromise;
+
+  const result = new Map<string, Record<string, string>>();
+  for (const node of m2Nodes) {
+    const repoId = repoIdLabels.get(node.nodeId)?.[REPO_ID_KEY];
     if (!repoId) {
-      return labels;
+      continue;
     }
-
-    const repoUrl = repoUrlMap.get(repoId);
-    if (!repoUrl) {
-      // Repo ID found in _remote.repositories but not in our fetched URL map.
-      // This can happen if the artifact was cached by another project or if the
-      // repository is not listed in the current project's dependency:list-repositories.
-      // Gracefully degrade: no distribution:url label for this artifact.
-      debug(
-        `Repository ID '${repoId}' from ${remoteReposFile} not found in fetched repo map`,
-      );
-      return labels;
-    }
-
-    // Construct the full artifact URL by appending the relative path from the
-    // repo root. Repo URLs from settings.xml/mirrors often carry a trailing
-    // slash (e.g. `https://repo.maven.apache.org/maven2/`); strip it so we
-    // don't emit a `…/maven2//com/google/…` double slash.
-    const relativePath = path
-      .relative(repositoryPath, artifactPath)
-      .replace(/\\/g, '/');
-    const fullUrl = `${repoUrl.replace(/\/+$/, '')}/${relativePath}`;
-    labels['distribution:url'] = fullUrl;
-
-    debug(`Resolved distribution URL for ${nodeId}: ${fullUrl}`);
-  } catch (err) {
-    // Any unexpected error: just skip the label.
-    debug(
-      `Failed to read remote repository label for ${nodeId}: ${
-        err instanceof Error ? err.message : String(err)
-      }`,
+    const label = buildDistributionUrlLabel(
+      node,
+      repoId,
+      repositoryPath,
+      repoUrlMap,
     );
+    if (Object.keys(label).length > 0) {
+      result.set(node.nodeId, label);
+    }
   }
 
-  return labels;
+  return result;
 }

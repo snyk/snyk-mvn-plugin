@@ -21,7 +21,7 @@ import {
 import { readM2HashLabels } from './parse/m2-hash-labels';
 import {
   fetchRepositoryUrlMap,
-  readRemoteRepositoryLabel,
+  buildRemoteRepositoryLabelMap,
 } from './parse/m2-remote-repositories';
 import { collectM2Nodes, buildLabelMap } from './parse/m2-batch';
 import {
@@ -196,20 +196,25 @@ export async function inspect(
       // Resolve the node set and artifact paths once; both label passes reuse it.
       const m2Nodes = collectM2Nodes(mavenGraphs, repositoryPath);
 
-      // The hash-label reads only touch the local repository, so kick them off
-      // concurrently with the dependency:list-repositories subprocess instead
-      // of waiting for it.
-      const hashLabelsPromise = buildLabelMap(m2Nodes, (node) =>
-        readM2HashLabels(node.artifactPath),
-      );
-
-      const repoUrlMap = await fetchRepositoryUrlMap(
+      // Both label passes read only local-repository files (hash companions and
+      // _remote.repositories), so run them concurrently with the
+      // dependency:list-repositories subprocess rather than waiting for it: kick
+      // the subprocess off first, then start the reads. The distribution:url
+      // pass reads repo ids up front and only awaits the subprocess result for
+      // the final in-memory URL join (see buildRemoteRepositoryLabelMap).
+      const repoUrlMapPromise = fetchRepositoryUrlMap(
         mavenContext,
         !!options.mavenAggregateProject,
         executionResult.explicitPluginVersion,
       );
-      const remoteRepositoriesPromise = buildLabelMap(m2Nodes, (node) =>
-        readRemoteRepositoryLabel(node, repositoryPath, repoUrlMap),
+
+      const hashLabelsPromise = buildLabelMap(m2Nodes, (node) =>
+        readM2HashLabels(node.artifactPath),
+      );
+      const remoteRepositoriesPromise = buildRemoteRepositoryLabelMap(
+        m2Nodes,
+        repositoryPath,
+        repoUrlMapPromise,
       );
 
       [hashLabelsMap, remoteRepositoriesMap] = await Promise.all([
