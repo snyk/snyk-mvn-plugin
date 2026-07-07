@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as subProcess from '../sub-process';
 import type { MavenContext } from '../maven/context';
+import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from '../maven/version';
 import type { M2Node } from './m2-batch';
 import { debug } from '../index';
 
@@ -19,6 +20,7 @@ import { debug } from '../index';
 export async function fetchRepositoryUrlMap(
   context: MavenContext,
   mavenAggregateProject: boolean,
+  pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
 ): Promise<Map<string, string>> {
   const result = new Map<string, string>();
 
@@ -27,7 +29,17 @@ export async function fetchRepositoryUrlMap(
     // project's repositories: run from the Maven working directory, scope to the
     // target pom, and use --batch-mode to disable interactive prompts and
     // download-progress/colour noise that would break the line parsing below.
-    const args = ['dependency:list-repositories', '--batch-mode'];
+    //
+    // Pin the plugin version rather than using the bare `dependency:` prefix:
+    // the goal's output format is version-dependent — 3.6.1+ emits the
+    // single-line ` * <id> (<url>, ...)` form the regex below parses, whereas
+    // 2.x emits a multi-line `id:`/`url:` block we would not match (and 2.x
+    // also omits some repositories entirely). Pinning to the same version the
+    // rest of the pipeline uses keeps the output parseable and complete.
+    const args = [
+      `org.apache.maven.plugins:maven-dependency-plugin:${pluginVersion}:list-repositories`,
+      '--batch-mode',
+    ];
 
     if (context.targetFile && !mavenAggregateProject) {
       // if we are where we can execute - we preserve the original path;

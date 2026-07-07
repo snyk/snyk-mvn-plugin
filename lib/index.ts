@@ -206,6 +206,7 @@ export async function inspect(
       const repoUrlMap = await fetchRepositoryUrlMap(
         mavenContext,
         !!options.mavenAggregateProject,
+        executionResult.explicitPluginVersion,
       );
       const remoteRepositoriesPromise = buildLabelMap(m2Nodes, (node) =>
         readRemoteRepositoryLabel(node, repositoryPath, repoUrlMap),
