@@ -125,4 +125,21 @@ describe('fetchRepositoryUrlMap output parsing', () => {
     );
     expect(invokedArgs).toContain('--batch-mode');
   });
+
+  it('forwards the user maven args so the effective config matches the build', async () => {
+    mockedExecute.mockResolvedValue(SINGLE_REPO_STDOUT);
+
+    await fetchRepositoryUrlMap(context, false, '3.9.0', [
+      '-s',
+      'corporate-settings.xml',
+      '-Pinternal',
+    ]);
+
+    const invokedArgs = mockedExecute.mock.calls[0][1] as string[];
+    // Without these, list-repositories runs under a different effective config
+    // than the resolve/tree pipeline and the recorded repo ids won't line up.
+    expect(invokedArgs).toEqual(
+      expect.arrayContaining(['-s', 'corporate-settings.xml', '-Pinternal']),
+    );
+  });
 });

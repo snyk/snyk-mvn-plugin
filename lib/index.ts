@@ -206,6 +206,7 @@ export async function inspect(
         mavenContext,
         !!options.mavenAggregateProject,
         executionResult.explicitPluginVersion,
+        args,
       );
 
       const hashLabelsPromise = buildLabelMap(m2Nodes, (node) =>

@@ -21,6 +21,7 @@ export async function fetchRepositoryUrlMap(
   context: MavenContext,
   mavenAggregateProject: boolean,
   pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
+  mavenArgs: string[] = [],
 ): Promise<Map<string, string>> {
   const result = new Map<string, string>();
 
@@ -53,6 +54,16 @@ export async function fetchRepositoryUrlMap(
         args.push('--file', path.basename(context.targetFile));
       }
     }
+
+    // Forward the user's Maven args (the same ones passed to the resolve/tree
+    // pipeline). This is required, not cosmetic: the repo id recorded in an
+    // artifact's _remote.repositories is a *config-local* id resolved from the
+    // effective settings/profiles/mirrors (under a mirror it is the mirror id,
+    // e.g. `google-gcs-mirror`, not `central`). If list-repositories runs under
+    // a different effective config than the build that cached the artifacts, the
+    // ids won't line up and the join drops the label. Appended last to mirror
+    // the dependency-tree pipeline's arg order.
+    args.push(...mavenArgs);
 
     const stdout = await subProcess.execute(context.command, args, {
       cwd: context.workingDirectory,
