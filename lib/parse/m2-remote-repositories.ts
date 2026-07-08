@@ -260,25 +260,6 @@ export function buildDistributionUrlLabel(
   return { 'distribution:url': fullUrl };
 }
 
-/**
- * Given a Maven node (dependency ID + resolved artifact path), read its
- * _remote.repositories file (if present), extract the repository ID, look it up
- * in the provided URL map, and construct the full artifact URL.
- *
- * Returns `{ 'distribution:url': <url> }` when resolvable, empty object otherwise.
- */
-export async function readRemoteRepositoryLabel(
-  node: M2Node,
-  repositoryPath: string,
-  repoUrlMap: Map<string, string>,
-): Promise<Record<string, string>> {
-  const repoId = await readRemoteRepositoryId(node);
-  if (!repoId) {
-    return {};
-  }
-  return buildDistributionUrlLabel(node, repoId, repositoryPath, repoUrlMap);
-}
-
 // Internal key used to carry each node's recorded repo ID through the shared
 // buildLabelMap batching primitive during the I/O phase, before the URL join.
 const REPO_ID_KEY = 'repoId';

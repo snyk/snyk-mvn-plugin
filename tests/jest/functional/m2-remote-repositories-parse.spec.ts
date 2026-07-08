@@ -72,7 +72,7 @@ describe('fetchRepositoryUrlMap output parsing', () => {
 
     expect(map.get('central')).toBe('https://repo.maven.apache.org/maven2');
     // A trailing slash from settings.xml/mirror is preserved as-is; the join in
-    // readRemoteRepositoryLabel is responsible for normalising it, not the parse.
+    // buildDistributionUrlLabel is responsible for normalising it, not the parse.
     expect(map.get('local-snapshots')).toBe(
       'https://nexus.fake.invalid/repository/local-snapshots/',
     );

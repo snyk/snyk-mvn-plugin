@@ -3,11 +3,24 @@ import * as os from 'os';
 import * as path from 'path';
 
 import { dependencyIdToArtifactPath } from '../../../lib/fingerprint';
-import {
-  readRemoteRepositoryLabel,
-  buildRemoteRepositoryLabelMap,
-} from '../../../lib/parse/m2-remote-repositories';
+import { buildRemoteRepositoryLabelMap } from '../../../lib/parse/m2-remote-repositories';
 import type { M2Node } from '../../../lib/parse/m2-batch';
+
+// Resolve the label for a single node through the production path
+// (buildRemoteRepositoryLabelMap), returning {} when no label is emitted. Keeps
+// the per-node assertions below exercising the code that actually ships.
+async function labelFor(
+  node: M2Node,
+  repositoryPath: string,
+  urlMap: Map<string, string>,
+): Promise<Record<string, string>> {
+  const map = await buildRemoteRepositoryLabelMap(
+    [node],
+    repositoryPath,
+    Promise.resolve(urlMap),
+  );
+  return map.get(node.nodeId) ?? {};
+}
 
 describe('distribution:url label emission from .m2 _remote.repositories files', () => {
   let repoRoot: string;
@@ -41,7 +54,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
   });
 
   it('builds the artifact URL from the repo URL and the repo-relative path', async () => {
-    const labels = await readRemoteRepositoryLabel(
+    const labels = await labelFor(
       node,
       repoRoot,
       new Map([['central', 'https://repo.maven.apache.org/maven2']]),
@@ -50,7 +63,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
   });
 
   it('does not emit a double slash when the repo URL has a trailing slash', async () => {
-    const labels = await readRemoteRepositoryLabel(
+    const labels = await labelFor(
       node,
       repoRoot,
       new Map([['central', 'https://repo.maven.apache.org/maven2/']]),
@@ -59,7 +72,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
   });
 
   it('returns no label when the recorded repo id is not in the URL map', async () => {
-    const labels = await readRemoteRepositoryLabel(node, repoRoot, new Map());
+    const labels = await labelFor(node, repoRoot, new Map());
     expect(labels).toEqual({});
   });
 
@@ -69,7 +82,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
       nodeId: otherDepId,
       artifactPath: dependencyIdToArtifactPath(otherDepId, repoRoot),
     };
-    const labels = await readRemoteRepositoryLabel(
+    const labels = await labelFor(
       otherNode,
       repoRoot,
       new Map([['central', 'https://repo.maven.apache.org/maven2']]),
@@ -90,7 +103,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
       `#NOTE: internal Maven Resolver file\nclassified-1.0-sources.jar>other=\nclassified-1.0.jar>central=\n`,
     );
 
-    const labels = await readRemoteRepositoryLabel(
+    const labels = await labelFor(
       { nodeId: depId, artifactPath },
       repoRoot,
       new Map([
@@ -116,7 +129,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
       `#NOTE: internal Maven Resolver file\nlocal-1.0.pom>central=\nlocal-1.0.jar>=\n`,
     );
 
-    const labels = await readRemoteRepositoryLabel(
+    const labels = await labelFor(
       { nodeId: depId, artifactPath },
       repoRoot,
       new Map([['central', 'https://repo.maven.apache.org/maven2']]),
