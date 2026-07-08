@@ -41,6 +41,18 @@ const MULTI_REPO_STDOUT = `[INFO] Scanning for projects...
 [INFO] BUILD SUCCESS
 `;
 
+// Captured with a mirror active (settings.xml with a <mirror> of central). The
+// repo entry carries a trailing `mirrored by <id> (<url>, ...)` clause. Under a
+// mirror, an artifact's _remote.repositories records the MIRROR id, so the map
+// must contain that id -> the mirror URL.
+const MIRRORED_STDOUT = `[INFO] Scanning for projects...
+[INFO] --- dependency:3.9.0:list-repositories (default-cli) @ google-project ---
+[INFO] Project remote repositories used by this build:
+ * central (https://repo.maven.apache.org/maven2, default, releases) mirrored by google-gcs-mirror (https://maven-central.storage-download.googleapis.com/maven2/, default, releases)
+
+[INFO] BUILD SUCCESS
+`;
+
 describe('fetchRepositoryUrlMap output parsing', () => {
   afterEach(() => jest.clearAllMocks());
 
@@ -64,6 +76,22 @@ describe('fetchRepositoryUrlMap output parsing', () => {
     expect(map.get('local-snapshots')).toBe(
       'https://nexus.fake.invalid/repository/local-snapshots/',
     );
+    expect(map.size).toBe(2);
+  });
+
+  it('records both the logical id and the mirror id, each with its own url', async () => {
+    mockedExecute.mockResolvedValue(MIRRORED_STDOUT);
+
+    const map = await fetchRepositoryUrlMap(context, false);
+
+    // _remote.repositories records the mirror id under a mirror, so this entry
+    // is the one that actually resolves labels — pointing at the mirror URL.
+    expect(map.get('google-gcs-mirror')).toBe(
+      'https://maven-central.storage-download.googleapis.com/maven2/',
+    );
+    // The logical id is still recorded (its own URL) for the rare artifact that
+    // recorded `central` directly.
+    expect(map.get('central')).toBe('https://repo.maven.apache.org/maven2');
     expect(map.size).toBe(2);
   });
 

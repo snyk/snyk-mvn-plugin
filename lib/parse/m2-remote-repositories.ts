@@ -69,28 +69,42 @@ export async function fetchRepositoryUrlMap(
       cwd: context.workingDirectory,
     });
 
-    // Parse repository entries from Maven output.
-    // Format: ` * <id> (<url>, <layout>, <policy>)`
-    // We match lines that don't start with [INFO] (the repo entries).
-    // A regex like `/^\s+\*\s+(\S+)\s+\(([^,]+),/` captures:
-    // - Group 1: repository id
-    // - Group 2: repository url (everything before the first comma inside parens)
-    const repoLineRegex = /^\s+\*\s+(\S+)\s+\(([^,]+),/m;
+    // Parse repository entries from Maven output. A repo line looks like:
+    //    * central (https://repo.maven.apache.org/maven2, default, releases)
+    // and, when a mirror is active, carries a trailing mirror clause:
+    //    * central (https://…/maven2, default, releases) mirrored by google-gcs-mirror (https://mirror/…, default, releases)
+    //
+    // We record BOTH the logical id and the mirror id, each mapped to its own
+    // URL. This is essential, not redundant: the id written to an artifact's
+    // _remote.repositories is the *mirror* id when a mirror is active (e.g.
+    // `google-gcs-mirror`, not `central`), so keying only on the logical id
+    // would never match a mirrored build and no label would be emitted. Mapping
+    // each id to its own URL lets the recorded id pick the right source — the
+    // mirror URL for a mirrored artifact, which is where the bytes came from.
+    //
+    // Group 1: repository/mirror id. Group 2: URL up to the first comma in parens.
+    const repoLineRegex = /^\s+\*\s+(\S+)\s+\(([^,]+),/;
+    const mirrorRegex = /\bmirrored by\s+(\S+)\s+\(([^,]+),/;
     const lines = stdout.split('\n');
+
+    // Keep the first URL seen for a given id (duplicates should be rare).
+    const addRepo = (id: string, url: string): void => {
+      if (!result.has(id)) {
+        result.set(id, url);
+        debug(`Found repository: ${id} -> ${url}`);
+      }
+    };
 
     for (const line of lines) {
       const match = line.match(repoLineRegex);
       if (!match) {
         continue;
       }
-      const repoId = match[1];
-      const repoUrl = match[2];
+      addRepo(match[1], match[2]);
 
-      // Skip if we've already seen this repo ID (should be rare, but
-      // in the case of duplicate repo IDs we keep the first occurrence).
-      if (!result.has(repoId)) {
-        result.set(repoId, repoUrl);
-        debug(`Found repository: ${repoId} -> ${repoUrl}`);
+      const mirrorMatch = line.match(mirrorRegex);
+      if (mirrorMatch) {
+        addRepo(mirrorMatch[1], mirrorMatch[2]);
       }
     }
   } catch (err) {
