@@ -76,6 +76,53 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     );
     expect(labels).toEqual({});
   });
+
+  it('ignores a co-located -sources.jar recorded against a different repo', async () => {
+    const depId = 'com.example:classified:jar:1.0';
+    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const dir = path.dirname(artifactPath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(artifactPath, 'fake jar contents');
+    // The sources jar (from `other`) is listed before the main jar (`central`);
+    // the main artifact's own entry must win, not the first jar-like line.
+    fs.writeFileSync(
+      path.join(dir, '_remote.repositories'),
+      `#NOTE: internal Maven Resolver file\nclassified-1.0-sources.jar>other=\nclassified-1.0.jar>central=\n`,
+    );
+
+    const labels = await readRemoteRepositoryLabel(
+      { nodeId: depId, artifactPath },
+      repoRoot,
+      new Map([
+        ['central', 'https://repo.maven.apache.org/maven2'],
+        ['other', 'https://other.example/maven2'],
+      ]),
+    );
+    expect(labels['distribution:url']).toBe(
+      'https://repo.maven.apache.org/maven2/com/example/classified/1.0/classified-1.0.jar',
+    );
+  });
+
+  it('emits no label when the artifact was installed locally (empty repo id)', async () => {
+    const depId = 'com.example:local:jar:1.0';
+    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const dir = path.dirname(artifactPath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(artifactPath, 'fake jar contents');
+    // Jar installed locally (empty id) but the pom came from central: the jar's
+    // own entry is authoritative, so we must not claim it came from central.
+    fs.writeFileSync(
+      path.join(dir, '_remote.repositories'),
+      `#NOTE: internal Maven Resolver file\nlocal-1.0.pom>central=\nlocal-1.0.jar>=\n`,
+    );
+
+    const labels = await readRemoteRepositoryLabel(
+      { nodeId: depId, artifactPath },
+      repoRoot,
+      new Map([['central', 'https://repo.maven.apache.org/maven2']]),
+    );
+    expect(labels).toEqual({});
+  });
 });
 
 describe('buildRemoteRepositoryLabelMap two-phase build', () => {

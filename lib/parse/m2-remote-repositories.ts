@@ -56,13 +56,12 @@ export async function fetchRepositoryUrlMap(
     }
 
     // Forward the user's Maven args (the same ones passed to the resolve/tree
-    // pipeline). This is required, not cosmetic: the repo id recorded in an
-    // artifact's _remote.repositories is a *config-local* id resolved from the
-    // effective settings/profiles/mirrors (under a mirror it is the mirror id,
-    // e.g. `google-gcs-mirror`, not `central`). If list-repositories runs under
-    // a different effective config than the build that cached the artifacts, the
-    // ids won't line up and the join drops the label. Appended last to mirror
-    // the dependency-tree pipeline's arg order.
+    // pipeline). This is required, not cosmetic: the repo ids recorded in
+    // _remote.repositories are resolved from the effective
+    // settings/profiles/mirrors, so if list-repositories runs under a different
+    // config than the build that cached the artifacts, the ids won't line up and
+    // the join drops the label (see the mirror handling below). Appended last to
+    // mirror the dependency-tree pipeline's arg order.
     args.push(...mavenArgs);
 
     const stdout = await subProcess.execute(context.command, args, {
@@ -136,13 +135,17 @@ const MAX_REMOTE_REPOSITORIES_BYTES = 64 * 1024;
  * Maven writes this file when an artifact is installed from a remote repository.
  * Format: lines like `guava-32.1.3-jre.jar>central=`
  *
- * We prefer to read the repository ID from the `.jar` (or `.aar`, `.war`, `.ear`)
- * entry, as that's the artifact we're reporting on. Falls back to `.pom` if no
- * binary artifact entry is found. Returns undefined if the file is absent or
- * unparseable.
+ * We read the repository ID from the entry for the artifact we're reporting on
+ * (`artifactFileName`, e.g. `guava-32.1.3-jre.jar`) — matching by exact filename
+ * so a co-located `-sources.jar`/`-javadoc.jar` from a different repo can't win.
+ * An empty id on that entry means the artifact was installed locally (no remote
+ * source), so we report none rather than falling back. Falls back to the sibling
+ * `.pom` only when the artifact's own entry is absent. Returns undefined if the
+ * file is absent, unparseable, or records no remote source.
  */
 async function parseRemoteRepositoriesFile(
   filePath: string,
+  artifactFileName: string,
 ): Promise<string | undefined> {
   let content: string;
   let handle: fs.promises.FileHandle | undefined;
@@ -166,6 +169,8 @@ async function parseRemoteRepositoriesFile(
 
   const lines = content.split('\n');
 
+  // Sibling POM for the fallback, e.g. `foo-1.0.jar` -> `foo-1.0.pom`.
+  const pomFileName = artifactFileName.replace(/\.[^.]+$/, '.pom');
   let pomRepoId: string | undefined;
 
   for (const line of lines) {
@@ -181,35 +186,23 @@ async function parseRemoteRepositoriesFile(
       continue;
     }
     const filename = parts[0];
-    const repoAndRest = parts[1];
-    const repoId = repoAndRest.split('=')[0];
+    const repoId = parts[1].split('=')[0];
 
-    if (!repoId) {
-      continue;
+    // The artifact's own entry is authoritative: an empty id here means it was
+    // installed locally, so report no remote source rather than borrowing the
+    // .pom's.
+    if (filename === artifactFileName) {
+      return repoId || undefined;
     }
 
-    // Prefer JAR-like artifacts over .pom
-    if (
-      filename.endsWith('.jar') ||
-      filename.endsWith('.aar') ||
-      filename.endsWith('.war') ||
-      filename.endsWith('.ear')
-    ) {
-      return repoId;
-    }
-
-    // Remember .pom as a fallback
-    if (filename.endsWith('.pom') && !pomRepoId) {
+    // Remember the sibling .pom as a fallback for when the artifact's own entry
+    // is absent.
+    if (filename === pomFileName && repoId && !pomRepoId) {
       pomRepoId = repoId;
     }
   }
 
-  // Return .pom repo ID if no binary artifact was found
-  if (pomRepoId) {
-    return pomRepoId;
-  }
-
-  return undefined;
+  return pomRepoId;
 }
 
 /**
@@ -223,19 +216,12 @@ async function parseRemoteRepositoriesFile(
 export async function readRemoteRepositoryId(
   node: M2Node,
 ): Promise<string | undefined> {
-  try {
-    const versionDir = path.dirname(node.artifactPath);
-    const remoteReposFile = path.join(versionDir, '_remote.repositories');
-    return await parseRemoteRepositoriesFile(remoteReposFile);
-  } catch (err) {
-    // Any unexpected error: treat as "no remote repository recorded".
-    debug(
-      `Failed to read remote repository id for ${node.nodeId}: ${
-        err instanceof Error ? err.message : String(err)
-      }`,
-    );
-    return undefined;
-  }
+  // parseRemoteRepositoriesFile handles its own I/O errors and never throws;
+  // the path operations here can't throw either, so no guard is needed.
+  const versionDir = path.dirname(node.artifactPath);
+  const remoteReposFile = path.join(versionDir, '_remote.repositories');
+  const artifactFileName = path.basename(node.artifactPath);
+  return parseRemoteRepositoriesFile(remoteReposFile, artifactFileName);
 }
 
 /**
