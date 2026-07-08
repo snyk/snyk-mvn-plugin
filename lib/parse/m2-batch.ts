@@ -39,27 +39,45 @@ export function collectM2Nodes(
 }
 
 /**
- * Run `readLabels` for every node in bounded-concurrency batches and return a
- * Map<nodeId, labels> containing only the nodes that produced a non-empty label
- * set. Reads run asynchronously in bounded batches so they never block the
- * event loop. The shared scaffold for any per-node label-reading pass.
+ * Run `read` for every node in bounded-concurrency batches and return a
+ * Map<nodeId, result> for the nodes whose result `keep` accepts. Reads run
+ * asynchronously in bounded batches so they never block the event loop. The
+ * shared scaffold for any per-node async pass over the local Maven repository —
+ * label sets, recorded repo ids, etc.
  */
-export async function buildLabelMap(
+export async function mapNodes<T>(
   nodes: M2Node[],
-  readLabels: (node: M2Node) => Promise<Record<string, string>>,
-): Promise<Map<string, Record<string, string>>> {
-  const result = new Map<string, Record<string, string>>();
+  read: (node: M2Node) => Promise<T>,
+  keep: (value: T) => boolean,
+): Promise<Map<string, T>> {
+  const result = new Map<string, T>();
 
   for (let i = 0; i < nodes.length; i += CONCURRENCY) {
     const batch = nodes.slice(i, i + CONCURRENCY);
-    const batchResults = await Promise.all(batch.map(readLabels));
+    const batchResults = await Promise.all(batch.map(read));
     batch.forEach((node, j) => {
-      const labels = batchResults[j];
-      if (Object.keys(labels).length > 0) {
-        result.set(node.nodeId, labels);
+      const value = batchResults[j];
+      if (keep(value)) {
+        result.set(node.nodeId, value);
       }
     });
   }
 
   return result;
+}
+
+/**
+ * Run `readLabels` for every node and return a Map<nodeId, labels> containing
+ * only the nodes that produced a non-empty label set. Thin specialisation of
+ * {@link mapNodes} for the per-node label-reading passes (hashes, etc.).
+ */
+export function buildLabelMap(
+  nodes: M2Node[],
+  readLabels: (node: M2Node) => Promise<Record<string, string>>,
+): Promise<Map<string, Record<string, string>>> {
+  return mapNodes(
+    nodes,
+    readLabels,
+    (labels) => Object.keys(labels).length > 0,
+  );
 }

@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as subProcess from '../sub-process';
 import type { MavenContext } from '../maven/context';
 import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from '../maven/version';
-import { buildLabelMap, type M2Node } from './m2-batch';
+import { mapNodes, type M2Node } from './m2-batch';
 import { debug } from '../index';
 
 /**
@@ -260,10 +260,6 @@ export function buildDistributionUrlLabel(
   return { 'distribution:url': fullUrl };
 }
 
-// Internal key used to carry each node's recorded repo ID through the shared
-// buildLabelMap batching primitive during the I/O phase, before the URL join.
-const REPO_ID_KEY = 'repoId';
-
 /**
  * Build the distribution:url label map for a set of nodes in two phases so the
  * file I/O overlaps the (slow, JVM-startup) dependency:list-repositories
@@ -282,13 +278,12 @@ export async function buildRemoteRepositoryLabelMap(
   repositoryPath: string,
   repoUrlMapPromise: Promise<Map<string, string>>,
 ): Promise<Map<string, Record<string, string>>> {
-  // Phase 1 — pure I/O, overlaps the subprocess.
-  const repoIdLabels = await buildLabelMap(
+  // Phase 1 — pure I/O, overlaps the subprocess. Keep only nodes whose
+  // _remote.repositories recorded a repo id.
+  const repoIdByNode = await mapNodes(
     m2Nodes,
-    async (node): Promise<Record<string, string>> => {
-      const repoId = await readRemoteRepositoryId(node);
-      return repoId ? { [REPO_ID_KEY]: repoId } : {};
-    },
+    (node) => readRemoteRepositoryId(node),
+    (repoId) => repoId !== undefined,
   );
 
   // Phase 2 — join against the fetched map (by now usually already resolved).
@@ -296,7 +291,7 @@ export async function buildRemoteRepositoryLabelMap(
 
   const result = new Map<string, Record<string, string>>();
   for (const node of m2Nodes) {
-    const repoId = repoIdLabels.get(node.nodeId)?.[REPO_ID_KEY];
+    const repoId = repoIdByNode.get(node.nodeId);
     if (!repoId) {
       continue;
     }
