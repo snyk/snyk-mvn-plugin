@@ -50,10 +50,20 @@ const CONCURRENCY = 5;
 // buffered wholesale — anything past the first token is irrelevant.
 const MAX_COMPANION_BYTES = 256;
 
+// Result of reading a single companion file. `found` distinguishes "the file
+// doesn't exist" from "the file exists but its contents are not a usable
+// digest" — both yield no `digest`, but callers need to tell the two apart to
+// avoid reporting a corrupt/invalid companion file as merely "not present".
+interface CompanionFileResult {
+  found: boolean;
+  digest?: string;
+}
+
 /**
- * Read a single companion-file value. Returns undefined if the file does not
- * exist (older artifacts may not publish every algorithm), is unreadable, or
- * does not contain a valid digest. Returns the validated hex digest, lowercased.
+ * Read a single companion-file value. `found` is false if the file does not
+ * exist (older artifacts may not publish every algorithm) or is unreadable;
+ * otherwise true. `digest` is set only if the file was found and its contents
+ * are a valid digest for the algorithm.
  *
  * Maven companion files contain the digest as ASCII hex, sometimes followed by a
  * space and the filename; we keep only the first whitespace-delimited token. The
@@ -65,7 +75,7 @@ async function readCompanionFile(
   artifactPath: string,
   ext: string,
   digestPattern: RegExp,
-): Promise<string | undefined> {
+): Promise<CompanionFileResult> {
   const companionPath = `${artifactPath}.${ext}`;
   let raw: string;
   let handle: fs.promises.FileHandle | undefined;
@@ -77,7 +87,7 @@ async function readCompanionFile(
   } catch {
     // File does not exist (older artifacts may not publish every algorithm) or
     // is unreadable — treat both as "no recorded hash for this algorithm".
-    return undefined;
+    return { found: false };
   } finally {
     await handle?.close();
   }
@@ -87,9 +97,9 @@ async function readCompanionFile(
       `Ignoring ${ext} companion file ${companionPath}: ` +
         `contents are not a valid digest`,
     );
-    return undefined;
+    return { found: true };
   }
-  return digest;
+  return { found: true, digest };
 }
 
 /**
@@ -107,18 +117,22 @@ export async function readM2HashLabels(
   const labels: Record<string, string> = {};
   const artifactPath = dependencyIdToArtifactPath(dependencyId, repositoryPath);
 
-  const digests = await Promise.all(
+  const results = await Promise.all(
     M2_COMPANION_FILES.map(({ ext, digestPattern }) =>
       readCompanionFile(artifactPath, ext, digestPattern),
     ),
   );
 
   M2_COMPANION_FILES.forEach(({ algorithm }, i) => {
-    const digest = digests[i];
+    const { digest } = results[i];
     if (digest) {
       labels[`hash:${algorithm}`] = digest;
     }
   });
+
+  if (results.every((result) => !result.found)) {
+    debug(`No companion checksum files found for ${artifactPath}`);
+  }
 
   return labels;
 }
