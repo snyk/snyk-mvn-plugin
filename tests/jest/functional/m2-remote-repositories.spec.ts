@@ -3,8 +3,22 @@ import * as os from 'os';
 import * as path from 'path';
 
 import { dependencyIdToArtifactPath } from '../../../lib/fingerprint';
-import { buildRemoteRepositoryLabelMap } from '../../../lib/parse/m2-remote-repositories';
+import {
+  buildRemoteRepositoryLabelMap,
+  type RepositoryEntry,
+} from '../../../lib/parse/m2-remote-repositories';
 import type { M2Node } from '../../../lib/parse/m2-batch';
+
+// Build a repo→entry map from ordered [id, url] pairs, stamping rank by position
+// so the first pair is the highest priority — mirroring how fetchRepositoryUrlMap
+// ranks dependency:list-repositories output.
+function rankedMap(
+  ...pairs: [string, string][]
+): Map<string, RepositoryEntry> {
+  return new Map(
+    pairs.map(([id, url], rank) => [id, { url, rank }]),
+  );
+}
 
 // Resolve the label for a single node through the production path
 // (buildRemoteRepositoryLabelMap), returning {} when no label is emitted. Keeps
@@ -12,7 +26,7 @@ import type { M2Node } from '../../../lib/parse/m2-batch';
 async function labelFor(
   node: M2Node,
   repositoryPath: string,
-  urlMap: Map<string, string>,
+  urlMap: Map<string, RepositoryEntry>,
 ): Promise<Record<string, string>> {
   const map = await buildRemoteRepositoryLabelMap(
     [node],
@@ -57,7 +71,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     const labels = await labelFor(
       node,
       repoRoot,
-      new Map([['central', 'https://repo.maven.apache.org/maven2']]),
+      rankedMap(['central', 'https://repo.maven.apache.org/maven2']),
     );
     expect(labels['distribution:url']).toBe(expectedUrl);
   });
@@ -66,7 +80,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     const labels = await labelFor(
       node,
       repoRoot,
-      new Map([['central', 'https://repo.maven.apache.org/maven2/']]),
+      rankedMap(['central', 'https://repo.maven.apache.org/maven2/']),
     );
     expect(labels['distribution:url']).toBe(expectedUrl);
   });
@@ -85,7 +99,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     const labels = await labelFor(
       otherNode,
       repoRoot,
-      new Map([['central', 'https://repo.maven.apache.org/maven2']]),
+      rankedMap(['central', 'https://repo.maven.apache.org/maven2']),
     );
     expect(labels).toEqual({});
   });
@@ -106,10 +120,10 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     const labels = await labelFor(
       { nodeId: depId, artifactPath },
       repoRoot,
-      new Map([
+      rankedMap(
         ['central', 'https://repo.maven.apache.org/maven2'],
         ['other', 'https://other.example/maven2'],
-      ]),
+      ),
     );
     expect(labels['distribution:url']).toBe(
       'https://repo.maven.apache.org/maven2/com/example/classified/1.0/classified-1.0.jar',
@@ -132,9 +146,62 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     const labels = await labelFor(
       { nodeId: depId, artifactPath },
       repoRoot,
-      new Map([['central', 'https://repo.maven.apache.org/maven2']]),
+      rankedMap(['central', 'https://repo.maven.apache.org/maven2']),
     );
     expect(labels).toEqual({});
+  });
+
+  it('credits the highest-priority repo when a jar records multiple repo ids', async () => {
+    // Shared/warm cache: the jar accumulated both ids. list-repositories ranks
+    // jboss above central, so the label must resolve to jboss (rank 0), not
+    // whichever id happens to appear first in the file.
+    const depId = 'com.example:multi:jar:1.0';
+    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const dir = path.dirname(artifactPath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(artifactPath, 'fake jar contents');
+    // central is written first in the file; jboss second. File order must not
+    // decide the winner — rank does.
+    fs.writeFileSync(
+      path.join(dir, '_remote.repositories'),
+      `#NOTE: internal Maven Resolver file\nmulti-1.0.jar>central=\nmulti-1.0.jar>jboss=\n`,
+    );
+
+    const labels = await labelFor(
+      { nodeId: depId, artifactPath },
+      repoRoot,
+      rankedMap(
+        ['jboss', 'https://repository.jboss.org/nexus/content/groups/public/'],
+        ['central', 'https://repo.maven.apache.org/maven2'],
+      ),
+    );
+    expect(labels['distribution:url']).toBe(
+      'https://repository.jboss.org/nexus/content/groups/public/com/example/multi/1.0/multi-1.0.jar',
+    );
+  });
+
+  it('falls back to a lower-priority recorded id when the top one is absent from the map', async () => {
+    // The jar records [jboss, central] but the fetched map only knows central
+    // (jboss missing, e.g. cached by another project). Rather than lose the
+    // label, we credit the known lower-priority repo.
+    const depId = 'com.example:partial:jar:1.0';
+    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const dir = path.dirname(artifactPath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(artifactPath, 'fake jar contents');
+    fs.writeFileSync(
+      path.join(dir, '_remote.repositories'),
+      `#NOTE: internal Maven Resolver file\npartial-1.0.jar>jboss=\npartial-1.0.jar>central=\n`,
+    );
+
+    const labels = await labelFor(
+      { nodeId: depId, artifactPath },
+      repoRoot,
+      rankedMap(['central', 'https://repo.maven.apache.org/maven2']),
+    );
+    expect(labels['distribution:url']).toBe(
+      'https://repo.maven.apache.org/maven2/com/example/partial/1.0/partial-1.0.jar',
+    );
   });
 });
 
@@ -144,9 +211,7 @@ describe('buildRemoteRepositoryLabelMap two-phase build', () => {
   let jbossNode: M2Node; // records a repo id absent from the url map
   let noFileNode: M2Node; // installed jar but no _remote.repositories file
 
-  const urlMap = new Map([
-    ['central', 'https://repo.maven.apache.org/maven2'],
-  ]);
+  const urlMap = rankedMap(['central', 'https://repo.maven.apache.org/maven2']);
 
   function install(depId: string, repoId?: string): M2Node {
     const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
@@ -198,8 +263,8 @@ describe('buildRemoteRepositoryLabelMap two-phase build', () => {
     const openSpy = jest.spyOn(fs.promises, 'open');
 
     let mapResolved = false;
-    let resolveMap!: (m: Map<string, string>) => void;
-    const pendingMap = new Promise<Map<string, string>>((resolve) => {
+    let resolveMap!: (m: Map<string, RepositoryEntry>) => void;
+    const pendingMap = new Promise<Map<string, RepositoryEntry>>((resolve) => {
       resolveMap = (m) => {
         mapResolved = true;
         resolve(m);

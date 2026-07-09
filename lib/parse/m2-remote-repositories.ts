@@ -7,14 +7,39 @@ import { mapNodes, type M2Node } from './m2-batch';
 import { debug } from '../index';
 
 /**
+ * A repository entry from `dependency:list-repositories`: its URL, plus its
+ * `rank` — the 0-based position it appeared at in the output. `list-repositories`
+ * prints repositories in Maven's search/priority order (project- and
+ * dependency-declared repos before `central`), so a lower rank means a
+ * higher-priority repository. When an artifact's _remote.repositories records
+ * more than one repo id (see `parseRemoteRepositoriesFile`), the rank breaks the
+ * tie: we credit the highest-priority (lowest-rank) recorded repo, matching the
+ * repo Maven itself would have preferred.
+ *
+ * Caveat: rank is assigned by first occurrence across the whole (flat) output.
+ * In an aggregate reactor the aggregator section often lists `central` first, so
+ * `central` can grab rank 0 globally even though a child module declares a
+ * higher-priority repo. That aggregate imprecision is rare, and the recorded
+ * per-artifact repo signal is itself unreliable in multi-module builds sharing
+ * one cache; the rank is exact wherever there is a single module (the common
+ * case). The real fix would be per-module ranks, deliberately deferred.
+ */
+export interface RepositoryEntry {
+  url: string;
+  rank: number;
+}
+
+/**
  * Read the Maven remote repositories for a project by running
  * `mvn dependency:list-repositories` and parsing the output.
  *
  * The output lists all repositories available to the project, including those
- * configured in pom.xml, settings.xml, and super-POMs. In aggregate builds
- * (multi-module), we capture repos from all modules and return a union.
+ * configured in pom.xml, settings.xml, super-POMs, AND those introduced by
+ * dependency POMs (e.g. a dependency that declares its own <repositories>). In
+ * aggregate builds (multi-module), we capture repos from all modules and return
+ * a union.
  *
- * Returns a Map<repositoryId, repositoryUrl> for known repositories, or an
+ * Returns a Map<repositoryId, RepositoryEntry> for known repositories, or an
  * empty map if the command fails or produces no output. Never throws.
  */
 export async function fetchRepositoryUrlMap(
@@ -22,8 +47,8 @@ export async function fetchRepositoryUrlMap(
   mavenAggregateProject: boolean,
   pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
   mavenArgs: string[] = [],
-): Promise<Map<string, string>> {
-  const result = new Map<string, string>();
+): Promise<Map<string, RepositoryEntry>> {
+  const result = new Map<string, RepositoryEntry>();
 
   try {
     // Mirror the dependency-tree pipeline's invocation so we resolve the same
@@ -46,8 +71,15 @@ export async function fetchRepositoryUrlMap(
       // if we are where we can execute - we preserve the original path;
       // if not - we rely on the executor (mvnw) to be spawned at the closest
       // directory, leaving us w/ the file itself.
+      //
       // In aggregate (multi-module) builds we omit --file so Maven walks every
-      // module and we capture the union of their repositories.
+      // module and we capture the union of their repositories. We deliberately
+      // do NOT use --non-recursive here: a child module's <repositories> are not
+      // inherited by the aggregator, so a non-recursive run against the parent
+      // would report only the parent's repos and miss module-specific ones. The
+      // recursive run already prints a per-module section, which is enough to
+      // union every repo id in play (running each module non-recursively would
+      // spawn N subprocesses for the same information).
       if (context.root === context.workingDirectory) {
         args.push('--file', context.targetFile);
       } else {
@@ -86,11 +118,14 @@ export async function fetchRepositoryUrlMap(
     const mirrorRegex = /\bmirrored by\s+(\S+)\s+\(([^,]+),/;
     const lines = stdout.split('\n');
 
-    // Keep the first URL seen for a given id (duplicates should be rare).
+    // Keep the first URL seen for a given id (duplicates should be rare) and
+    // stamp it with the rank of that first occurrence — its position in the
+    // priority-ordered output. `result.size` is the next free rank because we
+    // only ever insert new ids here.
     const addRepo = (id: string, url: string): void => {
       if (!result.has(id)) {
-        result.set(id, url);
-        debug(`Found repository: ${id} -> ${url}`);
+        result.set(id, { url, rank: result.size });
+        debug(`Found repository (rank ${result.size - 1}): ${id} -> ${url}`);
       }
     };
 
@@ -135,18 +170,21 @@ const MAX_REMOTE_REPOSITORIES_BYTES = 64 * 1024;
  * Maven writes this file when an artifact is installed from a remote repository.
  * Format: lines like `guava-32.1.3-jre.jar>central=`
  *
- * We read the repository ID from the entry for the artifact we're reporting on
+ * We read the repository IDs from the entry for the artifact we're reporting on
  * (`artifactFileName`, e.g. `guava-32.1.3-jre.jar`) — matching by exact filename
  * so a co-located `-sources.jar`/`-javadoc.jar` from a different repo can't win.
+ * A single artifact can accumulate more than one id (a shared/warm cache appends
+ * every repo it was ever resolved against), so we return ALL ids recorded for
+ * that entry, in file order; the caller picks the highest-priority one by rank.
  * An empty id on that entry means the artifact was installed locally (no remote
  * source), so we report none rather than falling back. Falls back to the sibling
- * `.pom` only when the artifact's own entry is absent. Returns undefined if the
- * file is absent, unparseable, or records no remote source.
+ * `.pom`'s ids only when the artifact's own entry is absent. Returns an empty
+ * array if the file is absent, unparseable, or records no remote source.
  */
 async function parseRemoteRepositoriesFile(
   filePath: string,
   artifactFileName: string,
-): Promise<string | undefined> {
+): Promise<string[]> {
   let content: string;
   let handle: fs.promises.FileHandle | undefined;
   try {
@@ -161,8 +199,8 @@ async function parseRemoteRepositoriesFile(
     content = buffer.toString('utf8', 0, bytesRead);
   } catch {
     // File does not exist, is unreadable, or is malformed.
-    // Return undefined to signal "no remote repository recorded".
-    return undefined;
+    // Return an empty array to signal "no remote repository recorded".
+    return [];
   } finally {
     await handle?.close();
   }
@@ -171,7 +209,9 @@ async function parseRemoteRepositoriesFile(
 
   // Sibling POM for the fallback, e.g. `foo-1.0.jar` -> `foo-1.0.pom`.
   const pomFileName = artifactFileName.replace(/\.[^.]+$/, '.pom');
-  let pomRepoId: string | undefined;
+  const artifactRepoIds: string[] = [];
+  const pomRepoIds: string[] = [];
+  let sawArtifactEntry = false;
 
   for (const line of lines) {
     // Skip comments and empty lines
@@ -188,34 +228,45 @@ async function parseRemoteRepositoriesFile(
     const filename = parts[0];
     const repoId = parts[1].split('=')[0];
 
-    // The artifact's own entry is authoritative: an empty id here means it was
-    // installed locally, so report no remote source rather than borrowing the
-    // .pom's.
+    // The artifact's own entry is authoritative. Collect every id recorded for
+    // it. An empty id means it was installed locally; we track that the entry
+    // exists (sawArtifactEntry) so we don't borrow the .pom's ids, but we don't
+    // add the empty id itself.
     if (filename === artifactFileName) {
-      return repoId || undefined;
+      sawArtifactEntry = true;
+      if (repoId) {
+        artifactRepoIds.push(repoId);
+      }
+      continue;
     }
 
-    // Remember the sibling .pom as a fallback for when the artifact's own entry
-    // is absent.
-    if (filename === pomFileName && repoId && !pomRepoId) {
-      pomRepoId = repoId;
+    // Remember the sibling .pom's ids as a fallback for when the artifact's own
+    // entry is absent.
+    if (filename === pomFileName && repoId) {
+      pomRepoIds.push(repoId);
     }
   }
 
-  return pomRepoId;
+  // The artifact's own entry wins outright when present (even if it recorded
+  // only an empty local id); only fall back to the .pom when it is absent.
+  if (sawArtifactEntry) {
+    return artifactRepoIds;
+  }
+  return pomRepoIds;
 }
 
 /**
- * Read the repository ID recorded for an artifact in its _remote.repositories
+ * Read the repository IDs recorded for an artifact in its _remote.repositories
  * file. This is the I/O half of the distribution:url pass and depends only on
  * the local Maven repository — never on the fetched repo→URL map — so it can be
  * run concurrently with the dependency:list-repositories subprocess.
  *
- * Returns the repository ID, or undefined if no file/entry is present.
+ * Returns the recorded repository IDs (in file order), or an empty array if no
+ * file/entry is present.
  */
-export async function readRemoteRepositoryId(
+export async function readRemoteRepositoryIds(
   node: M2Node,
-): Promise<string | undefined> {
+): Promise<string[]> {
   // parseRemoteRepositoriesFile handles its own I/O errors and never throws;
   // the path operations here can't throw either, so no guard is needed.
   const versionDir = path.dirname(node.artifactPath);
@@ -225,25 +276,40 @@ export async function readRemoteRepositoryId(
 }
 
 /**
- * Join a recorded repository ID against the fetched repo→URL map to construct
- * the artifact's distribution:url label. Pure in-memory work — no I/O.
+ * Join an artifact's recorded repository IDs against the fetched repo→entry map
+ * to construct its distribution:url label. Pure in-memory work — no I/O.
+ *
+ * When more than one id was recorded (a shared/warm cache accumulates every repo
+ * the artifact was resolved against), we credit the highest-priority repo: a
+ * single linear pass over the recorded ids picks the one with the lowest rank
+ * (earliest in dependency:list-repositories' priority order). Ids absent from
+ * the map are skipped, so an unmatched id degrades gracefully rather than losing
+ * the label — a lower-priority-but-known repo can still win the URL.
  *
  * Returns `{ 'distribution:url': <url> }` when resolvable, empty object otherwise.
  */
 export function buildDistributionUrlLabel(
   node: M2Node,
-  repoId: string,
+  repoIds: string[],
   repositoryPath: string,
-  repoUrlMap: Map<string, string>,
+  repoUrlMap: Map<string, RepositoryEntry>,
 ): Record<string, string> {
-  const repoUrl = repoUrlMap.get(repoId);
-  if (!repoUrl) {
-    // Repo ID found in _remote.repositories but not in our fetched URL map.
-    // This can happen if the artifact was cached by another project or if the
-    // repository is not listed in the current project's dependency:list-repositories.
-    // Gracefully degrade: no distribution:url label for this artifact.
+  let best: RepositoryEntry | undefined;
+  for (const repoId of repoIds) {
+    const entry = repoUrlMap.get(repoId);
+    // undefined ⇒ id recorded in _remote.repositories but not in our fetched
+    // map (e.g. cached by another project, or not in this project's
+    // list-repositories); skip it and let a known repo win instead.
+    if (entry && (!best || entry.rank < best.rank)) {
+      best = entry;
+    }
+  }
+
+  if (!best) {
     debug(
-      `Repository ID '${repoId}' for ${node.nodeId} not found in fetched repo map`,
+      `None of the recorded repository IDs [${repoIds.join(', ')}] for ${
+        node.nodeId
+      } were found in the fetched repo map`,
     );
     return {};
   }
@@ -255,7 +321,7 @@ export function buildDistributionUrlLabel(
   const relativePath = path
     .relative(repositoryPath, node.artifactPath)
     .replace(/\\/g, '/');
-  const fullUrl = `${repoUrl.replace(/\/+$/, '')}/${relativePath}`;
+  const fullUrl = `${best.url.replace(/\/+$/, '')}/${relativePath}`;
   debug(`Resolved distribution URL for ${node.nodeId}: ${fullUrl}`);
   return { 'distribution:url': fullUrl };
 }
@@ -276,14 +342,14 @@ export function buildDistributionUrlLabel(
 export async function buildRemoteRepositoryLabelMap(
   m2Nodes: M2Node[],
   repositoryPath: string,
-  repoUrlMapPromise: Promise<Map<string, string>>,
+  repoUrlMapPromise: Promise<Map<string, RepositoryEntry>>,
 ): Promise<Map<string, Record<string, string>>> {
   // Phase 1 — pure I/O, overlaps the subprocess. Keep only nodes whose
-  // _remote.repositories recorded a repo id.
-  const repoIdByNode = await mapNodes(
+  // _remote.repositories recorded at least one repo id.
+  const repoIdsByNode = await mapNodes(
     m2Nodes,
-    (node) => readRemoteRepositoryId(node),
-    (repoId) => repoId !== undefined,
+    (node) => readRemoteRepositoryIds(node),
+    (repoIds) => repoIds.length > 0,
   );
 
   // Phase 2 — join against the fetched map (by now usually already resolved).
@@ -291,13 +357,13 @@ export async function buildRemoteRepositoryLabelMap(
 
   const result = new Map<string, Record<string, string>>();
   for (const node of m2Nodes) {
-    const repoId = repoIdByNode.get(node.nodeId);
-    if (!repoId) {
+    const repoIds = repoIdsByNode.get(node.nodeId);
+    if (!repoIds) {
       continue;
     }
     const label = buildDistributionUrlLabel(
       node,
-      repoId,
+      repoIds,
       repositoryPath,
       repoUrlMap,
     );

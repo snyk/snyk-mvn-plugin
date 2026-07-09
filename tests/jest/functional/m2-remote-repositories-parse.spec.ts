@@ -61,21 +61,30 @@ describe('fetchRepositoryUrlMap output parsing', () => {
 
     const map = await fetchRepositoryUrlMap(context, false);
 
-    expect(map.get('central')).toBe('https://repo.maven.apache.org/maven2');
+    expect(map.get('central')).toEqual({
+      url: 'https://repo.maven.apache.org/maven2',
+      rank: 0,
+    });
     expect(map.size).toBe(1);
   });
 
-  it('parses multiple repositories into a single union map', async () => {
+  it('parses multiple repositories into a single union map, ranked in output order', async () => {
     mockedExecute.mockResolvedValue(MULTI_REPO_STDOUT);
 
     const map = await fetchRepositoryUrlMap(context, false);
 
-    expect(map.get('central')).toBe('https://repo.maven.apache.org/maven2');
-    // A trailing slash from settings.xml/mirror is preserved as-is; the join in
-    // buildDistributionUrlLabel is responsible for normalising it, not the parse.
-    expect(map.get('local-snapshots')).toBe(
-      'https://nexus.fake.invalid/repository/local-snapshots/',
-    );
+    // list-repositories prints repos in priority order; rank captures that so a
+    // multi-id artifact can pick the highest-priority (lowest-rank) repo.
+    expect(map.get('local-snapshots')).toEqual({
+      // A trailing slash from settings.xml/mirror is preserved as-is; the join in
+      // buildDistributionUrlLabel normalises it, not the parse.
+      url: 'https://nexus.fake.invalid/repository/local-snapshots/',
+      rank: 0,
+    });
+    expect(map.get('central')).toEqual({
+      url: 'https://repo.maven.apache.org/maven2',
+      rank: 1,
+    });
     expect(map.size).toBe(2);
   });
 
@@ -84,14 +93,18 @@ describe('fetchRepositoryUrlMap output parsing', () => {
 
     const map = await fetchRepositoryUrlMap(context, false);
 
+    // The logical id is parsed first (rank 0), the mirror id second (rank 1);
+    // an artifact recording both prefers the canonical central URL by rank.
+    expect(map.get('central')).toEqual({
+      url: 'https://repo.maven.apache.org/maven2',
+      rank: 0,
+    });
     // _remote.repositories records the mirror id under a mirror, so this entry
-    // is the one that actually resolves labels — pointing at the mirror URL.
-    expect(map.get('google-gcs-mirror')).toBe(
-      'https://maven-central.storage-download.googleapis.com/maven2/',
-    );
-    // The logical id is still recorded (its own URL) for the rare artifact that
-    // recorded `central` directly.
-    expect(map.get('central')).toBe('https://repo.maven.apache.org/maven2');
+    // is what resolves labels for a mirrored artifact — pointing at the mirror URL.
+    expect(map.get('google-gcs-mirror')).toEqual({
+      url: 'https://maven-central.storage-download.googleapis.com/maven2/',
+      rank: 1,
+    });
     expect(map.size).toBe(2);
   });
 
@@ -105,7 +118,7 @@ describe('fetchRepositoryUrlMap output parsing', () => {
     expect([...map.keys()].sort()).toEqual(['central', 'local-snapshots']);
   });
 
-  it('keeps the first occurrence when a repository id is repeated', async () => {
+  it('keeps the first occurrence (url and rank) when a repository id is repeated', async () => {
     mockedExecute.mockResolvedValue(
       `[INFO] Project remote repositories used by this build:
  * central (https://first.example/maven2, default, releases)
@@ -115,7 +128,10 @@ describe('fetchRepositoryUrlMap output parsing', () => {
 
     const map = await fetchRepositoryUrlMap(context, false);
 
-    expect(map.get('central')).toBe('https://first.example/maven2');
+    expect(map.get('central')).toEqual({
+      url: 'https://first.example/maven2',
+      rank: 0,
+    });
     expect(map.size).toBe(1);
   });
 
