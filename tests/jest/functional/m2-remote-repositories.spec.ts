@@ -12,12 +12,8 @@ import type { M2Node } from '../../../lib/parse/m2-batch';
 // Build a repo→entry map from ordered [id, url] pairs, stamping rank by position
 // so the first pair is the highest priority — mirroring how fetchRepositoryUrlMap
 // ranks dependency:list-repositories output.
-function rankedMap(
-  ...pairs: [string, string][]
-): Map<string, RepositoryEntry> {
-  return new Map(
-    pairs.map(([id, url], rank) => [id, { url, rank }]),
-  );
+function rankedMap(...pairs: [string, string][]): Map<string, RepositoryEntry> {
+  return new Map(pairs.map(([id, url], rank) => [id, { url, rank }]));
 }
 
 // Resolve the label for a single node through the production path

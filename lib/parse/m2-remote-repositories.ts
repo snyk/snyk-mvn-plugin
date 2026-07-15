@@ -264,9 +264,7 @@ async function parseRemoteRepositoriesFile(
  * Returns the recorded repository IDs (in file order), or an empty array if no
  * file/entry is present.
  */
-export async function readRemoteRepositoryIds(
-  node: M2Node,
-): Promise<string[]> {
+export async function readRemoteRepositoryIds(node: M2Node): Promise<string[]> {
   // parseRemoteRepositoriesFile handles its own I/O errors and never throws;
   // the path operations here can't throw either, so no guard is needed.
   const versionDir = path.dirname(node.artifactPath);
