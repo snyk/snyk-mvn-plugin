@@ -112,17 +112,26 @@ export async function executeMavenDependencyTree(
       args: mvnArgs,
     };
   } catch (error) {
-    if (error instanceof Error) {
-      const message = error.message;
-      if (message.includes('Non-parseable POM')) {
-        throw new OpenSourceEcosystems.UnableToParseXMLError(
-          'Error parsing the XML file',
-        );
-      }
+    // subProcess.execute always rejects with an Error carrying the child
+    // process' STDERR/STDOUT, but normalise defensively so we never drop the
+    // cause of a non-Error throwable.
+    const err = error instanceof Error ? error : new Error(String(error));
+
+    if (err.message.includes('Non-parseable POM')) {
+      throw new OpenSourceEcosystems.UnableToParseXMLError(
+        'Error parsing the XML file',
+        undefined,
+        err,
+      );
     }
 
+    // Surface the underlying Maven output in `detail` (the only field the
+    // error-catalog formatters render) and pass `err` as `cause` to preserve
+    // the chain for logs/CI output.
     throw new OpenSourceEcosystems.FailedToBuildMavenProjectError(
-      'Cannot build Maven dependency tree',
+      `Cannot build Maven dependency tree: ${err.message}`,
+      undefined,
+      err,
     );
   }
 }
