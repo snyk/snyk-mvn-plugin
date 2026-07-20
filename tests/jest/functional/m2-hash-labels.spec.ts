@@ -5,11 +5,10 @@ import * as path from 'path';
 
 import { parseDigraphs } from '../../../lib/parse/digraph';
 import { buildDepGraph } from '../../../lib/parse/dep-graph';
-import {
-  buildM2HashLabelsMap,
-  readM2HashLabels,
-} from '../../../lib/parse/m2-hash-labels';
-import type { ParseContext } from '../../../lib/parse/types';
+import { readM2HashLabels } from '../../../lib/parse/m2-hash-labels';
+import { collectM2Nodes, buildLabelMap } from '../../../lib/parse/m2-batch';
+import { dependencyIdToArtifactPath } from '../../../lib/fingerprint';
+import type { MavenGraph, ParseContext } from '../../../lib/parse/types';
 
 // Helper: write a fake artifact JAR plus the three companion files Maven
 // would have written when it pulled the artifact from a registry. The JAR
@@ -41,6 +40,14 @@ function writeFakeArtifact(
 
   // Return the JAR path so callers can tweak individual companion files.
   return jarPath;
+}
+
+// Mirror the production pipeline's hash-label pass: resolve the graph nodes to
+// artifact paths once, then read each node's companion-file hashes.
+function buildHashLabelsMap(graphs: MavenGraph[], repoRoot: string) {
+  return buildLabelMap(collectM2Nodes(graphs, repoRoot), (node) =>
+    readM2HashLabels(node.artifactPath),
+  );
 }
 
 describe('Maven hash:<alg> label emission from .m2 companion files', () => {
@@ -94,8 +101,10 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
   describe('readM2HashLabels', () => {
     it('reads md5/sha-1/sha-256 from companion files', async () => {
       const labels = await readM2HashLabels(
-        'com.google.guava:guava:jar:32.1.3-jre',
-        repoRoot,
+        dependencyIdToArtifactPath(
+          'com.google.guava:guava:jar:32.1.3-jre',
+          repoRoot,
+        ),
       );
       expect(labels).toEqual(
         acceptedHashes['com.google.guava:guava:jar:32.1.3-jre'],
@@ -104,8 +113,10 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
 
     it('returns an empty object when the artifact is not in the repository', async () => {
       const labels = await readM2HashLabels(
-        'org.unknown:nothing-here:jar:0.0.0',
-        repoRoot,
+        dependencyIdToArtifactPath(
+          'org.unknown:nothing-here:jar:0.0.0',
+          repoRoot,
+        ),
       );
       expect(labels).toEqual({});
     });
@@ -123,8 +134,7 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
       fs.unlinkSync(`${jarPath}.sha256`);
 
       const labels = await readM2HashLabels(
-        'com.example:no-sha256:jar:1.0.0',
-        repoRoot,
+        dependencyIdToArtifactPath('com.example:no-sha256:jar:1.0.0', repoRoot),
       );
       expect(Object.keys(labels).sort()).toEqual(['hash:md5', 'hash:sha-1']);
     });
@@ -146,8 +156,10 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
       );
 
       const labels = await readM2HashLabels(
-        'com.example:html-sha256:jar:1.0.0',
-        repoRoot,
+        dependencyIdToArtifactPath(
+          'com.example:html-sha256:jar:1.0.0',
+          repoRoot,
+        ),
       );
       expect(Object.keys(labels).sort()).toEqual(['hash:md5', 'hash:sha-1']);
       expect(labels['hash:sha-256']).toBeUndefined();
@@ -165,8 +177,10 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
       fs.writeFileSync(`${jarPath}.sha256`, 'deadbeef\n');
 
       const labels = await readM2HashLabels(
-        'com.example:short-sha256:jar:1.0.0',
-        repoRoot,
+        dependencyIdToArtifactPath(
+          'com.example:short-sha256:jar:1.0.0',
+          repoRoot,
+        ),
       );
       expect(labels['hash:sha-256']).toBeUndefined();
     });
@@ -179,7 +193,7 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
       }`;
       const mavenGraph = parseDigraphs([diGraph])[0];
 
-      const hashLabelsMap = await buildM2HashLabelsMap([mavenGraph], repoRoot);
+      const hashLabelsMap = await buildHashLabelsMap([mavenGraph], repoRoot);
       const context: ParseContext = {
         includeTestScope: false,
         verboseEnabled: false,
@@ -218,7 +232,7 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
       }`;
       const mavenGraph = parseDigraphs([diGraph])[0];
 
-      const hashLabelsMap = await buildM2HashLabelsMap([mavenGraph], repoRoot);
+      const hashLabelsMap = await buildHashLabelsMap([mavenGraph], repoRoot);
       const context: ParseContext = {
         includeTestScope: false,
         verboseEnabled: false,

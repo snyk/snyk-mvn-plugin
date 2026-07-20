@@ -1,6 +1,4 @@
 import * as fs from 'fs';
-import type { MavenGraph } from './types';
-import { dependencyIdToArtifactPath } from '../fingerprint';
 import { debug } from '../index';
 
 /**
@@ -36,11 +34,6 @@ const M2_COMPANION_FILES: {
   { ext: 'sha256', algorithm: 'sha-256', digestPattern: /^[0-9a-f]{64}$/ },
   { ext: 'sha512', algorithm: 'sha-512', digestPattern: /^[0-9a-f]{128}$/ },
 ];
-
-// Number of artifacts processed per batch. Each artifact reads its companion
-// files concurrently (up to one per entry in M2_COMPANION_FILES), so up to
-// CONCURRENCY * M2_COMPANION_FILES.length companion reads are in flight at once.
-const CONCURRENCY = 5;
 
 // Upper bound on the bytes read from a companion file. We only keep the first
 // whitespace-delimited token, and the longest valid digest is sha-512 at 128
@@ -103,19 +96,17 @@ async function readCompanionFile(
 }
 
 /**
- * Given a Maven dependency ID (e.g. "com.google.guava:guava:jar:32.1.3-jre"),
- * read whichever companion checksum files exist for it in the local Maven
- * repository and return them as `hash:<algorithm>` -> hex labels.
+ * Given the path to an artifact in the local Maven repository, read whichever
+ * companion checksum files exist for it and return them as
+ * `hash:<algorithm>` -> hex labels.
  *
  * Empty result if none are present (artifact not in .m2 yet, or no companion
  * files published).
  */
 export async function readM2HashLabels(
-  dependencyId: string,
-  repositoryPath: string,
+  artifactPath: string,
 ): Promise<Record<string, string>> {
   const labels: Record<string, string> = {};
-  const artifactPath = dependencyIdToArtifactPath(dependencyId, repositoryPath);
 
   const results = await Promise.all(
     M2_COMPANION_FILES.map(({ ext, digestPattern }) =>
@@ -135,40 +126,4 @@ export async function readM2HashLabels(
   }
 
   return labels;
-}
-
-/**
- * Pre-compute the hash-label map for every node in a set of Maven graphs.
- * Mirrors the pattern used by `generateFingerprints` so the depgraph builder
- * can attach labels without doing I/O inside the BFS/DFS loop. Reads are run
- * asynchronously in bounded batches so they never block the event loop.
- */
-export async function buildM2HashLabelsMap(
-  mavenGraphs: MavenGraph[],
-  repositoryPath: string,
-): Promise<Map<string, Record<string, string>>> {
-  const result = new Map<string, Record<string, string>>();
-
-  // Collect the unique node IDs across all graphs.
-  const nodeIds = new Set<string>();
-  for (const graph of mavenGraphs) {
-    Object.keys(graph.nodes).forEach((nodeId) => nodeIds.add(nodeId));
-  }
-  const nodeIdArray = Array.from(nodeIds);
-
-  // Read companion files in bounded-concurrency batches.
-  for (let i = 0; i < nodeIdArray.length; i += CONCURRENCY) {
-    const batch = nodeIdArray.slice(i, i + CONCURRENCY);
-    const batchResults = await Promise.all(
-      batch.map((nodeId) => readM2HashLabels(nodeId, repositoryPath)),
-    );
-    batch.forEach((nodeId, j) => {
-      const labels = batchResults[j];
-      if (Object.keys(labels).length > 0) {
-        result.set(nodeId, labels);
-      }
-    });
-  }
-
-  return result;
 }

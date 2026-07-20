@@ -29,6 +29,11 @@ export interface MavenExecutionResult {
   javaVersion?: string;
   mavenVersion?: string;
   mavenPluginVersion?: string;
+  // The maven-dependency-plugin version we explicitly pin the pipeline to
+  // (selected from the detected Maven version). Callers that spawn additional
+  // dependency-plugin goals — e.g. list-repositories for distribution:url
+  // labels — pin to this so their output format matches the pipeline's.
+  explicitPluginVersion: string;
   command: string;
   args: string[];
 }
@@ -97,6 +102,7 @@ export async function executeMavenPipeline(
     javaVersion,
     mavenVersion,
     mavenPluginVersion: treeResult.mavenPluginVersion,
+    explicitPluginVersion,
     command: treeResult.command,
     args: treeResult.args,
   };

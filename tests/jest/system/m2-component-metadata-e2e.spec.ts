@@ -12,11 +12,12 @@ const testProjectPath = path.join(fixturesPath, 'test-project');
 // through a shell — mirror lib/sub-process.ts, which sets `shell: true` there.
 const isWindows = /^win/.test(os.platform());
 
-// Hash labels are read from the JAR's companion checksum files in the local
-// Maven repository. A bare `dependency:tree` resolution does not necessarily
-// download the JAR bytes (and therefore the `.jar.sha1`/`.md5` companions), so
-// resolve the fixture's artifacts into `~/.m2` up front — CI starts with an
-// empty repository.
+// Component metadata (hash + distribution:url labels) is read from files in the
+// local Maven repository — the JAR's companion checksums and the
+// `_remote.repositories` file Maven writes alongside a downloaded artifact. A
+// bare `dependency:tree` resolution does not necessarily download the JAR bytes
+// (and therefore those companion files), so resolve the fixture's artifacts into
+// `~/.m2` up front — CI starts with an empty repository.
 beforeAll(() => {
   execFileSync('mvn', ['clean', 'install', '-DskipTests'], {
     cwd: testProjectPath,
@@ -31,8 +32,8 @@ function hashLabelKeys(labels?: {
   return Object.keys(labels ?? {}).filter((key) => key.startsWith('hash:'));
 }
 
-test('hash labels disabled vs enabled comparison', async () => {
-  // Hashes disabled (default).
+test('component metadata disabled vs enabled comparison', async () => {
+  // Disabled (default).
   const resultDisabled = await inspect(
     '.',
     path.join(testProjectPath, 'pom.xml'),
@@ -46,7 +47,7 @@ test('hash labels disabled vs enabled comparison', async () => {
     throw new Error('expected multi inspect result for disabled case');
   }
 
-  // Hashes enabled.
+  // Enabled.
   const resultEnabled = await inspect(
     '.',
     path.join(testProjectPath, 'pom.xml'),
@@ -68,9 +69,10 @@ test('hash labels disabled vs enabled comparison', async () => {
     disabledGraph.graph.nodes.length,
   );
 
-  // Disabled: no node carries a hash:* label.
+  // Disabled: no node carries a hash:* or distribution:url label.
   for (const node of disabledGraph.graph.nodes) {
     expect(hashLabelKeys(node.info?.labels)).toHaveLength(0);
+    expect(node.info?.labels?.['distribution:url']).toBeUndefined();
   }
 
   // Enabled: the axis dependency was resolved into the local Maven repository,
@@ -95,17 +97,29 @@ test('hash labels disabled vs enabled comparison', async () => {
     expect(axisLabels['hash:sha-512']).toMatch(/^[0-9a-f]{128}$/);
   }
 
-  // At least one resolved dependency carries hash labels end-to-end.
+  // Enabled: the axis dependency was downloaded from Maven Central, so its
+  // `_remote.repositories` file records `central` and `dependency:list-repositories`
+  // reports central's URL — together they resolve the full artifact URL.
+  expect(axisLabels['distribution:url']).toBe(
+    'https://repo.maven.apache.org/maven2/axis/axis/1.4/axis-1.4.jar',
+  );
+
+  // At least one resolved dependency carries each label kind end-to-end.
   const nodesWithHashes = enabledGraph.graph.nodes.filter(
     (node) => hashLabelKeys(node.info?.labels).length > 0,
   );
   expect(nodesWithHashes.length).toBeGreaterThan(0);
+
+  const nodesWithDistributionUrl = enabledGraph.graph.nodes.filter(
+    (node) => node.info?.labels?.['distribution:url'],
+  );
+  expect(nodesWithDistributionUrl.length).toBeGreaterThan(0);
 });
 
-test('hash labels graceful failure with nonexistent repository', async () => {
-  // Point the hash reader at a repository that does not exist. Maven still
-  // resolves the tree, but no companion files can be read, so inspect succeeds
-  // with no hash labels rather than throwing.
+test('component metadata graceful failure with nonexistent repository', async () => {
+  // Point the readers at a repository that does not exist. Maven still resolves
+  // the tree, but no companion or _remote.repositories files can be read, so
+  // inspect succeeds with no hash or distribution:url labels rather than throwing.
   const result = await inspect('.', path.join(testProjectPath, 'pom.xml'), {
     dev: false,
     includeComponentMetadata: true,
@@ -118,5 +132,6 @@ test('hash labels graceful failure with nonexistent repository', async () => {
 
   for (const node of result.scannedProjects[0].depGraph!.toJSON().graph.nodes) {
     expect(hashLabelKeys(node.info?.labels)).toHaveLength(0);
+    expect(node.info?.labels?.['distribution:url']).toBeUndefined();
   }
 });
