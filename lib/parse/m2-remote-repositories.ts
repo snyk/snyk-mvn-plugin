@@ -274,6 +274,34 @@ export async function readRemoteRepositoryIds(node: M2Node): Promise<string[]> {
 }
 
 /**
+ * Strip embedded basic-auth userinfo (scheme://user:pass@host) from a
+ * repository URL so credentials configured on a private Maven repository
+ * (settings.xml/mirror URLs like `https://user:secret@example.com/maven2`)
+ * never leak into the distribution:url label or downstream SBOM
+ * externalReferences. Mirrors the URL-class-based stripping
+ * nodejs-lockfile-parser applies to npm/yarn resolved URLs.
+ *
+ * Falls back to the raw URL if it isn't a parseable absolute URL — repo URLs
+ * handled here always come from Maven's own dependency:list-repositories
+ * output, so this should not happen in practice.
+ */
+function stripUrlCredentials(rawUrl: string): string {
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return rawUrl;
+  }
+
+  if (url.username || url.password) {
+    url.username = '';
+    url.password = '';
+  }
+
+  return url.toString();
+}
+
+/**
  * Join an artifact's recorded repository IDs against the fetched repo→entry map
  * to construct its distribution:url label. Pure in-memory work — no I/O.
  *
@@ -319,7 +347,8 @@ export function buildDistributionUrlLabel(
   const relativePath = path
     .relative(repositoryPath, node.artifactPath)
     .replace(/\\/g, '/');
-  const fullUrl = `${best.url.replace(/\/+$/, '')}/${relativePath}`;
+  const sanitizedUrl = stripUrlCredentials(best.url);
+  const fullUrl = `${sanitizedUrl.replace(/\/+$/, '')}/${relativePath}`;
   debug(`Resolved distribution URL for ${node.nodeId}: ${fullUrl}`);
   return { 'distribution:url': fullUrl };
 }
