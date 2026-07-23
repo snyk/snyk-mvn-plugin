@@ -1,9 +1,10 @@
-import { execute, sanitiseSubprocessOutput } from '../../../lib/sub-process';
+import { execute } from '../../../lib/sub-process';
+import { sanitiseCredentials } from '../../../lib/sanitise-output';
 
-describe('sanitiseSubprocessOutput', () => {
+describe('sanitiseCredentials', () => {
   it('strips userinfo from a repo URL but keeps the host and path', () => {
     expect(
-      sanitiseSubprocessOutput(
+      sanitiseCredentials(
         'Could not transfer artifact from https://user:s3cr3t@repo.internal/maven2/x.jar',
       ),
     ).toBe(
@@ -12,27 +13,27 @@ describe('sanitiseSubprocessOutput', () => {
   });
 
   it('strips user-only userinfo (no password)', () => {
-    expect(sanitiseSubprocessOutput('see https://deploy-token@host/p')).toBe(
+    expect(sanitiseCredentials('see https://deploy-token@host/p')).toBe(
       'see https://host/p',
     );
   });
 
   it('leaves a credential-free URL untouched', () => {
     const line = 'downloading from https://repo.maven.apache.org/maven2/';
-    expect(sanitiseSubprocessOutput(line)).toBe(line);
+    expect(sanitiseCredentials(line)).toBe(line);
   });
 
   it('does not treat an @ in a URL path as userinfo', () => {
     const line = 'https://repo.internal/maven2/group/a@b/1.0/a@b-1.0.jar';
-    expect(sanitiseSubprocessOutput(line)).toBe(line);
+    expect(sanitiseCredentials(line)).toBe(line);
   });
 
   it('redacts HTTP Authorization headers', () => {
     expect(
-      sanitiseSubprocessOutput('Authorization: Basic dXNlcjpwYXNzd29yZA=='),
+      sanitiseCredentials('Authorization: Basic dXNlcjpwYXNzd29yZA=='),
     ).toBe('Authorization: Basic <redacted>');
     expect(
-      sanitiseSubprocessOutput('authorization:  Bearer eyJhbGciOi.J9.sig'),
+      sanitiseCredentials('authorization:  Bearer eyJhbGciOi.J9.sig'),
     ).toBe('authorization:  Bearer <redacted>');
   });
 
@@ -45,14 +46,14 @@ describe('sanitiseSubprocessOutput', () => {
       '[INFO] Building moduleB',
       '[ERROR] Failed to read parent POM for moduleB',
     ].join('\n');
-    const out = sanitiseSubprocessOutput(partial);
+    const out = sanitiseCredentials(partial);
     expect(out).not.toContain('glpat-abcdef123456');
     expect(out).not.toContain('ci:');
     expect(out).toContain('https://nexus.corp/repo');
   });
 
   it('is a no-op for output with nothing to redact', () => {
-    expect(sanitiseSubprocessOutput('BUILD FAILURE\n')).toBe(
+    expect(sanitiseCredentials('BUILD FAILURE\n')).toBe(
       'BUILD FAILURE\n',
     );
   });

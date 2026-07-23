@@ -7,7 +7,7 @@ import {
   VersionResolver,
   NO_OP_VERSION_RESOLVER,
 } from '../parse/version-resolver';
-import { debug } from '../index';
+import { debug, sanitisedDebug } from '../index';
 
 /**
  * Detect if Maven dependency tree output contains metaversions that require resolution
@@ -80,7 +80,9 @@ export async function executeMavenPipeline(
         args,
         explicitPluginVersion,
       );
-      debug(`Resolve result: ${resolveResult}`);
+      // resolveResult is raw mvn stdout, which can include inline-credential
+      // `Downloading from` URLs — scrub before logging.
+      sanitisedDebug(`Resolve result: ${resolveResult}`);
 
       // Parse immediately and fail fast if there's an issue
       versionResolver = createVersionResolver(resolveResult);

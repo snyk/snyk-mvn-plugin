@@ -24,6 +24,7 @@ import {
   buildRemoteRepositoryLabelMap,
 } from './parse/m2-remote-repositories';
 import { collectM2Nodes, buildLabelMap } from './parse/m2-batch';
+import { sanitiseCredentials } from './sanitise-output';
 import {
   SnykHttpClient,
   HashAlgorithm,
@@ -41,6 +42,17 @@ export function debug(...messages: string[]) {
     logger = debugModule('snyk-mvn-plugin');
   }
   messages.forEach((m) => logger?.(m));
+}
+
+/**
+ * `debug` for messages that may embed raw Maven output — i.e. anything that can
+ * carry an inline-credential repo URL (`Downloading from`/`Could not transfer`
+ * lines, dumped stdout/stderr). Each message is credential-scrubbed before it
+ * reaches the log sink. Use this instead of `debug` wherever untrusted
+ * subprocess output is logged; ordinary status messages can keep using `debug`.
+ */
+export function sanitisedDebug(...messages: string[]) {
+  debug(...messages.map(sanitiseCredentials));
 }
 
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
@@ -254,7 +266,11 @@ export async function inspect(
     };
   } catch (err) {
     if (executionResult) {
-      debug(`>>> Output from mvn: ${executionResult.dependencyTreeResult}`);
+      // The raw tree output can include inline-credential `Downloading from`
+      // URLs — scrub before logging.
+      sanitisedDebug(
+        `>>> Output from mvn: ${executionResult.dependencyTreeResult}`,
+      );
     }
 
     // Handle Maven execution errors with proper command information

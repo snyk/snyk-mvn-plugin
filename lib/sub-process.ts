@@ -1,37 +1,8 @@
 import * as childProcess from 'child_process';
-import { debug } from './index';
+import { debug, sanitisedDebug } from './index';
+import { sanitiseCredentials } from './sanitise-output';
 import { escapeAll, quoteAll } from 'shescape/stateless';
 import * as os from 'node:os';
-
-/**
- * Redact credential-shaped spans from a subprocess's diagnostic output before it
- * is logged or folded into an error message. Maven itself holds the credentials
- * (settings.xml `<server>` blocks, inline repo/mirror URLs), so — unlike a
- * builder that is handed the secret — we can only scrub by *shape*, not by
- * masking a known literal. This matters most for aggregate (multi-module)
- * builds: Maven walks every module, so a later module failing can leave an
- * earlier module's repository URLs (userinfo and all) in the partial STDOUT/
- * STDERR we then surface.
- *
- * Only failure diagnostics are passed through here; the success output is
- * returned verbatim because it is the real data we parse (and the repo-URL
- * path already strips credentials at ingest).
- */
-export function sanitiseSubprocessOutput(text: string): string {
-  return (
-    text
-      // URL userinfo: `scheme://user:token@host/…` → `scheme://host/…`. Keep the
-      // host (which repo failed is useful for debugging); drop only the
-      // credential. `[^/\s]*@` consumes the whole authority-local userinfo up to
-      // its last `@`, and cannot cross a `/`, so an `@` in a path is left alone.
-      .replace(/([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)[^/\s]*@/g, '$1')
-      // Auth headers Maven's HTTP wagon can echo under verbose/transport logging.
-      .replace(
-        /(Authorization:\s*(?:Basic|Bearer|Digest)\s+)\S+/gi,
-        '$1<redacted>',
-      )
-  );
-}
 
 export function execute(command, args, options): Promise<string> {
   const spawnOptions: {
@@ -94,24 +65,27 @@ export function execute(command, args, options): Promise<string> {
 
     proc.on('close', (code) => {
       if (code !== 0) {
-        // Scrub credentials out of the diagnostic output before it reaches any
-        // log sink or error message (see sanitiseSubprocessOutput).
-        const safeStderr = sanitiseSubprocessOutput(stderr);
-        const safeStdout = sanitiseSubprocessOutput(stdout);
-
-        debug(
+        // Maven's failure output can carry inline-credential repo URLs, so scrub
+        // before it reaches either sink: the log (via sanitisedDebug) and the
+        // rejected error message (via sanitiseCredentials — a thrown Error is not
+        // a debug line, so sanitisedDebug would not cover it).
+        sanitisedDebug(
           `Child process failed with exit code: ${code}`,
           '----------------',
           'STDERR:',
-          safeStderr,
+          stderr,
           '----------------',
           'STDOUT:',
-          safeStdout,
+          stdout,
           '----------------',
         );
 
-        const stdErrMessage = safeStderr ? `\nSTDERR:\n${safeStderr}` : '';
-        const stdOutMessage = safeStdout ? `\nSTDOUT:\n${safeStdout}` : '';
+        const stdErrMessage = stderr
+          ? `\nSTDERR:\n${sanitiseCredentials(stderr)}`
+          : '';
+        const stdOutMessage = stdout
+          ? `\nSTDOUT:\n${sanitiseCredentials(stdout)}`
+          : '';
         const debugSuggestion = process.env.DEBUG
           ? ''
           : `\nRun in debug mode (-d) to see STDERR and STDOUT.`;
