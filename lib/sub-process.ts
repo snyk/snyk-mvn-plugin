@@ -1,5 +1,6 @@
 import * as childProcess from 'child_process';
 import { debug } from './index';
+import { sanitiseCredentials } from './sanitise-output';
 import { escapeAll, quoteAll } from 'shescape/stateless';
 import * as os from 'node:os';
 
@@ -64,19 +65,26 @@ export function execute(command, args, options): Promise<string> {
 
     proc.on('close', (code) => {
       if (code !== 0) {
+        // Maven's failure output can carry inline-credential repo URLs, so scrub
+        // once here and reuse for both sinks — the debug log and the rejected
+        // error message (a thrown Error is not a debug line, so it needs the
+        // scrubbed value directly rather than going through sanitisedDebug).
+        const safeStderr = sanitiseCredentials(stderr);
+        const safeStdout = sanitiseCredentials(stdout);
+
         debug(
           `Child process failed with exit code: ${code}`,
           '----------------',
           'STDERR:',
-          stderr,
+          safeStderr,
           '----------------',
           'STDOUT:',
-          stdout,
+          safeStdout,
           '----------------',
         );
 
-        const stdErrMessage = stderr ? `\nSTDERR:\n${stderr}` : '';
-        const stdOutMessage = stdout ? `\nSTDOUT:\n${stdout}` : '';
+        const stdErrMessage = safeStderr ? `\nSTDERR:\n${safeStderr}` : '';
+        const stdOutMessage = safeStdout ? `\nSTDOUT:\n${safeStdout}` : '';
         const debugSuggestion = process.env.DEBUG
           ? ''
           : `\nRun in debug mode (-d) to see STDERR and STDOUT.`;
