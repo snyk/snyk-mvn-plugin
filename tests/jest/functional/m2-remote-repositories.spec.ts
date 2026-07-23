@@ -16,6 +16,17 @@ function rankedMap(...pairs: [string, string][]): Map<string, RepositoryEntry> {
   return new Map(pairs.map(([id, url], rank) => [id, { url, rank }]));
 }
 
+// dependencyIdToArtifactPath returns undefined only for coordinates that escape
+// the repository; every coordinate in these tests is well-formed, so assert a
+// path is produced and keep the call sites typed as string.
+function artifactPathFor(dependencyId: string, repositoryPath: string): string {
+  const artifactPath = dependencyIdToArtifactPath(dependencyId, repositoryPath);
+  if (artifactPath === undefined) {
+    throw new Error(`expected a path for ${dependencyId}`);
+  }
+  return artifactPath;
+}
+
 // Resolve the label for a single node through the production path
 // (buildRemoteRepositoryLabelMap), returning {} when no label is emitted. Keeps
 // the per-node assertions below exercising the code that actually ships.
@@ -45,7 +56,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
 
     // Stand up a fake installed artifact plus the _remote.repositories file
     // Maven writes alongside it, recording the repo the jar came from.
-    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const artifactPath = artifactPathFor(depId, repoRoot);
     const dir = path.dirname(artifactPath);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(artifactPath, 'fake jar contents');
@@ -90,7 +101,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     const otherDepId = 'com.example:bar:jar:2.0';
     const otherNode: M2Node = {
       nodeId: otherDepId,
-      artifactPath: dependencyIdToArtifactPath(otherDepId, repoRoot),
+      artifactPath: artifactPathFor(otherDepId, repoRoot),
     };
     const labels = await labelFor(
       otherNode,
@@ -102,7 +113,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
 
   it('ignores a co-located -sources.jar recorded against a different repo', async () => {
     const depId = 'com.example:classified:jar:1.0';
-    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const artifactPath = artifactPathFor(depId, repoRoot);
     const dir = path.dirname(artifactPath);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(artifactPath, 'fake jar contents');
@@ -128,7 +139,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
 
   it('emits no label when the artifact was installed locally (empty repo id)', async () => {
     const depId = 'com.example:local:jar:1.0';
-    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const artifactPath = artifactPathFor(depId, repoRoot);
     const dir = path.dirname(artifactPath);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(artifactPath, 'fake jar contents');
@@ -152,7 +163,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     // jboss above central, so the label must resolve to jboss (rank 0), not
     // whichever id happens to appear first in the file.
     const depId = 'com.example:multi:jar:1.0';
-    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const artifactPath = artifactPathFor(depId, repoRoot);
     const dir = path.dirname(artifactPath);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(artifactPath, 'fake jar contents');
@@ -181,7 +192,7 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     // (jboss missing, e.g. cached by another project). Rather than lose the
     // label, we credit the known lower-priority repo.
     const depId = 'com.example:partial:jar:1.0';
-    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const artifactPath = artifactPathFor(depId, repoRoot);
     const dir = path.dirname(artifactPath);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(artifactPath, 'fake jar contents');
@@ -210,7 +221,7 @@ describe('buildRemoteRepositoryLabelMap two-phase build', () => {
   const urlMap = rankedMap(['central', 'https://repo.maven.apache.org/maven2']);
 
   function install(depId: string, repoId?: string): M2Node {
-    const artifactPath = dependencyIdToArtifactPath(depId, repoRoot);
+    const artifactPath = artifactPathFor(depId, repoRoot);
     const dir = path.dirname(artifactPath);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(artifactPath, 'fake jar contents');

@@ -50,13 +50,48 @@ export async function getMavenRepositoryPath(
 }
 
 /**
- * Convert dependency ID to the expected artifact file path in Maven repository
+ * Convert dependency ID to the expected artifact file path in the Maven
+ * repository, or `undefined` if the coordinate would resolve OUTSIDE the
+ * repository root.
+ *
+ * A dependency coordinate is untrusted input: node ids come from `mvn
+ * dependency:tree` output, whose root node is the scanned project's own
+ * groupId:artifactId:type:version straight from its pom.xml. Maven accepts a
+ * version like `../../../../etc/passwd` (it only warns), so a crafted segment
+ * can drive `path.join` out of the repository and turn the downstream `stat` /
+ * read / hash into an arbitrary-file existence and content oracle. We therefore
+ * reject any coordinate whose resolved path escapes `repositoryPath`.
+ *
+ * The containment check is relative to whatever `repositoryPath` was resolved
+ * (the default `~/.m2/repository`, or a user-chosen `-Dmaven.repo.local=...` /
+ * `mavenRepository`), so relocating the local repo — a trusted, deliberate
+ * choice — keeps working; only coordinate-driven escapes out of the chosen base
+ * are blocked.
  */
 export function dependencyIdToArtifactPath(
   dependencyId: string,
   repositoryPath: string,
-): string {
+): string | undefined {
   const dep = parseDependency(dependencyId);
+
+  // Segment guard: a well-formed Maven coordinate segment is never a path
+  // separator or a `..` component. Reject those before building the path — `..`
+  // would climb out of the repository, and an embedded separator would let a
+  // coordinate inject arbitrary path structure. This matters even when the
+  // containment check below passes: if repositoryPath is a broad root (e.g. a
+  // custom `-Dmaven.repo.local=/`), containment is vacuous and segment shape is
+  // the only thing keeping a coordinate on the expected group/artifact/version
+  // layout. groupId maps its dots to separators by design, so it is validated
+  // for raw separators only, not for the resulting path components.
+  if (
+    hasUnsafeSegment(dep.artifactId) ||
+    hasUnsafeSegment(dep.version) ||
+    hasUnsafeSegment(dep.type) ||
+    (dep.classifier !== undefined && hasUnsafeSegment(dep.classifier)) ||
+    /[/\\]/.test(dep.groupId)
+  ) {
+    return undefined;
+  }
 
   // Convert groupId dots to path separators
   const groupPath = dep.groupId.replace(/\./g, path.sep);
@@ -75,7 +110,28 @@ export function dependencyIdToArtifactPath(
     artifactFileName,
   );
 
+  // Containment backstop: reject anything that still resolves outside
+  // repositoryPath. Relative to whatever base was resolved, so a deliberately
+  // relocated local repo keeps working while coordinate-driven escapes do not.
+  const relativeToRepo = path.relative(
+    path.resolve(repositoryPath),
+    path.resolve(artifactPath),
+  );
+  if (relativeToRepo.startsWith('..') || path.isAbsolute(relativeToRepo)) {
+    return undefined;
+  }
+
   return artifactPath;
+}
+
+/**
+ * True if a Maven coordinate segment contains a path separator or is a `..`
+ * component — neither of which occurs in a legitimate groupId label,
+ * artifactId, version, classifier or type, and both of which can steer the
+ * constructed artifact path off the expected repository layout.
+ */
+function hasUnsafeSegment(segment: string): boolean {
+  return segment === '..' || /[/\\]/.test(segment);
 }
 
 /**
@@ -134,15 +190,25 @@ async function processSingleDependency(
 ): Promise<FingerprintData> {
   const startTime = performance.now();
 
-  try {
-    const artifactPath = dependencyIdToArtifactPath(
-      dependencyId,
-      repositoryPath,
-    );
-    const { exists, size } = await checkArtifactExists(artifactPath);
+  const artifactPath = dependencyIdToArtifactPath(dependencyId, repositoryPath);
+  if (artifactPath === undefined) {
+    // The coordinate resolves outside the repository (crafted traversal or an
+    // otherwise malformed segment); refuse to touch the filesystem at all.
+    return {
+      hash: '',
+      algorithm,
+      filePath: '',
+      fileSize: 0,
+      processingTime: performance.now() - startTime,
+      error: 'Artifact path escapes repository',
+    };
+  }
 
-    // Sanitize the artifact path to show only the relative path within the repository
-    const sanitizedPath = sanitizeArtifactPath(artifactPath, repositoryPath);
+  // Sanitize the artifact path to show only the relative path within the repository
+  const sanitizedPath = sanitizeArtifactPath(artifactPath, repositoryPath);
+
+  try {
+    const { exists, size } = await checkArtifactExists(artifactPath);
 
     if (!exists) {
       const endTime = performance.now();
@@ -168,11 +234,6 @@ async function processSingleDependency(
     };
   } catch (error) {
     const endTime = performance.now();
-    const artifactPath = dependencyIdToArtifactPath(
-      dependencyId,
-      repositoryPath,
-    );
-    const sanitizedPath = sanitizeArtifactPath(artifactPath, repositoryPath);
 
     return {
       hash: '',
