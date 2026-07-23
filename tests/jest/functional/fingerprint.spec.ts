@@ -75,6 +75,52 @@ describe('Fingerprint Module Unit Tests', () => {
       const result = dependencyIdToArtifactPath(dependencyId, testRepoPath);
       expect(result).toBe(expected);
     });
+
+    it('returns undefined for a version that traverses out of the repository', () => {
+      // A malicious pom.xml can set the project version to a traversal string;
+      // Maven only warns and still emits it as the root dependency:tree node.
+      // The resulting path must not be allowed to escape the repository, or the
+      // downstream stat/hash becomes an arbitrary-file oracle.
+      const dependencyId =
+        'com.evil:evil:jar:../../../../../../../../etc/passwd';
+      expect(
+        dependencyIdToArtifactPath(dependencyId, testRepoPath),
+      ).toBeUndefined();
+    });
+
+    it('returns undefined when a coordinate segment contains a path separator', () => {
+      // A separator in artifactId/version/type is never valid in a real Maven
+      // coordinate; rejecting it keeps the on-disk layout rigid even when the
+      // repository base is broad (e.g. a custom -Dmaven.repo.local=/).
+      expect(
+        dependencyIdToArtifactPath('com.evil:a/b:jar:1.0', testRepoPath),
+      ).toBeUndefined();
+      expect(
+        dependencyIdToArtifactPath('com.evil:evil:jar:1.0/../..', testRepoPath),
+      ).toBeUndefined();
+      expect(
+        dependencyIdToArtifactPath('com.evil:evil:ja\\r:1.0', testRepoPath),
+      ).toBeUndefined();
+    });
+
+    it('returns undefined when a segment is a bare parent-directory component', () => {
+      expect(
+        dependencyIdToArtifactPath('com.evil:evil:jar:..', testRepoPath),
+      ).toBeUndefined();
+    });
+
+    it('still resolves a legitimate coordinate under a relocated repository base', () => {
+      // Relocating the local repo (a trusted -Dmaven.repo.local choice) must
+      // keep working: containment is relative to that base, not a hardcoded .m2.
+      const customBase = '/opt/custom-m2';
+      const result = dependencyIdToArtifactPath(
+        'com.example:app:jar:1.0.0',
+        customBase,
+      );
+      expect(result).toBe(
+        path.join(customBase, 'com/example/app/1.0.0/app-1.0.0.jar'),
+      );
+    });
   });
 
   describe('createMavenPurlWithChecksum', () => {

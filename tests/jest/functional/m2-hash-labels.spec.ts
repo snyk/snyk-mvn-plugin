@@ -10,6 +10,17 @@ import { collectM2Nodes, buildLabelMap } from '../../../lib/parse/m2-batch';
 import { dependencyIdToArtifactPath } from '../../../lib/fingerprint';
 import type { MavenGraph, ParseContext } from '../../../lib/parse/types';
 
+// dependencyIdToArtifactPath returns undefined only for coordinates that escape
+// the repository; every coordinate in these tests is well-formed, so assert a
+// path is produced and keep the call sites typed as string.
+function artifactPathFor(dependencyId: string, repositoryPath: string): string {
+  const artifactPath = dependencyIdToArtifactPath(dependencyId, repositoryPath);
+  if (artifactPath === undefined) {
+    throw new Error(`expected a path for ${dependencyId}`);
+  }
+  return artifactPath;
+}
+
 // Helper: write a fake artifact JAR plus the three companion files Maven
 // would have written when it pulled the artifact from a registry. The JAR
 // content is arbitrary (we never read it); the companion files contain real
@@ -101,7 +112,7 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
   describe('readM2HashLabels', () => {
     it('reads md5/sha-1/sha-256 from companion files', async () => {
       const labels = await readM2HashLabels(
-        dependencyIdToArtifactPath(
+        artifactPathFor(
           'com.google.guava:guava:jar:32.1.3-jre',
           repoRoot,
         ),
@@ -113,7 +124,7 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
 
     it('returns an empty object when the artifact is not in the repository', async () => {
       const labels = await readM2HashLabels(
-        dependencyIdToArtifactPath(
+        artifactPathFor(
           'org.unknown:nothing-here:jar:0.0.0',
           repoRoot,
         ),
@@ -134,7 +145,7 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
       fs.unlinkSync(`${jarPath}.sha256`);
 
       const labels = await readM2HashLabels(
-        dependencyIdToArtifactPath('com.example:no-sha256:jar:1.0.0', repoRoot),
+        artifactPathFor('com.example:no-sha256:jar:1.0.0', repoRoot),
       );
       expect(Object.keys(labels).sort()).toEqual(['hash:md5', 'hash:sha-1']);
     });
@@ -156,7 +167,7 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
       );
 
       const labels = await readM2HashLabels(
-        dependencyIdToArtifactPath(
+        artifactPathFor(
           'com.example:html-sha256:jar:1.0.0',
           repoRoot,
         ),
@@ -177,7 +188,7 @@ describe('Maven hash:<alg> label emission from .m2 companion files', () => {
       fs.writeFileSync(`${jarPath}.sha256`, 'deadbeef\n');
 
       const labels = await readM2HashLabels(
-        dependencyIdToArtifactPath(
+        artifactPathFor(
           'com.example:short-sha256:jar:1.0.0',
           repoRoot,
         ),

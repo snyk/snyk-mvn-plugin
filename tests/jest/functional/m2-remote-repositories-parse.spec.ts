@@ -135,6 +135,41 @@ describe('fetchRepositoryUrlMap output parsing', () => {
     expect(map.size).toBe(1);
   });
 
+  it('strips embedded basic-auth credentials from repository urls at ingest', async () => {
+    // A repository configured with credentials in the URL itself (rather than a
+    // settings.xml <server> block), e.g. https://user:secret@example.com/maven2.
+    // dependency:list-repositories prints it verbatim, so the userinfo must be
+    // stripped here — the map, logs and downstream labels must never carry it.
+    mockedExecute.mockResolvedValue(
+      `[INFO] Project remote repositories used by this build:
+ * central (https://user:secret@example.com/maven2, default, releases)
+`,
+    );
+
+    const map = await fetchRepositoryUrlMap(context, false);
+
+    const entry = map.get('central');
+    expect(entry?.url).toBe('https://example.com/maven2');
+    expect(entry?.url).not.toContain('user');
+    expect(entry?.url).not.toContain('secret');
+  });
+
+  it('drops a repository whose url is not parseable (port out of range)', async () => {
+    // A port above 65535 makes `new URL()` throw on construction, so the
+    // credentials can't be stripped. Rather than store the raw URL (leaking the
+    // userinfo), the repo is omitted from the map entirely.
+    mockedExecute.mockResolvedValue(
+      `[INFO] Project remote repositories used by this build:
+ * central (https://user:secret@example.com:99999/maven2, default, releases)
+`,
+    );
+
+    const map = await fetchRepositoryUrlMap(context, false);
+
+    expect(map.has('central')).toBe(false);
+    expect(map.size).toBe(0);
+  });
+
   it('returns an empty map when no repository lines are present', async () => {
     mockedExecute.mockResolvedValue(
       `[INFO] Project remote repositories used by this build:

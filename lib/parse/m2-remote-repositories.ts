@@ -122,11 +122,24 @@ export async function fetchRepositoryUrlMap(
     // stamp it with the rank of that first occurrence — its position in the
     // priority-ordered output. `result.size` is the next free rank because we
     // only ever insert new ids here.
-    const addRepo = (id: string, url: string): void => {
-      if (!result.has(id)) {
-        result.set(id, { url, rank: result.size });
-        debug(`Found repository (rank ${result.size - 1}): ${id} -> ${url}`);
+    //
+    // This is the one trust boundary for repo URLs: Maven output can carry
+    // embedded basic-auth userinfo, so we strip credentials here, before the URL
+    // enters the map or any log line. Downstream readers (the label builder)
+    // then treat map URLs as already-sanitised and never re-strip. An
+    // unparseable URL (e.g. a port outside 0-65535) can't be sanitised and is
+    // unusable as a distribution URL, so the repo is dropped rather than stored.
+    const addRepo = (id: string, rawUrl: string): void => {
+      if (result.has(id)) {
+        return;
       }
+      const url = stripUrlCredentials(rawUrl);
+      if (url === undefined) {
+        debug(`Skipping repository ${id}: URL is not parseable`);
+        return;
+      }
+      result.set(id, { url, rank: result.size });
+      debug(`Found repository (rank ${result.size - 1}): ${id} -> ${url}`);
     };
 
     for (const line of lines) {
@@ -281,16 +294,20 @@ export async function readRemoteRepositoryIds(node: M2Node): Promise<string[]> {
  * externalReferences. Mirrors the URL-class-based stripping
  * nodejs-lockfile-parser applies to npm/yarn resolved URLs.
  *
- * Falls back to the raw URL if it isn't a parseable absolute URL — repo URLs
- * handled here always come from Maven's own dependency:list-repositories
- * output, so this should not happen in practice.
+ * `new URL()` rejects some inputs before we can clear their userinfo — most
+ * notably a port outside 0-65535 (e.g. `https://user:pw@host:99999/maven2`),
+ * which throws on construction. Returning the raw URL in that case would leak
+ * the very credentials this function exists to remove, so an unparseable URL
+ * yields `undefined` — the caller (fetchRepositoryUrlMap) drops the repo rather
+ * than store unsanitised userinfo. An unparseable repo URL is unusable as a
+ * distribution URL anyway.
  */
-function stripUrlCredentials(rawUrl: string): string {
+function stripUrlCredentials(rawUrl: string): string | undefined {
   let url: URL;
   try {
     url = new URL(rawUrl);
   } catch {
-    return rawUrl;
+    return undefined;
   }
 
   if (url.username || url.password) {
@@ -347,8 +364,9 @@ export function buildDistributionUrlLabel(
   const relativePath = path
     .relative(repositoryPath, node.artifactPath)
     .replace(/\\/g, '/');
-  const sanitizedUrl = stripUrlCredentials(best.url);
-  const fullUrl = `${sanitizedUrl.replace(/\/+$/, '')}/${relativePath}`;
+  // best.url was already credential-stripped and validated at ingest
+  // (fetchRepositoryUrlMap), so use it directly — no re-sanitisation needed.
+  const fullUrl = `${best.url.replace(/\/+$/, '')}/${relativePath}`;
   debug(`Resolved distribution URL for ${node.nodeId}: ${fullUrl}`);
   return { 'distribution:url': fullUrl };
 }

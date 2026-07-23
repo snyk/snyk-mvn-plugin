@@ -32,10 +32,17 @@ export function collectM2Nodes(
   for (const graph of mavenGraphs) {
     Object.keys(graph.nodes).forEach((nodeId) => nodeIds.add(nodeId));
   }
-  return Array.from(nodeIds).map((nodeId) => ({
-    nodeId,
-    artifactPath: dependencyIdToArtifactPath(nodeId, repositoryPath),
-  }));
+  const nodes: M2Node[] = [];
+  for (const nodeId of nodeIds) {
+    const artifactPath = dependencyIdToArtifactPath(nodeId, repositoryPath);
+    // Drop nodes whose coordinate resolves outside the repository — the same
+    // containment guard the fingerprint pass applies, so a crafted coordinate
+    // can never drive the hash-label or distribution-url reads out of the repo.
+    if (artifactPath !== undefined) {
+      nodes.push({ nodeId, artifactPath });
+    }
+  }
+  return nodes;
 }
 
 /**
