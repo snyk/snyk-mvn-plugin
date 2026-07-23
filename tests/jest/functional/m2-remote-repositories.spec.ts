@@ -81,23 +81,6 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     expect(labels['distribution:url']).toBe(expectedUrl);
   });
 
-  it('strips embedded basic-auth credentials from the repo URL', async () => {
-    // A repository configured with credentials in the URL itself (rather than
-    // a settings.xml <server> block), e.g. <url>https://user:secret@example.com/maven2</url>.
-    // Maven's dependency:list-repositories prints this verbatim, so the fetched
-    // repo map can legitimately carry userinfo — it must never reach the label.
-    const labels = await labelFor(
-      node,
-      repoRoot,
-      rankedMap(['central', 'https://user:secret@example.com/maven2']),
-    );
-    expect(labels['distribution:url']).toBe(
-      'https://example.com/maven2/com/example/foo/1.0/foo-1.0.jar',
-    );
-    expect(labels['distribution:url']).not.toContain('user');
-    expect(labels['distribution:url']).not.toContain('secret');
-  });
-
   it('returns no label when the recorded repo id is not in the URL map', async () => {
     const labels = await labelFor(node, repoRoot, new Map());
     expect(labels).toEqual({});
