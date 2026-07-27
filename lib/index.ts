@@ -24,6 +24,7 @@ import {
   buildRemoteRepositoryLabelMap,
 } from './parse/m2-remote-repositories';
 import { collectM2Nodes, buildLabelMap } from './parse/m2-batch';
+import { redactUrlCredentials } from './redact';
 import {
   SnykHttpClient,
   HashAlgorithm,
@@ -40,7 +41,11 @@ export function debug(...messages: string[]) {
     }
     logger = debugModule('snyk-mvn-plugin');
   }
-  messages.forEach((m) => logger?.(m));
+  // Redact at the sink rather than at each call site: much of what we log is
+  // raw Maven output, which carries repository credentials when a download
+  // from an authenticated private repo fails. Scrubbing here covers every
+  // existing and future debug() call without each one having to remember.
+  messages.forEach((m) => logger?.(redactUrlCredentials(m)));
 }
 
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
