@@ -3,8 +3,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { performance } from 'perf_hooks';
-import { promisify } from 'util';
-import { exec } from 'child_process';
 import { PackageURL } from 'packageurl-js';
 import type {
   MavenGraph,
@@ -13,16 +11,16 @@ import type {
   HashAlgorithm,
 } from './parse/types';
 import { parseDependency } from './parse/dependency';
+import * as subProcess from './sub-process';
+import { MavenContext } from './maven/context';
 import { debug } from './index';
-
-const execAsync = promisify(exec);
 
 /**
  * Get the Maven local repository path
- * Uses the same Maven command that's being used for dependency resolution
+ * Uses the same Maven command and working directory as dependency resolution
  */
 export async function getMavenRepositoryPath(
-  mavenCommand: string,
+  context: MavenContext,
   providedPath?: string,
 ): Promise<string> {
   if (providedPath) {
@@ -30,9 +28,22 @@ export async function getMavenRepositoryPath(
   }
 
   try {
-    // Use the same Maven command that's being used for dependency resolution
-    const { stdout } = await execAsync(
-      `${mavenCommand} help:evaluate -Dexpression=settings.localRepository -DforceStdout -q`,
+    // Routed through subProcess.execute like every other Maven invocation in
+    // the plugin: no shell, arguments passed as a vector rather than
+    // interpolated into a command string, and shescape applied on the Windows
+    // path where a shell is unavoidable. Running it in the project's working
+    // directory also matters for correctness — the local repository can be
+    // overridden per-project in settings.xml or a .mvn/maven.config, and a
+    // wrapper command (./mvnw) only resolves from there at all.
+    const stdout = await subProcess.execute(
+      context.command,
+      [
+        'help:evaluate',
+        '-Dexpression=settings.localRepository',
+        '-DforceStdout',
+        '-q',
+      ],
+      { cwd: context.workingDirectory },
     );
     const repoPath = stdout.trim();
     if (repoPath && fs.existsSync(repoPath)) {
@@ -276,7 +287,7 @@ async function processDependenciesConcurrently(
 export async function generateFingerprints(
   mavenGraphs: MavenGraph[],
   options: FingerprintOptions,
-  mavenCommand: string,
+  context: MavenContext,
 ): Promise<Map<string, FingerprintData>> {
   const fingerprintMap = new Map<string, FingerprintData>();
 
@@ -288,7 +299,7 @@ export async function generateFingerprints(
 
   // Get Maven repository path using the same command
   const repositoryPath = await getMavenRepositoryPath(
-    mavenCommand,
+    context,
     options.mavenRepository,
   );
 
@@ -343,12 +354,12 @@ export function reportFingerprintTiming(
 export async function generateMavenFingerprints(
   mavenGraphs: MavenGraph[],
   fingerprintOptions: FingerprintOptions,
-  mavenCommand: string,
+  context: MavenContext,
 ): Promise<Map<string, FingerprintData>> {
   const fingerprintMap = await generateFingerprints(
     mavenGraphs,
     fingerprintOptions,
-    mavenCommand,
+    context,
   );
 
   reportFingerprintTiming(fingerprintMap);

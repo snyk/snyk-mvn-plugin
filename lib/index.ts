@@ -177,7 +177,7 @@ export async function inspect(
       fingerprintMap = await generateMavenFingerprints(
         mavenGraphs,
         fingerprintOptions,
-        mavenContext.command,
+        mavenContext,
       );
     }
 
@@ -192,7 +192,7 @@ export async function inspect(
 
     if (options.includeComponentMetadata) {
       repositoryPath = await getMavenRepositoryPath(
-        mavenContext.command,
+        mavenContext,
         options.mavenRepository,
       );
     }
