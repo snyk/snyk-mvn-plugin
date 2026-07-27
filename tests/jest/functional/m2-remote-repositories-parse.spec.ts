@@ -154,6 +154,23 @@ describe('fetchRepositoryUrlMap output parsing', () => {
     expect(entry?.url).not.toContain('secret');
   });
 
+  it('produces the same url when the credentials were already redacted upstream', async () => {
+    // These tests mock subProcess.execute, so they feed the raw form above.
+    // In production execute now redacts before resolving, so what actually
+    // reaches this parser is the placeholder form. Both must land on the same
+    // credential-free URL — stripUrlCredentials clears whatever userinfo is
+    // present rather than matching a specific value.
+    mockedExecute.mockResolvedValue(
+      `[INFO] Project remote repositories used by this build:
+ * central (https://***:***@example.com/maven2, default, releases)
+`,
+    );
+
+    const map = await fetchRepositoryUrlMap(context, false);
+
+    expect(map.get('central')?.url).toBe('https://example.com/maven2');
+  });
+
   it('drops a repository whose url is not parseable (port out of range)', async () => {
     // A port above 65535 makes `new URL()` throw on construction, so the
     // credentials can't be stripped. Rather than store the raw URL (leaking the

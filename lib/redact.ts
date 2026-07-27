@@ -14,15 +14,25 @@
  *     Maven stdout/stderr, must never throw, and must never reject its input:
  *     the whole point is that a log line still gets emitted.
  *
- * Crucially, this is NOT applied to `subProcess.execute`'s return value.
- * That return value is parse input — `dependency:tree` dot output, `mvn
- * --version`, and `dependency:list-repositories`, whose repo URLs are exactly
- * what feeds `distribution:url`. Rewriting credentials there would put a
- * placeholder inside a string that a downstream parser then has to re-parse as
- * a URL, silently coupling label emission to the placeholder happening to be
- * URL-legal. Redacting at the sink instead keeps the data path exact and the
- * existing, stronger data-level control the only thing deciding what a label
- * may contain.
+ * Applied in two layers, deliberately overlapping:
+ *
+ *   1. At the subprocess boundary (`sub-process.ts`), to both the resolved
+ *      value and the rejected error, so no credential survives into a string
+ *      the plugin holds. This is what makes future sinks safe by default.
+ *   2. At the log sink (`debug()` in `index.ts`), which catches what layer 1
+ *      cannot: spawn-level failures and any `${err}` interpolation that never
+ *      passed through the resolved value.
+ *
+ * The function is idempotent, so text crossing both layers is unaffected by
+ * the second pass.
+ *
+ * Layer 1 is safe for the one consumer that re-parses a URL out of subprocess
+ * output — `dependency:list-repositories` → `stripUrlCredentials` → the
+ * `distribution:url` label. That parser clears whatever userinfo it finds
+ * rather than pattern-matching a specific value, so a redacted URL and a raw
+ * one both end up as the same credential-free label. `redact.spec.ts` pins
+ * that with a `new URL()` assertion, so a future change to the placeholder
+ * cannot quietly break label emission.
  */
 
 /**

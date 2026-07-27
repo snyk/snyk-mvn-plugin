@@ -78,4 +78,41 @@ describe('redactUrlCredentials', () => {
   it('returns empty string unchanged', () => {
     expect(redactUrlCredentials('')).toBe('');
   });
+
+  it('is idempotent', () => {
+    // Redaction is applied at both the subprocess boundary and the log sink;
+    // text crossing both must not be mangled by the second pass.
+    const once = redactUrlCredentials('https://u:p@host.invalid/m2');
+    expect(redactUrlCredentials(once)).toBe(once);
+  });
+
+  // Because redaction now runs on subProcess.execute's resolved value, a
+  // redacted repository URL reaches stripUrlCredentials in
+  // parse/m2-remote-repositories.ts, which re-parses it with new URL() to
+  // build the distribution:url label. If the placeholder ever became
+  // unparseable, new URL() would throw, the repo would be dropped, and the
+  // label would silently disappear with no error anywhere. Pin it here so
+  // changing the placeholder for readability trips a test instead.
+  describe('placeholder stays safe for distribution:url handling', () => {
+    const redacted = redactUrlCredentials(
+      'https://alice:s3cr3t@nexus.example.com/maven2',
+    );
+
+    it('survives new URL() the way stripUrlCredentials parses it', () => {
+      expect(() => new URL(redacted)).not.toThrow();
+    });
+
+    it('yields the same label as sanitising the raw URL would', () => {
+      const fromRedacted = new URL(redacted);
+      fromRedacted.username = '';
+      fromRedacted.password = '';
+
+      const fromRaw = new URL('https://alice:s3cr3t@nexus.example.com/maven2');
+      fromRaw.username = '';
+      fromRaw.password = '';
+
+      expect(fromRedacted.toString()).toBe(fromRaw.toString());
+      expect(fromRedacted.toString()).toBe('https://nexus.example.com/maven2');
+    });
+  });
 });

@@ -22,10 +22,11 @@ describe('subProcess.execute credential redaction', () => {
     }
   });
 
-  it('leaves the resolved stdout verbatim — it is parse input, not log text', async () => {
-    // dependency:list-repositories output feeds the distribution:url label,
-    // whose own URL-aware sanitiser is the control for that data path. The
-    // subprocess layer must not pre-mangle it.
+  it('redacts the resolved stdout too, leaving the rest of the line intact', async () => {
+    // dependency:list-repositories output is the one resolved value that
+    // carries credentials. Redacting here means they never survive the
+    // subprocess boundary, while the surrounding line stays parseable by
+    // fetchRepositoryUrlMap's repo-line regex.
     const repoLine = ` * internal (${CREDENTIAL_URL}, default, releases)`;
     const stdout = await subProcess.execute(
       process.execPath,
@@ -33,7 +34,10 @@ describe('subProcess.execute credential redaction', () => {
       {},
     );
 
-    expect(stdout.trim()).toBe(repoLine.trim());
+    expect(stdout).not.toContain('hunter2');
+    expect(stdout.trim()).toBe(
+      '* internal (https://***:***@nexus.invalid/releases, default, releases)',
+    );
   });
 });
 
