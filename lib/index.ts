@@ -1,7 +1,6 @@
 import { legacyPlugin } from '@snyk/cli-interface';
 import * as fs from 'fs';
 import * as path from 'path';
-import { DependencyTreeError } from './maven/errors';
 import { createMavenContext } from './maven/context';
 import { executeMavenPipeline } from './maven/executor';
 import {
@@ -260,16 +259,6 @@ export async function inspect(
   } catch (err) {
     if (executionResult) {
       debug(`>>> Output from mvn: ${executionResult.dependencyTreeResult}`);
-    }
-
-    // Handle Maven execution errors with proper command information
-    if (err instanceof DependencyTreeError) {
-      const msg = formatGenericPluginError(
-        err.originalError,
-        err.command,
-        err.args,
-      );
-      throw new Error(msg);
     }
 
     // Handle parsing errors (when Maven succeeded but output can't be parsed)
