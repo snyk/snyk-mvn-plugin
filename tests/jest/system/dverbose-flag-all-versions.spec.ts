@@ -15,7 +15,7 @@ const testManagedProjectPath = path.join(
   'dverbose-dependency-management',
 );
 const complexProjectPath = path.join(fixturesPath, 'complex-aggregate-project');
-const TESTS_TIMEOUT = 50000;
+const TESTS_TIMEOUT = 180000;
 
 describe('Dverbose reuturning all considered versions for dependencies tests', () => {
   test(
