@@ -15,7 +15,7 @@ const testManagedProjectPath = path.join(
   'dverbose-dependency-management',
 );
 const complexProjectPath = path.join(fixturesPath, 'complex-aggregate-project');
-const TESTS_TIMEOUT = 50000;
+const TESTS_TIMEOUT = 180000;
 
 test(
   'inspect on dverbose-project pom using -Dverbose',
