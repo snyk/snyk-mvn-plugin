@@ -1,5 +1,6 @@
 import * as childProcess from 'child_process';
 import { debug } from './index';
+import { redactUrlCredentials } from './redact';
 import { escapeAll, quoteAll } from 'shescape/stateless';
 import * as os from 'node:os';
 
@@ -63,20 +64,37 @@ export function execute(command, args, options): Promise<string> {
     });
 
     proc.on('close', (code) => {
+      // Redact once here, on the fully-accumulated buffers, so no credential
+      // survives the subprocess boundary in either direction — resolved value
+      // or rejected error. Doing it at the boundary rather than at each
+      // consumer means a future sink (a new throw, a file write, a field on
+      // the dep-graph) is covered without anyone having to remember.
+      //
+      // Accumulated, not per-chunk, on purpose: a credential split across two
+      // stream writes would evade a per-write scrubber.
+      //
+      // Safe for the one consumer that re-parses a URL out of this output:
+      // `dependency:list-repositories` feeds `stripUrlCredentials` in
+      // parse/m2-remote-repositories.ts, which clears whatever userinfo it
+      // finds — the placeholder included — and yields the same credential-free
+      // URL either way. See the `new URL()` test pinning that.
+      const safeStdout = redactUrlCredentials(stdout);
+      const safeStderr = redactUrlCredentials(stderr);
+
       if (code !== 0) {
         debug(
           `Child process failed with exit code: ${code}`,
           '----------------',
           'STDERR:',
-          stderr,
+          safeStderr,
           '----------------',
           'STDOUT:',
-          stdout,
+          safeStdout,
           '----------------',
         );
 
-        const stdErrMessage = stderr ? `\nSTDERR:\n${stderr}` : '';
-        const stdOutMessage = stdout ? `\nSTDOUT:\n${stdout}` : '';
+        const stdErrMessage = safeStderr ? `\nSTDERR:\n${safeStderr}` : '';
+        const stdOutMessage = safeStdout ? `\nSTDOUT:\n${safeStdout}` : '';
         const debugSuggestion = process.env.DEBUG
           ? ''
           : `\nRun in debug mode (-d) to see STDERR and STDOUT.`;
@@ -89,7 +107,7 @@ export function execute(command, args, options): Promise<string> {
           ),
         );
       }
-      resolve(stdout || stderr);
+      resolve(safeStdout || safeStderr);
     });
   });
 }
