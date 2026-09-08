@@ -334,7 +334,7 @@ workflows:
           name: Security Scans
           node_version: "lts"
           context:
-            - open_source-managed
+            - engines_sca-scanners
             - nodejs-install
             - prodsec-orb-runtime
 
