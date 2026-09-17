@@ -124,12 +124,11 @@ export function buildWithVerbose(
 
     const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
     if (visited) {
+      // Already expanded: connect this extra incoming edge and stop. Maven's
+      // verbose output lists every edge explicitly, so re-walking a visited
+      // node's children once per incoming path adds no edges and makes this
+      // O(paths) instead of O(nodes + edges).
       builder.connectDep(parentNodeId, visited.id);
-
-      // use visited node when omited dependencies found (verbose)
-      stack.push(
-        ...getVerboseItems(visited.id, [...ancestry, parsed.key], node),
-      );
     } else {
       builder.addPkgNode(parsed.pkgInfo, id, createNodeInfo(parsed, context));
       builder.connectDep(parentNodeId, id);
