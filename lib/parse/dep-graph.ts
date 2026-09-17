@@ -77,6 +77,21 @@ export function buildWithoutVerbose(
   return builder.build();
 }
 
+// Today's verbose graph is defined per path: whether an edge is drawn to a
+// package or to a `:pruned-cycle` placeholder depends on the ancestry of the
+// route taken to reach it, so the same edge can legitimately produce both. The
+// old walker discovered that by enumerating every path, which is O(paths) and
+// takes minutes to hours on a reactor where packages are reachable many ways.
+//
+// The same answer follows from two graph properties, without enumeration:
+//
+//   * an edge `u -> v` closes a cycle exactly when `v` can reach `u`, i.e. the
+//     two share a strongly connected component;
+//   * the plain edge `u -> v` is drawn as well exactly when some route to `u`
+//     avoids `v`, i.e. `u` is still reachable from the root once `v` is removed.
+//
+// So each edge is decided once. The second property only has to be computed for
+// packages that take part in a cycle, which is a handful even on large graphs.
 export function buildWithVerbose(
   rootId: string,
   nodes: Record<string, MavenGraphNode>,
@@ -94,51 +109,175 @@ export function buildWithVerbose(
     parsedRoot.pkgInfo,
     createNodeInfo(parsedRoot, context, MAVEN_BUILD_SCOPE_UNKNOWN),
   );
-  const visitedMap: Record<string, DepInfo> = {};
-  const stack: StackItemVerbose[] = [];
-  stack.push(...getVerboseItems(rootId, [], nodes[rootId]));
 
-  // depth first search
-  while (stack.length > 0) {
-    const item = stack.pop();
-
-    if (!item) continue;
-    const { id, ancestry, parentId } = item;
-    const parsed = parseId(id, true, includePurl, fingerprintMap.get(id));
-    const node = nodes[id];
-    if (!includeTestScope && parsed.scope === 'test' && !node.reachesProdDep) {
-      continue;
+  const parsedCache = new Map<string, DepInfo>();
+  const parsed = (id: string): DepInfo => {
+    let depInfo = parsedCache.get(id);
+    if (!depInfo) {
+      depInfo = parseId(id, true, includePurl, fingerprintMap.get(id));
+      parsedCache.set(id, depInfo);
     }
-    const visited = visitedMap[parsed.key];
+    return depInfo;
+  };
 
-    // If verbose is enabled and our ancestry includes ourselves
-    // we are cyclic and should be pruned :)
-    if (ancestry.includes(parsed.key)) {
-      const prunedId = visited.id + ':pruned-cycle';
-      builder.addPkgNode(visited.pkgInfo, prunedId, {
+  // A test-scoped package that never reaches a production dependency is
+  // dropped wherever it appears, so inclusion is a property of the package
+  // rather than of the route to it.
+  const isIncluded = (id: string): boolean =>
+    includeTestScope ||
+    parsed(id).scope !== 'test' ||
+    !!nodes[id]?.reachesProdDep;
+
+  const childrenOf = (id: string): string[] =>
+    (nodes[id]?.dependsOn || []).filter(isIncluded);
+
+  const reachableFromRoot = (without?: string): Set<string> => {
+    const reached = new Set<string>();
+    const stack = childrenOf(rootId).filter((id) => id !== without);
+    while (stack.length > 0) {
+      const id = stack.pop() as string;
+      if (reached.has(id)) continue;
+      reached.add(id);
+      for (const child of childrenOf(id)) {
+        if (child !== without && !reached.has(child)) stack.push(child);
+      }
+    }
+    return reached;
+  };
+
+  const reachable = reachableFromRoot();
+  const componentOf = findStronglyConnectedComponents(reachable, childrenOf);
+
+  const reachableWithout = new Map<string, Set<string>>();
+  const reachedWithout = (without: string): Set<string> => {
+    let reached = reachableWithout.get(without);
+    if (!reached) {
+      reached = reachableFromRoot(without);
+      reachableWithout.set(without, reached);
+    }
+    return reached;
+  };
+
+  // `to` has to be able to reach `from` for the edge to sit on a cycle, and
+  // `to` has to be reachable without `from` for it to be able to come first on
+  // any route - otherwise `to` can only ever be seen after `from` and the edge
+  // is an ordinary one.
+  const closesCycle = (from: string, to: string): boolean =>
+    from === to ||
+    (componentOf.get(from) === componentOf.get(to) &&
+      reachedWithout(from).has(to));
+
+  const routeAvoiding = (from: string, to: string): boolean =>
+    reachedWithout(to).has(from);
+
+  // Every reachable package is added once: the first route to reach it cannot
+  // already contain it, so it always gets a package node of its own.
+  for (const id of reachable) {
+    const depInfo = parsed(id);
+    builder.addPkgNode(depInfo.pkgInfo, id, createNodeInfo(depInfo, context));
+  }
+
+  const prunedAdded = new Set<string>();
+  const prunedCycleNodeFor = (id: string): string => {
+    const prunedId = id + ':pruned-cycle';
+    if (!prunedAdded.has(prunedId)) {
+      builder.addPkgNode(parsed(id).pkgInfo, prunedId, {
         labels: { pruned: 'cyclic' },
       });
-      builder.connectDep(parentId, prunedId);
-      continue; // don't queue any more children
+      prunedAdded.add(prunedId);
     }
+    return prunedId;
+  };
 
-    const parentNodeId = parentId === rootId ? builder.rootNodeId : parentId;
-    if (visited) {
-      // Already expanded: connect this extra incoming edge and stop. Maven's
-      // verbose output lists every edge explicitly, so re-walking a visited
-      // node's children once per incoming path adds no edges and makes this
-      // O(paths) instead of O(nodes + edges).
-      builder.connectDep(parentNodeId, visited.id);
-    } else {
-      builder.addPkgNode(parsed.pkgInfo, id, createNodeInfo(parsed, context));
-      builder.connectDep(parentNodeId, id);
-      visitedMap[parsed.key] = parsed;
-      // Remember to push updated ancestry here
-      stack.push(...getVerboseItems(id, [...ancestry, parsed.key], node));
+  // The root is never its own ancestor, so its own edges are always plain.
+  for (const child of childrenOf(rootId)) {
+    builder.connectDep(builder.rootNodeId, child);
+  }
+
+  for (const from of reachable) {
+    for (const to of childrenOf(from)) {
+      if (closesCycle(from, to)) {
+        builder.connectDep(from, prunedCycleNodeFor(to));
+        if (!routeAvoiding(from, to)) continue;
+      }
+      builder.connectDep(from, to);
     }
   }
 
   return builder.build();
+}
+
+// Tarjan's algorithm, driven by an explicit stack: a recursive implementation
+// overflows the call stack on the deep dependency chains this is here to cope
+// with in the first place.
+function findStronglyConnectedComponents(
+  nodeIds: Iterable<string>,
+  childrenOf: (id: string) => string[],
+): Map<string, number> {
+  const index = new Map<string, number>();
+  const lowLink = new Map<string, number>();
+  const onStack = new Set<string>();
+  const pending: string[] = [];
+  const componentOf = new Map<string, number>();
+  let nextIndex = 0;
+  let nextComponent = 0;
+
+  const open = (id: string): void => {
+    index.set(id, nextIndex);
+    lowLink.set(id, nextIndex);
+    nextIndex++;
+    pending.push(id);
+    onStack.add(id);
+  };
+
+  for (const start of nodeIds) {
+    if (index.has(start)) continue;
+    open(start);
+    const work = [{ id: start, children: childrenOf(start), next: 0 }];
+
+    while (work.length > 0) {
+      const frame = work[work.length - 1];
+      if (frame.next < frame.children.length) {
+        const child = frame.children[frame.next++];
+        if (!index.has(child)) {
+          open(child);
+          work.push({ id: child, children: childrenOf(child), next: 0 });
+        } else if (onStack.has(child)) {
+          lowLink.set(
+            frame.id,
+            Math.min(
+              lowLink.get(frame.id) as number,
+              index.get(child) as number,
+            ),
+          );
+        }
+        continue;
+      }
+
+      work.pop();
+      if (work.length > 0) {
+        const caller = work[work.length - 1];
+        lowLink.set(
+          caller.id,
+          Math.min(
+            lowLink.get(caller.id) as number,
+            lowLink.get(frame.id) as number,
+          ),
+        );
+      }
+      if (lowLink.get(frame.id) === index.get(frame.id)) {
+        const component = nextComponent++;
+        let member: string;
+        do {
+          member = pending.pop() as string;
+          onStack.delete(member);
+          componentOf.set(member, component);
+        } while (member !== frame.id);
+      }
+    }
+  }
+
+  return componentOf;
 }
 
 function createNodeInfo(
@@ -180,26 +319,10 @@ interface QueueItem {
   parentId: string;
 }
 
-interface StackItemVerbose extends QueueItem {
-  ancestry: string[]; // This is an easy trick to maintain ancestry at cost of space for the verbose algorithm
-}
-
 function getItems(parentId: string, node?: MavenGraphNode): QueueItem[] {
   const items: QueueItem[] = [];
   for (const id of node?.dependsOn || []) {
     items.push({ id, parentId });
-  }
-  return items;
-}
-
-function getVerboseItems(
-  parentId: string,
-  ancestry: string[],
-  node?: MavenGraphNode,
-): StackItemVerbose[] {
-  const items: StackItemVerbose[] = [];
-  for (const id of node?.dependsOn || []) {
-    items.push({ id, ancestry, parentId });
   }
   return items;
 }
