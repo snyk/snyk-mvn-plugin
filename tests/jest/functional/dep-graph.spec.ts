@@ -244,6 +244,67 @@ describe('buildDepGraph', () => {
       },
     });
   });
+  test('should mark cycle edges without dropping the plain edge', () => {
+    // Pins the verbose cycle semantics, which the timing test above cannot see
+    // because its graph is acyclic. `p1 -> p2` is drawn twice here: once to the
+    // package and once to a cycle placeholder, because p1 and p2 share a cycle
+    // through p0 and p2 is reachable without p1. Deciding that exactly is
+    // NP-hard, so this is a deliberate over-approximation of the old per-route
+    // behaviour - the guarantee being pinned is that every package and every
+    // plain edge survives, and only placeholders may be added.
+    const diGraph = `"g:root:jar:1.0.0" {
+      "g:root:jar:1.0.0" -> "g:p0:jar:1.0.0:compile" ;
+      "g:p0:jar:1.0.0:compile" -> "g:p1:jar:1.0.0:compile" ;
+      "g:p0:jar:1.0.0:compile" -> "g:p2:jar:1.0.0:compile" ;
+      "g:p1:jar:1.0.0:compile" -> "g:p2:jar:1.0.0:compile" ;
+      "g:p2:jar:1.0.0:compile" -> "g:p0:jar:1.0.0:compile" ;
+    }`;
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: true,
+      fingerprintMap: new Map(),
+      includePurl: false,
+    };
+
+    const depGraph = buildDepGraph(parseDigraphs([diGraph])[0], context);
+    const json = depGraph.toJSON();
+    const depsOf = (nodeId: string) =>
+      (json.graph.nodes.find((node) => node.nodeId === nodeId)?.deps || [])
+        .map((dep) => dep.nodeId)
+        .sort();
+
+    expect(
+      depGraph
+        .getPkgs()
+        .map((pkg) => pkg.name)
+        .sort(),
+    ).toEqual(['g:p0', 'g:p1', 'g:p2', 'g:root']);
+    expect(depsOf('root-node')).toEqual(['g:p0:jar:1.0.0:compile']);
+    expect(depsOf('g:p0:jar:1.0.0:compile')).toEqual([
+      'g:p1:jar:1.0.0:compile',
+      'g:p2:jar:1.0.0:compile',
+    ]);
+    // the back edge onto p0 keeps only the placeholder: no route reaches p2
+    // without passing through p0
+    expect(depsOf('g:p2:jar:1.0.0:compile')).toEqual([
+      'g:p0:jar:1.0.0:compile:pruned-cycle',
+    ]);
+    // p1 -> p2 keeps both, and the placeholder is a childless leaf
+    expect(depsOf('g:p1:jar:1.0.0:compile')).toEqual([
+      'g:p2:jar:1.0.0:compile',
+      'g:p2:jar:1.0.0:compile:pruned-cycle',
+    ]);
+    expect(depsOf('g:p2:jar:1.0.0:compile:pruned-cycle')).toEqual([]);
+    for (const nodeId of [
+      'g:p0:jar:1.0.0:compile:pruned-cycle',
+      'g:p2:jar:1.0.0:compile:pruned-cycle',
+    ]) {
+      expect(
+        json.graph.nodes.find((node) => node.nodeId === nodeId)?.info?.labels,
+      ).toEqual({ pruned: 'cyclic' });
+    }
+  });
+
   test('should build a duplicate-heavy verbose graph in linear time', () => {
     // Regression guard for exponential graph-build time in buildWithVerbose.
     // Every node below is reachable via many distinct paths, which is the
