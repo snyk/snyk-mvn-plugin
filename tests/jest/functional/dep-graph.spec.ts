@@ -305,6 +305,46 @@ describe('buildDepGraph', () => {
     }
   });
 
+  test('should keep the plain edge when a dependency points back at the root', () => {
+    // The traversal begins at the root's children, so in its terms the root is
+    // neither blockable nor reachable unless something points back at it. A
+    // dominator tree rooted at the root itself asserts the opposite, and got
+    // every edge touching the root wrong - dropping the plain `p2 -> root`
+    // edge in favour of a placeholder. Maven's own dot output cannot produce
+    // this shape, so only a test keeps it honest.
+    const diGraph = `"g:root:jar:1.0.0" {
+      "g:root:jar:1.0.0" -> "g:p0:jar:1.0.0:compile" ;
+      "g:p0:jar:1.0.0:compile" -> "g:p1:jar:1.0.0:compile" ;
+      "g:p0:jar:1.0.0:compile" -> "g:p2:jar:1.0.0:compile" ;
+      "g:p1:jar:1.0.0:compile" -> "g:p2:jar:1.0.0:compile" ;
+      "g:p2:jar:1.0.0:compile" -> "g:p0:jar:1.0.0:compile" ;
+      "g:p2:jar:1.0.0:compile" -> "g:root:jar:1.0.0" ;
+    }`;
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: true,
+      fingerprintMap: new Map(),
+      includePurl: false,
+    };
+
+    const json = buildDepGraph(parseDigraphs([diGraph])[0], context).toJSON();
+    const depsOf = (nodeId: string) =>
+      (json.graph.nodes.find((node) => node.nodeId === nodeId)?.deps || [])
+        .map((dep) => dep.nodeId)
+        .sort();
+
+    // the plain edge back to the root survives, alongside p2's cycle placeholder
+    expect(depsOf('g:p2:jar:1.0.0:compile')).toEqual([
+      'g:p0:jar:1.0.0:compile:pruned-cycle',
+      'g:root:jar:1.0.0',
+    ]);
+    // and the root's own package node keeps its placeholder edge
+    expect(depsOf('g:root:jar:1.0.0')).toEqual([
+      'g:p0:jar:1.0.0:compile:pruned-cycle',
+    ]);
+    expect(depsOf('root-node')).toEqual(['g:p0:jar:1.0.0:compile']);
+  });
+
   test('should build a duplicate-heavy verbose graph in linear time', () => {
     // Regression guard for exponential graph-build time in buildWithVerbose.
     // Every node below is reachable via many distinct paths, which is the
