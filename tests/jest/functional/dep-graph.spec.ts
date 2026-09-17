@@ -244,4 +244,48 @@ describe('buildDepGraph', () => {
       },
     });
   });
+  test('should build a duplicate-heavy verbose graph in linear time', () => {
+    // Regression guard for exponential graph-build time in buildWithVerbose.
+    // Every node below is reachable via many distinct paths, which is the
+    // ordinary shape of a large multi-module reactor's verbose dependency
+    // tree. Re-expanding an already-visited node's children once per
+    // incoming path makes the traversal O(paths) instead of
+    // O(nodes + edges); at 32 nodes that took ~167s, against ~1ms here.
+    // The graph is identical either way, so elapsed time is the only thing
+    // that can assert the complexity class - hence a wall-clock budget, set
+    // three orders of magnitude above the linear cost so it cannot flake.
+    const nodeCount = 32;
+    const fanout = 3;
+    const id = (i: number) =>
+      `example:p${String(i).padStart(4, '0')}:jar:1.0.0:compile`;
+    const root = 'example:root:jar:1.0.0';
+    const lines: string[] = [];
+    for (let i = 1; i <= fanout; i++) {
+      lines.push(`"${root}" -> "${id(i)}" ;`);
+    }
+    for (let i = 1; i <= nodeCount; i++) {
+      for (let k = 1; k <= fanout; k++) {
+        if (i + k <= nodeCount) {
+          lines.push(`"${id(i)}" -> "${id(i + k)}" ;`);
+        }
+      }
+    }
+    const mavenGraph = parseDigraphs([
+      `"${root}" {\n${lines.join('\n')}\n}`,
+    ])[0];
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: true,
+      fingerprintMap: new Map(),
+      includePurl: false,
+    };
+
+    const startedAt = Date.now();
+    const depGraph = buildDepGraph(mavenGraph, context);
+    const elapsed = Date.now() - startedAt;
+
+    // root + every generated package, each added exactly once
+    expect(depGraph.getPkgs()).toHaveLength(nodeCount + 1);
+    expect(elapsed).toBeLessThan(5000);
+  });
 });
