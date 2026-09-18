@@ -131,15 +131,15 @@ export function buildWithVerbose(
   const childrenOf = (id: string): string[] =>
     (nodes[id]?.dependsOn || []).filter(isIncluded);
 
-  const reachableFromRoot = (without?: string): Set<string> => {
+  const reachableFromRoot = (): Set<string> => {
     const reached = new Set<string>();
-    const stack = childrenOf(rootId).filter((id) => id !== without);
+    const stack = childrenOf(rootId);
     while (stack.length > 0) {
       const id = stack.pop() as string;
       if (reached.has(id)) continue;
       reached.add(id);
       for (const child of childrenOf(id)) {
-        if (child !== without && !reached.has(child)) stack.push(child);
+        if (!reached.has(child)) stack.push(child);
       }
     }
     return reached;
