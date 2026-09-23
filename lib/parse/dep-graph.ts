@@ -91,7 +91,7 @@ export function buildWithoutVerbose(
 //     avoids `v`, i.e. `u` is still reachable from the root once `v` is removed.
 //
 // So each edge is decided once, off one strongly-connected-components pass and
-// one dominator tree.
+// a dominator tree per cycle.
 export function buildWithVerbose(
   rootId: string,
   nodes: Record<string, MavenGraphNode>,
@@ -110,15 +110,7 @@ export function buildWithVerbose(
     createNodeInfo(parsedRoot, context, MAVEN_BUILD_SCOPE_UNKNOWN),
   );
 
-  const parsedCache = new Map<string, DepInfo>();
-  const parsed = (id: string): DepInfo => {
-    let depInfo = parsedCache.get(id);
-    if (!depInfo) {
-      depInfo = parseId(id, true, includePurl, fingerprintMap.get(id));
-      parsedCache.set(id, depInfo);
-    }
-    return depInfo;
-  };
+  const parsed = createDepInfoLookup(fingerprintMap, includePurl);
 
   // A test-scoped package that never reaches a production dependency is
   // dropped wherever it appears, so inclusion is a property of the package
@@ -147,15 +139,11 @@ export function buildWithVerbose(
 
   const reachable = reachableFromRoot();
   const componentOf = findStronglyConnectedComponents(reachable, childrenOf);
-
-  // `reachableFromRoot` starts from the root's children, so in its terms the
-  // root is neither blockable nor reachable unless something points back at
-  // it. Rooting the dominator tree at the root itself would encode the
-  // opposite - that it dominates everything and nothing dominates it - and
-  // give the wrong answer for any edge touching it. A separate entry keeps
-  // the root an ordinary vertex.
-  const dominates = buildDominanceTest(DOMINANCE_ENTRY, reachable, (id) =>
-    id === DOMINANCE_ENTRY ? childrenOf(rootId) : childrenOf(id),
+  const dominates = buildCycleDominanceTest(
+    childrenOf(rootId),
+    reachable,
+    childrenOf,
+    componentOf,
   );
 
   // `to` has to be able to reach `from` for the edge to sit on a cycle, and
@@ -171,8 +159,12 @@ export function buildWithVerbose(
     from === to ||
     (componentOf.get(from) === componentOf.get(to) && !dominates(from, to));
 
-  const routeAvoiding = (from: string, to: string): boolean =>
-    !dominates(to, from);
+  // Whether some route from the root reaches `from` without passing through
+  // `to`: if one does, `from -> to` can be walked with `to` not yet an
+  // ancestor, so the plain edge is drawn alongside the cycle placeholder. A
+  // self-loop never can, and its package sits in no dominator tree to say so.
+  const canReachSourceWithoutTarget = (from: string, to: string): boolean =>
+    from !== to && !dominates(to, from);
 
   // Every reachable package is added once: the first route to reach it cannot
   // already contain it, so it always gets a package node of its own.
@@ -207,7 +199,7 @@ export function buildWithVerbose(
         // the old walk connected placeholders from the raw parent and only
         // mapped the root for plain edges, so this stays asymmetric on purpose
         builder.connectDep(from, prunedCycleNodeFor(to));
-        if (!routeAvoiding(from, to)) continue;
+        if (!canReachSourceWithoutTarget(from, to)) continue;
       }
       builder.connectDep(fromNodeId, to);
     }
@@ -216,121 +208,207 @@ export function buildWithVerbose(
   return builder.build();
 }
 
+// Dominance is only ever asked about two packages in the same strongly
+// connected component, and a route from the root that enters a component
+// cannot leave it and come back. So whether one member dominates another
+// depends only on the component itself and on where routes enter it, and each
+// cyclic component gets a dominator tree of its own. Packages outside any
+// cycle - the bulk of a real dependency graph - cost nothing here.
+//
+// Keeping the trees small matters because Cooper, Harvey and Kennedy's
+// algorithm is quadratic in the worst case: a single tree over a long chain
+// whose every link also depends on one shared library climbs ever-longer
+// dominator chains, and took seconds at a few thousand packages.
+function buildCycleDominanceTest(
+  rootChildren: string[],
+  packages: Set<string>,
+  childrenOf: (id: string) => string[],
+  componentOf: Map<string, number>,
+): (dominator: string, id: string) => boolean {
+  const componentSizes = new Map<number, number>();
+  for (const component of componentOf.values()) {
+    componentSizes.set(component, (componentSizes.get(component) || 0) + 1);
+  }
+  const isCyclic = (component: number | undefined): boolean =>
+    component !== undefined && (componentSizes.get(component) as number) > 1;
+
+  const entriesByComponent = new Map<number, string[]>();
+  const addEntry = (id: string): void => {
+    const component = componentOf.get(id) as number;
+    if (!isCyclic(component)) return;
+    const entries = entriesByComponent.get(component);
+    if (entries) entries.push(id);
+    else entriesByComponent.set(component, [id]);
+  };
+
+  // The root's own edges are where every route starts, so its children are
+  // entries even when something points back at the root and puts it in a
+  // component of its own; any other member is an entry when an edge reaches
+  // it from outside its component.
+  rootChildren.forEach(addEntry);
+  for (const from of packages) {
+    for (const to of childrenOf(from)) {
+      if (componentOf.get(from) !== componentOf.get(to)) addEntry(to);
+    }
+  }
+
+  const dominanceByComponent = new Map<
+    number,
+    (dominator: string, id: string) => boolean
+  >();
+  for (const [component, entries] of entriesByComponent) {
+    const membersOnly = (id: string): string[] =>
+      childrenOf(id).filter((child) => componentOf.get(child) === component);
+    dominanceByComponent.set(
+      component,
+      buildDominanceTest(entries, membersOnly),
+    );
+  }
+
+  return (dominator, id) => {
+    const test = dominanceByComponent.get(componentOf.get(id) as number);
+    return test ? test(dominator, id) : false;
+  };
+}
+
 // A node id the graph cannot contain, so the dominator tree can have an entry
-// of its own that is distinct from the dependency graph's root.
+// of its own that leads to every place routes come in from outside.
 const DOMINANCE_ENTRY = '\u0000dominance-entry';
 
-// `to` is reachable from the root without `from` exactly when `from` does not
-// dominate `to`, so one dominator tree answers every such question in constant
-// time. Answering them with a reachability pass per cycle member instead cost
-// O(cycle members x nodes) in both time and memory, which is worse than the
-// walk it replaced on a graph made of many small cycles.
+// `to` is reachable from the entries without `from` exactly when `from` does
+// not dominate `to`, so one dominator tree answers every such question in
+// constant time.
 function buildDominanceTest(
-  rootId: string,
-  reachable: Set<string>,
-  childrenOf: (id: string) => string[],
+  entries: string[],
+  successorsOf: (id: string) => string[],
 ): (dominator: string, id: string) => boolean {
-  const childrenIn = (id: string): string[] =>
-    childrenOf(id).filter((child) => reachable.has(child));
+  const graph = prepareDominanceGraph(DOMINANCE_ENTRY, (id) =>
+    id === DOMINANCE_ENTRY ? entries : successorsOf(id),
+  );
+  const immediateDominator = computeImmediateDominators(DOMINANCE_ENTRY, graph);
+  return createDominanceLookup(DOMINANCE_ENTRY, immediateDominator);
+}
 
-  // depth-first postorder, then reversed, so every node follows its
-  // predecessors wherever the graph is acyclic
+interface DominanceGraph {
+  // reverse postorder, so every node follows its predecessors wherever the
+  // graph is acyclic
+  order: string[];
+  rank: Map<string, number>;
+  predecessors: Map<string, string[]>;
+}
+
+function prepareDominanceGraph(
+  entry: string,
+  successorsOf: (id: string) => string[],
+): DominanceGraph {
+  // A node is recorded in postorder by its leaving frame, which is pushed
+  // beneath its children so that it pops once they have all been walked.
   const postorder: string[] = [];
-  const seen = new Set<string>([rootId]);
-  const dfs = [{ id: rootId, children: childrenIn(rootId), next: 0 }];
-  while (dfs.length > 0) {
-    const frame = dfs[dfs.length - 1];
-    if (frame.next < frame.children.length) {
-      const child = frame.children[frame.next++];
-      if (seen.has(child)) continue;
-      seen.add(child);
-      dfs.push({ id: child, children: childrenIn(child), next: 0 });
+  const seen = new Set<string>();
+  const stack: { id: string; leaving?: true }[] = [{ id: entry }];
+  while (stack.length > 0) {
+    const { id, leaving } = stack.pop() as { id: string; leaving?: true };
+    if (leaving) {
+      postorder.push(id);
       continue;
     }
-    postorder.push(frame.id);
-    dfs.pop();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    stack.push({ id, leaving: true });
+    const successors = successorsOf(id);
+    for (let i = successors.length - 1; i >= 0; i--) {
+      if (!seen.has(successors[i])) stack.push({ id: successors[i] });
+    }
   }
+
   const order = postorder.reverse();
   const rank = new Map<string, number>();
   order.forEach((id, position) => rank.set(id, position));
 
   const predecessors = new Map<string, string[]>();
   for (const id of order) {
-    for (const child of childrenIn(id)) {
-      if (!rank.has(child)) continue;
-      const known = predecessors.get(child);
+    for (const successor of successorsOf(id)) {
+      const known = predecessors.get(successor);
       if (known) known.push(id);
-      else predecessors.set(child, [id]);
+      else predecessors.set(successor, [id]);
     }
   }
+  return { order, rank, predecessors };
+}
 
-  // Cooper, Harvey and Kennedy's iterative formulation
-  const idom = new Map<string, string>([[rootId, rootId]]);
-  const commonDominator = (left: string, right: string): string => {
+// Cooper, Harvey and Kennedy's iterative formulation: refine each node's
+// immediate dominator from its predecessors' until nothing changes.
+function computeImmediateDominators(
+  entry: string,
+  { order, rank, predecessors }: DominanceGraph,
+): Map<string, string> {
+  const immediateDominator = new Map<string, string>([[entry, entry]]);
+
+  // Walks both nodes up the dominator tree built so far until they meet.
+  const nearestCommonDominator = (left: string, right: string): string => {
     let a = left;
     let b = right;
     while (a !== b) {
       while ((rank.get(a) as number) > (rank.get(b) as number))
-        a = idom.get(a) as string;
+        a = immediateDominator.get(a) as string;
       while ((rank.get(b) as number) > (rank.get(a) as number))
-        b = idom.get(b) as string;
+        b = immediateDominator.get(b) as string;
     }
     return a;
   };
+
   let settled = false;
   while (!settled) {
     settled = true;
     for (const id of order) {
-      if (id === rootId) continue;
+      if (id === entry) continue;
       let candidate: string | undefined;
       for (const predecessor of predecessors.get(id) || []) {
-        if (!idom.has(predecessor)) continue;
+        if (!immediateDominator.has(predecessor)) continue;
         candidate =
           candidate === undefined
             ? predecessor
-            : commonDominator(predecessor, candidate);
+            : nearestCommonDominator(predecessor, candidate);
       }
-      if (candidate !== undefined && idom.get(id) !== candidate) {
-        idom.set(id, candidate);
+      if (candidate !== undefined && immediateDominator.get(id) !== candidate) {
+        immediateDominator.set(id, candidate);
         settled = false;
       }
     }
   }
+  return immediateDominator;
+}
 
-  // Entry and exit stamps over the dominator tree turn dominance into a range
-  // check: one node dominates another when its interval encloses it.
+// Entry and exit stamps over the dominator tree turn dominance into a range
+// check: one node dominates another when its interval encloses it.
+function createDominanceLookup(
+  entry: string,
+  immediateDominator: Map<string, string>,
+): (dominator: string, id: string) => boolean {
   const treeChildren = new Map<string, string[]>();
-  for (const [id, parent] of idom) {
-    if (id === rootId) continue;
+  for (const [id, parent] of immediateDominator) {
+    if (id === entry) continue;
     const known = treeChildren.get(parent);
     if (known) known.push(id);
     else treeChildren.set(parent, [id]);
   }
+
   const entered = new Map<string, number>();
   const exited = new Map<string, number>();
   let clock = 0;
-  entered.set(rootId, clock++);
-  const walk = [
-    { id: rootId, children: treeChildren.get(rootId) || [], next: 0 },
-  ];
-  while (walk.length > 0) {
-    const frame = walk[walk.length - 1];
-    if (frame.next < frame.children.length) {
-      const child = frame.children[frame.next++];
-      if (entered.has(child)) continue;
-      entered.set(child, clock++);
-      walk.push({
-        id: child,
-        children: treeChildren.get(child) || [],
-        next: 0,
-      });
+  const stack: { id: string; leaving?: true }[] = [{ id: entry }];
+  while (stack.length > 0) {
+    const { id, leaving } = stack.pop() as { id: string; leaving?: true };
+    if (leaving) {
+      exited.set(id, clock++);
       continue;
     }
-    exited.set(frame.id, clock++);
-    walk.pop();
+    entered.set(id, clock++);
+    stack.push({ id, leaving: true });
+    for (const child of treeChildren.get(id) || []) stack.push({ id: child });
   }
 
-  return (dominator: string, id: string): boolean => {
+  return (dominator, id) => {
     const from = entered.get(dominator);
     const to = entered.get(id);
     if (from === undefined || to === undefined) return false;
@@ -502,5 +580,22 @@ function parseId(
       ...(includePurl ? { purl } : {}),
     },
     scope: dep.scope,
+  };
+}
+
+// Parsing an id, and building its purl, is repeated for every edge that
+// touches it, so each id is parsed once.
+function createDepInfoLookup(
+  fingerprintMap: Map<string, FingerprintData>,
+  includePurl: boolean,
+): (id: string) => DepInfo {
+  const cache = new Map<string, DepInfo>();
+  return (id) => {
+    let depInfo = cache.get(id);
+    if (!depInfo) {
+      depInfo = parseId(id, true, includePurl, fingerprintMap.get(id));
+      cache.set(id, depInfo);
+    }
+    return depInfo;
   };
 }

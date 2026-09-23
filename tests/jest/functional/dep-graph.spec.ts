@@ -345,7 +345,7 @@ describe('buildDepGraph', () => {
     expect(depsOf('root-node')).toEqual(['g:p0:jar:1.0.0:compile']);
   });
 
-  test('should build a duplicate-heavy verbose graph in linear time', () => {
+  test('should build a duplicate-heavy verbose graph without walking every route', () => {
     // Regression guard for exponential graph-build time in buildWithVerbose.
     // Every node below is reachable via many distinct paths, which is the
     // ordinary shape of a large multi-module reactor's verbose dependency
@@ -354,7 +354,7 @@ describe('buildDepGraph', () => {
     // O(nodes + edges); at 32 nodes that took ~167s, against ~1ms here.
     // The graph is identical either way, so elapsed time is the only thing
     // that can assert the complexity class - hence a wall-clock budget, set
-    // three orders of magnitude above the linear cost so it cannot flake.
+    // three orders of magnitude above the current cost so it cannot flake.
     const nodeCount = 32;
     const fanout = 3;
     const id = (i: number) =>
@@ -388,5 +388,44 @@ describe('buildDepGraph', () => {
     // root + every generated package, each added exactly once
     expect(depGraph.getPkgs()).toHaveLength(nodeCount + 1);
     expect(elapsed).toBeLessThan(5000);
+  });
+
+  test('should build a long chain sharing one library without quadratic work', () => {
+    // Every link of a long chain also depends on one shared library - the
+    // shape a framework or a ubiquitous helper gives a real build. A dominator
+    // tree over the whole graph climbs ever-longer chains here and took
+    // seconds at a few thousand packages, so dominance is only worked out
+    // inside cycles. A back edge closes the chain into one large cycle, so
+    // both the acyclic and the cyclic paths are held to the budget.
+    const chainLength = 8000;
+    const id = (i: number) => `example:c${i}:jar:1.0.0:compile`;
+    const shared = 'example:shared:jar:1.0.0:compile';
+    const root = 'example:root:jar:1.0.0';
+    const chainGraph = (closed: boolean) => {
+      const lines = [`"${root}" -> "${id(1)}" ;`];
+      for (let i = 1; i <= chainLength; i++) {
+        if (i < chainLength) lines.push(`"${id(i)}" -> "${id(i + 1)}" ;`);
+        lines.push(`"${id(i)}" -> "${shared}" ;`);
+      }
+      if (closed) lines.push(`"${id(chainLength)}" -> "${id(1)}" ;`);
+      return parseDigraphs([`"${root}" {\n${lines.join('\n')}\n}`])[0];
+    };
+    const context: ParseContext = {
+      includeTestScope: false,
+      verboseEnabled: true,
+      fingerprintMap: new Map(),
+      includePurl: false,
+    };
+
+    for (const closed of [false, true]) {
+      const mavenGraph = chainGraph(closed);
+      const startedAt = Date.now();
+      const depGraph = buildDepGraph(mavenGraph, context);
+      const elapsed = Date.now() - startedAt;
+
+      // root + the chain + the shared library
+      expect(depGraph.getPkgs()).toHaveLength(chainLength + 2);
+      expect(elapsed).toBeLessThan(1000);
+    }
   });
 });
