@@ -115,14 +115,12 @@ export async function executeMavenDependencyTree(
     if (error instanceof Error) {
       const message = error.message;
       if (message.includes('Non-parseable POM')) {
-        throw new OpenSourceEcosystems.UnableToParseXMLError(
-          'Error parsing the XML file',
-        );
+        throw new OpenSourceEcosystems.UnableToParseXMLError(message);
       }
     }
 
-    throw new OpenSourceEcosystems.FailedToBuildMavenProjectError(
-      'Cannot build Maven dependency tree',
-    );
+    const detail =
+      error instanceof Error ? error.message : 'Cannot build Maven dependency tree';
+    throw new OpenSourceEcosystems.FailedToBuildMavenProjectError(detail);
   }
 }
