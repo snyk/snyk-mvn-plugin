@@ -92,6 +92,27 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     expect(labels['distribution:url']).toBe(expectedUrl);
   });
 
+  it('matches a repo id recorded with the Maven Resolver 2 url-hash suffix', async () => {
+    const depId = 'com.example:hashed:jar:1.0';
+    const artifactPath = artifactPathFor(depId, repoRoot);
+    const dir = path.dirname(artifactPath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(artifactPath, 'fake jar contents');
+    fs.writeFileSync(
+      path.join(dir, '_remote.repositories'),
+      `#NOTE: internal Maven Resolver file\nhashed-1.0.pom>central-8fac3ebd6edbaca3c794783fa38088af0aa128e7=\nhashed-1.0.jar>central-8fac3ebd6edbaca3c794783fa38088af0aa128e7=\n`,
+    );
+
+    const labels = await labelFor(
+      { nodeId: depId, artifactPath },
+      repoRoot,
+      rankedMap(['central', 'https://repo.maven.apache.org/maven2']),
+    );
+    expect(labels['distribution:url']).toBe(
+      'https://repo.maven.apache.org/maven2/com/example/hashed/1.0/hashed-1.0.jar',
+    );
+  });
+
   it('returns no label when the recorded repo id is not in the URL map', async () => {
     const labels = await labelFor(node, repoRoot, new Map());
     expect(labels).toEqual({});
