@@ -239,7 +239,9 @@ async function parseRemoteRepositoriesFile(
       continue;
     }
     const filename = parts[0];
-    const repoId = parts[1].split('=')[0];
+    // Maven Resolver 2 (Maven 3.10+) records `<id>-<sha1(repo url)>`, while
+    // list-repositories prints the bare id.
+    const repoId = parts[1].split('=')[0].replace(/-[0-9a-f]{40}$/, '');
 
     // The artifact's own entry is authoritative. Collect every id recorded for
     // it. An empty id means it was installed locally; we track that the entry
