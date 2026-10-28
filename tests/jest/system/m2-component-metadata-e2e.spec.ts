@@ -97,11 +97,11 @@ test('component metadata disabled vs enabled comparison', async () => {
     expect(axisLabels['hash:sha-512']).toMatch(/^[0-9a-f]{128}$/);
   }
 
-  // Enabled: the axis dependency was downloaded from Maven Central, so its
-  // `_remote.repositories` file records `central` and `dependency:list-repositories`
-  // reports central's URL — together they resolve the full artifact URL.
-  expect(axisLabels['distribution:url']).toBe(
-    'https://repo.maven.apache.org/maven2/axis/axis/1.4/axis-1.4.jar',
+  // Enabled: the axis dependency was downloaded from Maven Central (or a mirror of
+  // it), so its `_remote.repositories` record and `dependency:list-repositories`
+  // together resolve the full artifact URL. The host depends on the mirror in use.
+  expect(axisLabels['distribution:url']).toMatch(
+    /^https:\/\/.+\/axis\/axis\/1\.4\/axis-1\.4\.jar$/,
   );
 
   // At least one resolved dependency carries each label kind end-to-end.

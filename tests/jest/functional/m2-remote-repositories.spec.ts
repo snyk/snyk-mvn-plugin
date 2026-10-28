@@ -92,6 +92,62 @@ describe('distribution:url label emission from .m2 _remote.repositories files', 
     expect(labels['distribution:url']).toBe(expectedUrl);
   });
 
+  it('matches a repo id recorded with the Maven Resolver 2 url-hash suffix', async () => {
+    const depId = 'com.example:hashed:jar:1.0';
+    const artifactPath = artifactPathFor(depId, repoRoot);
+    const dir = path.dirname(artifactPath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(artifactPath, 'fake jar contents');
+    fs.writeFileSync(
+      path.join(dir, '_remote.repositories'),
+      `#NOTE: internal Maven Resolver file\nhashed-1.0.pom>central-8fac3ebd6edbaca3c794783fa38088af0aa128e7=\nhashed-1.0.jar>central-8fac3ebd6edbaca3c794783fa38088af0aa128e7=\n`,
+    );
+
+    const labels = await labelFor(
+      { nodeId: depId, artifactPath },
+      repoRoot,
+      rankedMap(['central', 'https://repo.maven.apache.org/maven2']),
+    );
+    expect(labels['distribution:url']).toBe(
+      'https://repo.maven.apache.org/maven2/com/example/hashed/1.0/hashed-1.0.jar',
+    );
+  });
+
+  it('resolves bare and url-hash suffixed ids recorded in the same file', async () => {
+    // A cache written by Maven 3.9 (bare id) and later by Maven 3.10 (suffixed id).
+    const depId = 'com.example:mixed:jar:1.0';
+    const artifactPath = artifactPathFor(depId, repoRoot);
+    const dir = path.dirname(artifactPath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(artifactPath, 'fake jar contents');
+    fs.writeFileSync(
+      path.join(dir, '_remote.repositories'),
+      `#NOTE: internal Maven Resolver file\nmixed-1.0.jar>central=\nmixed-1.0.jar>jboss-73182cf333235d19efa7ad23d934431062693e5f=\n`,
+    );
+    const mixedNode = { nodeId: depId, artifactPath };
+
+    const centralOnly = await labelFor(
+      mixedNode,
+      repoRoot,
+      rankedMap(['central', 'https://repo.maven.apache.org/maven2']),
+    );
+    expect(centralOnly['distribution:url']).toBe(
+      'https://repo.maven.apache.org/maven2/com/example/mixed/1.0/mixed-1.0.jar',
+    );
+
+    const jbossOnly = await labelFor(
+      mixedNode,
+      repoRoot,
+      rankedMap([
+        'jboss',
+        'https://repository.jboss.org/nexus/content/groups/public/',
+      ]),
+    );
+    expect(jbossOnly['distribution:url']).toBe(
+      'https://repository.jboss.org/nexus/content/groups/public/com/example/mixed/1.0/mixed-1.0.jar',
+    );
+  });
+
   it('returns no label when the recorded repo id is not in the URL map', async () => {
     const labels = await labelFor(node, repoRoot, new Map());
     expect(labels).toEqual({});

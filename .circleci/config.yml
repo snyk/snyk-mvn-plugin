@@ -150,6 +150,38 @@ commands:
           name: Installing Maven
           command: sdk install maven << parameters.maven_version >>
 
+  install_maven_osx:
+    description: Install maven and route Maven Central through Google's mirror; repo.maven.apache.org rate-limits (429) the shared macOS runner IPs
+    parameters:
+      maven_version:
+        type: string
+        default: ''
+    steps:
+      - run:
+          name: Installing Maven
+          command: |
+            v=<< parameters.maven_version >>
+            curl -fsSL --retry 3 -o "/tmp/apache-maven-$v-bin.zip" \
+              "https://maven-central.storage-download.googleapis.com/maven2/org/apache/maven/apache-maven/$v/apache-maven-$v-bin.zip"
+            unzip -q "/tmp/apache-maven-$v-bin.zip" -d "$HOME/maven"
+            echo "export PATH=\"$HOME/maven/apache-maven-$v/bin:\$PATH\"" >> "$BASH_ENV"
+            source "$BASH_ENV"
+            mvn -v
+      - run:
+          name: Configuring Maven Central mirror
+          command: |
+            mkdir -p ~/.m2
+            printf '%s\n' \
+              '<settings>' \
+              '  <mirrors>' \
+              '    <mirror>' \
+              '      <id>google-maven-central</id>' \
+              '      <mirrorOf>central</mirrorOf>' \
+              '      <url>https://maven-central.storage-download.googleapis.com/maven2/</url>' \
+              '    </mirror>' \
+              '  </mirrors>' \
+              '</settings>' > ~/.m2/settings.xml
+
   install_maven_windows:
     description: Install maven
     parameters:
@@ -265,7 +297,7 @@ jobs:
       - install_sdkman
       - install_jdk_unix:
           jdk_version: << parameters.jdk_version >>
-      - install_maven_unix:
+      - install_maven_osx:
           maven_version: << parameters.maven_version >>
       - install_deps
       - show_node_version
@@ -294,7 +326,7 @@ jobs:
       - install_sdkman
       - install_jdk_unix:
           jdk_version: << parameters.jdk_version >>
-      - install_maven_unix:
+      - install_maven_osx:
           maven_version: << parameters.maven_version >>
       - install_deps
       - show_node_version
