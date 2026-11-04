@@ -2,6 +2,7 @@ import {
   parseDigraphsFromStdout,
   parsePluginVersionFromStdout,
 } from '../../../lib/parse/stdout';
+import { parseDigraphs } from '../../../lib/parse/digraph';
 
 const singleProjectStdout = `[INFO] Scanning for projects...
 [INFO] 
@@ -302,5 +303,41 @@ describe('parsePluginVersionFromStdout', () => {
     const version = parsePluginVersionFromStdout(stdout);
     // Should return the first match
     expect(version).toBe('2.8');
+  });
+});
+
+// OSM-3378: JVM unified-logging GC lines interleaved with Maven stdout
+describe('JVM unified logging lines', () => {
+  const gcLines = [
+    '[4.326s][info][gc] GC(9) Pause Young (Normal) (G1 Evacuation Pause) 24M->8M(64M) 3.123ms',
+    '[2026-06-04T10:15:30.123+0000][0.512s][info][gc,heap] GC(0) Eden regions: 3->0(5)',
+    '[info][gc] GC(1) Pause Young (Concurrent Start) 12M->6M(32M) 1.2ms',
+    '[1.001s][warning][gc,alloc] GC(2) Allocation stall',
+    '[INFO] [5.000s][info][gc] GC(10) Pause Remark 30M->30M(64M) 0.9ms',
+  ];
+  test.each(gcLines)('strips "%s" inside a digraph', (gcLine) => {
+    const lines = singleProjectStdout.split('\n');
+    const edgeIdx = lines.findIndex((l) => l.includes('->'));
+    lines.splice(edgeIdx + 1, 0, gcLine);
+    expect(parseDigraphsFromStdout(lines.join('\n'))).toEqual([
+      singleProjectDigraph,
+    ]);
+  });
+
+  test('strips CRLF GC lines', () => {
+    const lines = singleProjectStdout.split('\n');
+    const edgeIdx = lines.findIndex((l) => l.includes('->'));
+    lines.splice(edgeIdx + 1, 0, `${gcLines[0]}\r`);
+    expect(parseDigraphsFromStdout(lines.join('\n'))).toEqual([
+      singleProjectDigraph,
+    ]);
+  });
+
+  test('the reported GC line no longer breaks the dependency graph', () => {
+    const lines = singleProjectStdout.split('\n');
+    const edgeIdx = lines.findIndex((l) => l.includes('->'));
+    lines.splice(edgeIdx + 1, 0, gcLines[0]);
+    const graphs = parseDigraphs(parseDigraphsFromStdout(lines.join('\n')));
+    expect(graphs).toEqual(parseDigraphs([singleProjectDigraph]));
   });
 });
