@@ -17,8 +17,10 @@ function cleanStdout(stdout: string): string {
   if (errorLabel.test(stdout) && !successLabel.test(stdout)) {
     throw new Error('Maven output contains errors.');
   }
-  // Strip JVM log lines both before and after the Maven label strip, so a
-  // line Maven prefixed with "[INFO] " is removed too.
+  // Strip JVM log lines on both sides of the Maven label strip. Before: logLabel
+  // also eats the level of an undecorated "[info][gc] ..." line, leaving
+  // "[gc] ..." that no longer matches. After: catches lines Maven prefixed
+  // with "[INFO] ".
   return stdout
     .replace(jvmUnifiedLogLine, '')
     .replace(logLabel, '')
