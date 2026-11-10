@@ -1,8 +1,10 @@
 version: 2.1
 
 orbs:
-  win: circleci/windows@2.4.0
+  # Snyk-owned orbs: track the latest release of the major version
   prodsec: snyk/prodsec-orb@1
+  # Third-party orbs: always pin an exact version
+  win: circleci/windows@5.1.1
 
 defaults: &defaults
   parameters:
@@ -21,7 +23,8 @@ windows_defaults: &windows_defaults
   environment:
     npm_config_loglevel: silent
   executor:
-    name: win/default
+    # win/default moved to Windows Server 2022 in orb v5, where the invalid-XML system test fails with Maven 3.6.3/3.9.11
+    name: win/server-2019
 
 osx_defaults: &osx_defaults
   macos:
