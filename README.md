@@ -163,9 +163,9 @@ Slowest: 156.78ms
 
 | Node | Supported |
 |------| --------- |
-| 20   | ✅        |
 | 22   | ✅        |
 | 24   | ✅        |
+| 26   | ✅        |
 
 ## Supported Maven versions
 
