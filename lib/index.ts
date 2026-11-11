@@ -1,7 +1,6 @@
 import { legacyPlugin } from '@snyk/cli-interface';
 import * as fs from 'fs';
 import * as path from 'path';
-import { DependencyTreeError } from './maven/errors';
 import { createMavenContext } from './maven/context';
 import { executeMavenPipeline } from './maven/executor';
 import {
@@ -24,6 +23,7 @@ import {
   buildRemoteRepositoryLabelMap,
 } from './parse/m2-remote-repositories';
 import { collectM2Nodes, buildLabelMap } from './parse/m2-batch';
+import { redactUrlCredentials } from './redact';
 import {
   SnykHttpClient,
   HashAlgorithm,
@@ -40,7 +40,11 @@ export function debug(...messages: string[]) {
     }
     logger = debugModule('snyk-mvn-plugin');
   }
-  messages.forEach((m) => logger?.(m));
+  // Redact at the sink rather than at each call site: much of what we log is
+  // raw Maven output, which carries repository credentials when a download
+  // from an authenticated private repo fails. Scrubbing here covers every
+  // existing and future debug() call without each one having to remember.
+  messages.forEach((m) => logger?.(redactUrlCredentials(m)));
 }
 
 export interface MavenOptions extends legacyPlugin.BaseInspectOptions {
@@ -172,7 +176,7 @@ export async function inspect(
       fingerprintMap = await generateMavenFingerprints(
         mavenGraphs,
         fingerprintOptions,
-        mavenContext.command,
+        mavenContext,
       );
     }
 
@@ -187,7 +191,7 @@ export async function inspect(
 
     if (options.includeComponentMetadata) {
       repositoryPath = await getMavenRepositoryPath(
-        mavenContext.command,
+        mavenContext,
         options.mavenRepository,
       );
     }
@@ -255,16 +259,6 @@ export async function inspect(
   } catch (err) {
     if (executionResult) {
       debug(`>>> Output from mvn: ${executionResult.dependencyTreeResult}`);
-    }
-
-    // Handle Maven execution errors with proper command information
-    if (err instanceof DependencyTreeError) {
-      const msg = formatGenericPluginError(
-        err.originalError,
-        err.command,
-        err.args,
-      );
-      throw new Error(msg);
     }
 
     // Handle parsing errors (when Maven succeeded but output can't be parsed)
