@@ -6,6 +6,7 @@ import { performance } from 'perf_hooks';
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import { PackageURL } from 'packageurl-js';
+import { cleanSnykEnv } from '@snyk/cli-interface';
 import type {
   MavenGraph,
   FingerprintOptions,
@@ -33,6 +34,7 @@ export async function getMavenRepositoryPath(
     // Use the same Maven command that's being used for dependency resolution
     const { stdout } = await execAsync(
       `${mavenCommand} help:evaluate -Dexpression=settings.localRepository -DforceStdout -q`,
+      { env: cleanSnykEnv(process.env, process.env) },
     );
     const repoPath = stdout.trim();
     if (repoPath && fs.existsSync(repoPath)) {
