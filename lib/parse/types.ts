@@ -1,12 +1,7 @@
 import type { OutgoingHttpHeaders } from 'http';
 
 export type HttpClientVerbs =
-  | 'get'
-  | 'head'
-  | 'delete'
-  | 'patch'
-  | 'post'
-  | 'put';
+  'get' | 'head' | 'delete' | 'patch' | 'post' | 'put';
 
 export interface RequestInfo {
   method: HttpClientVerbs;
