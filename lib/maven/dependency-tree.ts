@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as subProcess from '../sub-process';
+import { DependencyTreeStdoutFilter } from '../parse/stdout-filter';
 import { debug } from '../index';
 import { parsePluginVersionFromStdout } from '../parse/dependency-tree-parser';
 import { MavenContext } from './context';
@@ -99,6 +100,7 @@ export async function executeMavenDependencyTree(
       mvnArgs,
       {
         cwd: context.workingDirectory,
+        stdoutFilter: new DependencyTreeStdoutFilter(),
       },
     );
 
