@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as subProcess from '../sub-process';
+import { DependencyTreeStdoutFilter } from '../parse/stdout-filter';
 import { debug } from '../index';
 import { parsePluginVersionFromStdout } from '../parse/dependency-tree-parser';
 import { MavenContext } from './context';
@@ -8,6 +9,10 @@ import { OpenSourceEcosystems } from '@snyk/error-catalog-nodejs-public';
 
 export interface MavenDependencyTreeResult {
   dependencyTreeResult: string;
+  // Set only when the output was too large to keep in full: the end of the
+  // raw Maven output, for debugging, since dependencyTreeResult then holds
+  // only the lines the parsers read.
+  rawOutputTail?: string;
   mavenPluginVersion?: string;
   command: string;
   args: string[];
@@ -93,12 +98,18 @@ export async function executeMavenDependencyTree(
   debug(`Maven working directory: ${context.workingDirectory}`);
   debug(`Verbose enabled: ${verboseEnabled}`);
 
+  // SNYK_MVN_DISABLE_OUTPUT_FILTER restores the previous behaviour of always
+  // holding the full Maven output.
+  const stdoutFilter = process.env.SNYK_MVN_DISABLE_OUTPUT_FILTER
+    ? undefined
+    : new DependencyTreeStdoutFilter();
   try {
     const dependencyTreeResult = await subProcess.execute(
       context.command,
       mvnArgs,
       {
         cwd: context.workingDirectory,
+        stdoutFilter,
       },
     );
 
@@ -107,6 +118,9 @@ export async function executeMavenDependencyTree(
 
     return {
       dependencyTreeResult,
+      rawOutputTail: stdoutFilter?.isFiltering()
+        ? stdoutFilter.rawTail()
+        : undefined,
       mavenPluginVersion,
       command: context.command,
       args: mvnArgs,
