@@ -5,6 +5,7 @@ import { parsePluginVersionFromStdout } from '../parse/dependency-tree-parser';
 import { MavenContext } from './context';
 import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from './version';
 import { OpenSourceEcosystems } from '@snyk/error-catalog-nodejs-public';
+import { appendMavenErrorHints } from './error-hints';
 
 export interface MavenDependencyTreeResult {
   dependencyTreeResult: string;
@@ -112,8 +113,11 @@ export async function executeMavenDependencyTree(
       args: mvnArgs,
     };
   } catch (error) {
+    let mavenOutput = '';
     if (error instanceof Error) {
       const message = error.message;
+      // includes the captured STDERR/STDOUT of the failed Maven run
+      mavenOutput = message;
       if (message.includes('Non-parseable POM')) {
         throw new OpenSourceEcosystems.UnableToParseXMLError(
           'Error parsing the XML file',
@@ -122,7 +126,7 @@ export async function executeMavenDependencyTree(
     }
 
     throw new OpenSourceEcosystems.FailedToBuildMavenProjectError(
-      'Cannot build Maven dependency tree',
+      appendMavenErrorHints('Cannot build Maven dependency tree', mavenOutput),
     );
   }
 }
