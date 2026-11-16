@@ -77,4 +77,35 @@ describe('buildArgs', () => {
       '-Pjaxen',
     ]);
   });
+
+  describe('pinNonVerbose', () => {
+    const PINNED =
+      'org.apache.maven.plugins:maven-dependency-plugin:3.9.0:tree';
+
+    test('keeps the bare dependency:tree goal by default (non-verbose)', () => {
+      const context = createMavenContext('.', undefined);
+      expect(buildArgs(context, [])[0]).toBe('dependency:tree');
+    });
+
+    test('pins the supplied plugin version when pinNonVerbose is set', () => {
+      const context = createMavenContext('.', undefined);
+      expect(buildArgs(context, [], false, false, '3.6.1', true)[0]).toBe(
+        'org.apache.maven.plugins:maven-dependency-plugin:3.6.1:tree',
+      );
+    });
+
+    test('pins the default plugin version when pinNonVerbose is set', () => {
+      const context = createMavenContext('.', undefined);
+      expect(buildArgs(context, [], false, false, undefined, true)[0]).toBe(
+        PINNED,
+      );
+    });
+
+    test('verbose always pins regardless of pinNonVerbose', () => {
+      const context = createMavenContext('.', undefined);
+      expect(buildArgs(context, [], false, true, '3.9.0', false)[0]).toBe(
+        PINNED,
+      );
+    });
+  });
 });

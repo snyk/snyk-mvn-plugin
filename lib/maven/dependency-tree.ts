@@ -19,6 +19,7 @@ export function buildArgs(
   mavenAggregateProject = false,
   verboseEnabled = false,
   pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
+  pinNonVerbose = false,
 ) {
   let args: string[] = [];
 
@@ -32,9 +33,12 @@ export function buildArgs(
 
   // when using verbose ensure maven-dependency-plugin version 3 is used
   // lower versions do not work with -DoutputType=dot
-  const mavenDependencyPlugin = verboseEnabled
-    ? `org.apache.maven.plugins:maven-dependency-plugin:${pluginVersion}:tree`
-    : 'dependency:tree';
+  // in non-verbose mode we only pin when explicitly allowed (see
+  // shouldPinDependencyPlugin), so a version declared by the project wins
+  const mavenDependencyPlugin =
+    verboseEnabled || pinNonVerbose
+      ? `org.apache.maven.plugins:maven-dependency-plugin:${pluginVersion}:tree`
+      : 'dependency:tree';
 
   // Requires Maven >= 2.2
   args = args.concat([
@@ -80,6 +84,7 @@ export async function executeMavenDependencyTree(
   verboseEnabled: boolean,
   args: string[],
   pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
+  pinNonVerbose = false,
 ): Promise<MavenDependencyTreeResult> {
   const mvnArgs = buildArgs(
     context,
@@ -87,6 +92,7 @@ export async function executeMavenDependencyTree(
     mavenAggregateProject,
     verboseEnabled,
     pluginVersion,
+    pinNonVerbose,
   );
 
   debug(`Maven command: ${context.command} ${mvnArgs.join(' ')}`);
