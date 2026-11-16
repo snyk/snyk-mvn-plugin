@@ -2,14 +2,14 @@ import * as childProcess from 'child_process';
 import { debug } from './index';
 import { escapeAll, quoteAll } from 'shescape/stateless';
 import * as os from 'node:os';
-import { DependencyTreeStdoutFilter } from './parse/stdout-filter';
+import { MavenStdoutFilter } from './parse/stdout-filter';
 
 export interface ExecuteOptions {
   cwd?: string;
   // When set, stdout is collected by this filter, which keeps the full output
-  // unless it grows past a threshold. Used for `dependency:tree`, whose output
+  // unless it grows past a threshold. Used for the Maven goals, whose output
   // on very large reactors can exceed V8's maximum string length.
-  stdoutFilter?: DependencyTreeStdoutFilter;
+  stdoutFilter?: MavenStdoutFilter;
 }
 
 export function execute(

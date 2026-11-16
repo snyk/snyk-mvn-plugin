@@ -1,6 +1,9 @@
 import * as path from 'path';
 import * as subProcess from '../sub-process';
-import { DependencyTreeStdoutFilter } from '../parse/stdout-filter';
+import {
+  DependencyTreeStdoutFilter,
+  isOutputFilterDisabled,
+} from '../parse/stdout-filter';
 import { debug } from '../index';
 import { parsePluginVersionFromStdout } from '../parse/dependency-tree-parser';
 import { MavenContext } from './context';
@@ -98,9 +101,7 @@ export async function executeMavenDependencyTree(
   debug(`Maven working directory: ${context.workingDirectory}`);
   debug(`Verbose enabled: ${verboseEnabled}`);
 
-  // SNYK_MVN_DISABLE_OUTPUT_FILTER restores the previous behaviour of always
-  // holding the full Maven output.
-  const stdoutFilter = process.env.SNYK_MVN_DISABLE_OUTPUT_FILTER
+  const stdoutFilter = isOutputFilterDisabled()
     ? undefined
     : new DependencyTreeStdoutFilter();
   try {

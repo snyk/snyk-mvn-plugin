@@ -1,3 +1,5 @@
+import { MavenStdoutFilter } from './stdout-filter';
+
 export interface ResolvedVersion {
   groupId: string;
   artifactId: string;
@@ -20,6 +22,33 @@ export interface ResolvedVersion {
  * [INFO]    org.jboss.resteasy:resteasy-core:jar:7.0.0.Beta1:compile -- module resteasy.core (auto)
  * [INFO]    org.jboss.logging:jboss-logging:jar:3.6.1.Final:compile -- module org.jboss.logging
  */
+// Modern Maven project header: [INFO] --------------------< groupId:artifactId >---------------------
+const projectHeaderRegex = /\[INFO\]\s*[-<]+\s*<([^>]+)>\s*[-<]+/;
+// Older Maven: resolve goal line with @ module-name, e.g.
+// "--- maven-dependency-plugin:3.6.1:resolve (default-cli) @ module-web ---"
+const oldProjectHeaderRegex =
+  /\[INFO\]\s*---\s*maven-dependency-plugin[^@]*@\s*([^-\s]+)\s*---/;
+// Dependency resolution line: groupId:artifactId:type:version[:scope]
+const dependencyLineRegex =
+  /\[INFO\]\s+([a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+(?::[a-zA-Z0-9._-]+)?)(?:\s+--\s+module\s+.+)?$/;
+
+/**
+ * Stdout collector for `mvn dependency:resolve`. Keeps the full output below
+ * the threshold; past it, keeps only the lines parseResolveResult reads
+ * (project headers and dependency lines), so it returns the same result.
+ */
+export class DependencyResolveStdoutFilter extends MavenStdoutFilter {
+  protected keepLine(content: string): boolean {
+    const trimmedLine = content.trim();
+    return (
+      trimmedLine.startsWith('[INFO]') &&
+      (projectHeaderRegex.test(trimmedLine) ||
+        oldProjectHeaderRegex.test(trimmedLine) ||
+        dependencyLineRegex.test(trimmedLine))
+    );
+  }
+}
+
 export function parseResolveResult(resolveResult: string): ResolvedVersion[] {
   const resolvedVersions: ResolvedVersion[] = [];
   const lines = resolveResult.split('\n');
@@ -36,9 +65,7 @@ export function parseResolveResult(resolveResult: string): ResolvedVersion[] {
 
     // Extract project ID from project header lines
     // Modern Maven format: [INFO] --------------------< groupId:artifactId >---------------------
-    const projectMatch = trimmedLine.match(
-      /\[INFO\]\s*[-<]+\s*<([^>]+)>\s*[-<]+/,
-    );
+    const projectMatch = trimmedLine.match(projectHeaderRegex);
     if (projectMatch) {
       currentProjectId = projectMatch[1].trim();
       continue;
@@ -46,9 +73,7 @@ export function parseResolveResult(resolveResult: string): ResolvedVersion[] {
 
     // Older Maven format: look for resolve command with @ module-name
     // e.g., "--- maven-dependency-plugin:3.6.1:resolve (default-cli) @ module-web ---"
-    const oldProjectMatch = trimmedLine.match(
-      /\[INFO\]\s*---\s*maven-dependency-plugin[^@]*@\s*([^-\s]+)\s*---/,
-    );
+    const oldProjectMatch = trimmedLine.match(oldProjectHeaderRegex);
     if (oldProjectMatch) {
       // For older Maven, we only have the module name, not the full coordinates
       // We'll store this as a temporary identifier and resolve it later
@@ -68,9 +93,7 @@ export function parseResolveResult(resolveResult: string): ResolvedVersion[] {
     }
 
     // Parse dependency resolution lines - look for pattern: groupId:artifactId:type:version:scope
-    const depMatch = trimmedLine.match(
-      /\[INFO\]\s+([a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+(?::[a-zA-Z0-9._-]+)?)(?:\s+--\s+module\s+.+)?$/,
-    );
+    const depMatch = trimmedLine.match(dependencyLineRegex);
     if (depMatch) {
       const depString = depMatch[1];
       const resolvedVersion = parseDependencyString(

@@ -1,21 +1,25 @@
 import { StringDecoder } from 'node:string_decoder';
 
-// Stdout collector for `mvn dependency:tree -DoutputType=dot`.
+// Stdout collectors for the Maven subprocesses.
 //
-// By default it keeps the whole output, exactly as before. An aggregate
-// (reactor) scan of a very large build, especially with `-X`, can produce
-// more output than V8's maximum string length (~512M chars on Node >= 14), and
-// accumulating it into one string throws `RangeError: Invalid string length`
-// regardless of heap size. So once the output passes `thresholdChars`, the
-// collector drops the full copy and from then on keeps only the lines the
-// parsers read (see lib/parse/stdout.ts and detectMetaversions in
-// lib/maven/executor.ts):
+// By default they keep the whole output, exactly as before. A reactor scan of
+// a very large build, especially with `-X`, can produce more output than V8's
+// maximum string length (~512M chars on Node >= 14), and accumulating it into
+// one string throws `RangeError: Invalid string length` regardless of heap
+// size. The error is thrown inside the stdout "data" handler, so it crashes
+// the process rather than rejecting the promise. Once the output passes
+// `thresholdChars`, a collector drops the full copy and from then on keeps only
+// the lines its parser reads. Builds below the threshold are unaffected.
+//
+// DependencyTreeStdoutFilter (`dependency:tree -DoutputType=dot`, see
+// lib/parse/stdout.ts and detectMetaversions in lib/maven/executor.ts) keeps:
 //   - digraph blocks: from a line containing "digraph" up to the first line
 //     whose last non-whitespace character is "}" (mirrors lib/parse-digraph.ts)
 //   - "[ERROR]" lines and the "[INFO] BUILD SUCCESS" line (build status check)
 //   - the maven-dependency-plugin "...:tree" line (plugin version)
 //   - lines containing ":RELEASE:" or ":LATEST:" (metaversion detection)
-// Builds below the threshold are unaffected.
+// The `dependency:resolve` and `dependency:list-repositories` filters live
+// next to their parsers so they match exactly the same lines.
 
 const digraphStart = /digraph/;
 const digraphEnd = /\}\s*$/;
@@ -33,6 +37,11 @@ const jvmUnifiedLogLine =
 const mavenLabelledJvmLine =
   /^\[\w+\]\s*(?:\[[^\]\n]*\])*\[(?:trace|debug|info|warning|error)\s*\]\[[\w,+-]+\s*\]/;
 
+/** SNYK_MVN_DISABLE_OUTPUT_FILTER restores always holding the full output. */
+export function isOutputFilterDisabled(): boolean {
+  return !!process.env.SNYK_MVN_DISABLE_OUTPUT_FILTER;
+}
+
 // Half of V8's maximum string length, leaving room for the copies the
 // parsers make.
 export const DEFAULT_FILTER_THRESHOLD_CHARS = 256 * 1024 * 1024;
@@ -41,12 +50,12 @@ export const DEFAULT_TAIL_CHARS = 1024 * 1024;
 // errors for every module can't grow the message without bound.
 const MAX_ERROR_CHARS = 1024 * 1024;
 
-export interface DependencyTreeStdoutFilterOptions {
+export interface StdoutFilterOptions {
   thresholdChars?: number;
   tailChars?: number;
 }
 
-export class DependencyTreeStdoutFilter {
+export abstract class MavenStdoutFilter {
   private readonly thresholdChars: number;
   private readonly tailChars: number;
   private readonly decoder = new StringDecoder('utf8');
@@ -54,13 +63,12 @@ export class DependencyTreeStdoutFilter {
   private raw: string | null = '';
   private readonly kept: string[] = [];
   private partial = '';
-  private inDigraph = false;
   private tail = '';
   private readonly errorLines: string[] = [];
   private errorChars = 0;
   private totalChars = 0;
 
-  constructor(options: DependencyTreeStdoutFilterOptions = {}) {
+  constructor(options: StdoutFilterOptions = {}) {
     this.thresholdChars =
       options.thresholdChars ?? DEFAULT_FILTER_THRESHOLD_CHARS;
     this.tailChars = options.tailChars ?? DEFAULT_TAIL_CHARS;
@@ -203,32 +211,45 @@ export class DependencyTreeStdoutFilter {
       this.errorChars += line.length;
     }
 
-    if (this.inDigraph) {
+    if (this.keepLine(content)) {
       this.kept.push(line);
+    }
+  }
+
+  /**
+   * Whether the parser reads this line. `content` has no line terminator.
+   * Called once per line, in order, only while filtering.
+   */
+  protected abstract keepLine(content: string): boolean;
+}
+
+/** Collector for `mvn dependency:tree -DoutputType=dot`. */
+export class DependencyTreeStdoutFilter extends MavenStdoutFilter {
+  private inDigraph = false;
+
+  protected keepLine(content: string): boolean {
+    if (this.inDigraph) {
       if (this.isDigraphEnd(content)) {
         this.inDigraph = false;
       }
-      return;
+      return true;
     }
 
     if (digraphStart.test(content)) {
-      this.kept.push(line);
       // A block can open and close on the same line.
       const afterStart = content.slice(content.search(digraphStart));
       if (!digraphEnd.test(afterStart)) {
         this.inDigraph = true;
       }
-      return;
+      return true;
     }
 
-    if (
+    return (
       errorLine.test(content) ||
       successLine.test(content) ||
       pluginVersionLine.test(content) ||
       metaversionLine.test(content)
-    ) {
-      this.kept.push(line);
-    }
+    );
   }
 
   private isDigraphEnd(content: string): boolean {
