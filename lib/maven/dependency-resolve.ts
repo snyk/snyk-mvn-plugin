@@ -4,6 +4,12 @@ import { debug } from '../index';
 import { MavenContext } from './context';
 import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from './version';
 
+export interface MavenDependencyResolveResult {
+  dependencyResolveResult: string;
+  command: string;
+  args: string[];
+}
+
 export function buildArgs(
   context: MavenContext,
   mavenArgs: string[],
@@ -55,7 +61,7 @@ export async function executeMavenDependencyResolve(
   mavenAggregateProject: boolean,
   args: string[],
   pluginVersion: string = MAVEN_DEPENDENCY_PLUGIN_VERSION,
-): Promise<string> {
+): Promise<MavenDependencyResolveResult> {
   const mvnArgs = buildArgs(
     context,
     args,
@@ -67,9 +73,19 @@ export async function executeMavenDependencyResolve(
   debug(`Maven working directory: ${context.workingDirectory}`);
 
   try {
-    return await subProcess.execute(context.command, mvnArgs, {
-      cwd: context.workingDirectory,
-    });
+    const dependencyResolveResult = await subProcess.execute(
+      context.command,
+      mvnArgs,
+      {
+        cwd: context.workingDirectory,
+      },
+    );
+
+    return {
+      dependencyResolveResult,
+      command: context.command,
+      args: mvnArgs,
+    };
   } catch (error) {
     debug(
       `dependency:resolve execution failed - command: ${

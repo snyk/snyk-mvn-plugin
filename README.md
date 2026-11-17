@@ -48,6 +48,7 @@ const result = await inspect(rootPath, targetFile, options);
 | `allProjects` | boolean | `false` | Include all projects in multi-module builds |
 | `mavenAggregateProject` | boolean | `false` | Treat as Maven aggregate project |
 | `mavenVerboseIncludeAllVersions` | boolean | `false` | Include all dependency versions in verbose mode |
+| `mavenDebugOutput` | boolean | `false` | Log raw Maven command output to debug |
 | `includeProvenance` | boolean | `false` | Generate cryptographic fingerprints for artifacts to prove origin |
 | `fingerprintAlgorithm` | string | `'sha1'` | Hash algorithm ('sha1', 'sha256', 'sha512') |
 | `mavenRepository` | string | - | Custom Maven repository path |
