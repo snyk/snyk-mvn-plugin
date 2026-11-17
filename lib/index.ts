@@ -255,6 +255,11 @@ export async function inspect(
   } catch (err) {
     if (executionResult) {
       debug(`>>> Output from mvn: ${executionResult.dependencyTreeResult}`);
+      if (executionResult.dependencyTreeRawOutputTail !== undefined) {
+        debug(
+          `>>> Output from mvn was too large to keep; the above is only the lines used for parsing. End of the raw output: ${executionResult.dependencyTreeRawOutputTail}`,
+        );
+      }
     }
 
     // Handle Maven execution errors with proper command information

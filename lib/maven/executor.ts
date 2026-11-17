@@ -26,6 +26,7 @@ function detectMetaversions(dependencyTreeStdout: string): boolean {
 export interface MavenExecutionResult {
   versionResolver: VersionResolver;
   dependencyTreeResult: string;
+  dependencyTreeRawOutputTail?: string;
   javaVersion?: string;
   mavenVersion?: string;
   mavenPluginVersion?: string;
@@ -99,6 +100,7 @@ export async function executeMavenPipeline(
   return {
     versionResolver,
     dependencyTreeResult: treeResult.dependencyTreeResult,
+    dependencyTreeRawOutputTail: treeResult.rawOutputTail,
     javaVersion,
     mavenVersion,
     mavenPluginVersion: treeResult.mavenPluginVersion,

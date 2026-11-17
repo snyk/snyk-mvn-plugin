@@ -3,8 +3,21 @@ import { cleanSnykEnv } from '@snyk/cli-interface';
 import { debug } from './index';
 import { escapeAll, quoteAll } from 'shescape/stateless';
 import * as os from 'node:os';
+import { MavenStdoutFilter } from './parse/stdout-filter';
 
-export function execute(command, args, options): Promise<string> {
+export interface ExecuteOptions {
+  cwd?: string;
+  // When set, stdout is collected by this filter, which keeps the full output
+  // unless it grows past a threshold. Used for the Maven goals, whose output
+  // on very large reactors can exceed V8's maximum string length.
+  stdoutFilter?: MavenStdoutFilter;
+}
+
+export function execute(
+  command,
+  args,
+  options?: ExecuteOptions,
+): Promise<string> {
   const spawnOptions: {
     shell: boolean;
     cwd?: string;
@@ -36,10 +49,15 @@ export function execute(command, args, options): Promise<string> {
   return new Promise((resolve, reject) => {
     let stdout = '';
     let stderr = '';
+    const stdoutFilter = options?.stdoutFilter;
 
     const proc = childProcess.spawn(command, args, spawnOptions);
     proc.stdout.on('data', (data) => {
-      stdout = stdout + data;
+      if (stdoutFilter) {
+        stdoutFilter.write(data);
+      } else {
+        stdout = stdout + data;
+      }
     });
     proc.stderr.on('data', (data) => {
       stderr = stderr + data;
@@ -54,6 +72,16 @@ export function execute(command, args, options): Promise<string> {
     });
 
     proc.on('close', (code) => {
+      if (stdoutFilter) {
+        stdoutFilter.end();
+        if (stdoutFilter.isFiltering()) {
+          debug(
+            'Maven output exceeded the size threshold; kept only the lines used for parsing',
+          );
+        }
+        stdout =
+          code !== 0 ? stdoutFilter.failureOutput() : stdoutFilter.output();
+      }
       if (code !== 0) {
         debug(
           `Child process failed with exit code: ${code}`,

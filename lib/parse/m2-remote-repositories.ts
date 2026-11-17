@@ -5,6 +5,23 @@ import type { MavenContext } from '../maven/context';
 import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from '../maven/version';
 import { mapNodes, type M2Node } from './m2-batch';
 import { debug } from '../index';
+import { MavenStdoutFilter } from './stdout-filter';
+
+// A repository line from `dependency:list-repositories` (see
+// fetchRepositoryUrlMap). Group 1: repository/mirror id. Group 2: URL up to
+// the first comma in parens.
+const repoLineRegex = /^\s+\*\s+(\S+)\s+\(([^,]+),/;
+
+/**
+ * Stdout collector for `mvn dependency:list-repositories`. Keeps the full
+ * output below the threshold; past it, keeps only repository lines, the only
+ * lines fetchRepositoryUrlMap reads (a mirror clause sits on the same line).
+ */
+export class ListRepositoriesStdoutFilter extends MavenStdoutFilter {
+  protected keepLine(content: string): boolean {
+    return repoLineRegex.test(content);
+  }
+}
 
 /**
  * A repository entry from `dependency:list-repositories`: its URL, plus its
@@ -98,6 +115,7 @@ export async function fetchRepositoryUrlMap(
 
     const stdout = await subProcess.execute(context.command, args, {
       cwd: context.workingDirectory,
+      stdoutFilter: new ListRepositoriesStdoutFilter(),
     });
 
     // Parse repository entries from Maven output. A repo line looks like:
@@ -112,9 +130,6 @@ export async function fetchRepositoryUrlMap(
     // would never match a mirrored build and no label would be emitted. Mapping
     // each id to its own URL lets the recorded id pick the right source — the
     // mirror URL for a mirrored artifact, which is where the bytes came from.
-    //
-    // Group 1: repository/mirror id. Group 2: URL up to the first comma in parens.
-    const repoLineRegex = /^\s+\*\s+(\S+)\s+\(([^,]+),/;
     const mirrorRegex = /\bmirrored by\s+(\S+)\s+\(([^,]+),/;
     const lines = stdout.split('\n');
 

@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as subProcess from '../sub-process';
 import { debug } from '../index';
+import { DependencyResolveStdoutFilter } from '../parse/resolve-parser';
 import { MavenContext } from './context';
 import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from './version';
 
@@ -69,6 +70,7 @@ export async function executeMavenDependencyResolve(
   try {
     return await subProcess.execute(context.command, mvnArgs, {
       cwd: context.workingDirectory,
+      stdoutFilter: new DependencyResolveStdoutFilter(),
     });
   } catch (error) {
     debug(
