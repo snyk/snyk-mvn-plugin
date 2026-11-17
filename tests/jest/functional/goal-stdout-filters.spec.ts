@@ -165,7 +165,6 @@ describe('stdout filter wiring', () => {
   });
   afterEach(() => {
     spy.mockRestore();
-    delete process.env.SNYK_MVN_DISABLE_OUTPUT_FILTER;
   });
 
   test('dependency:resolve and list-repositories run with a filter', async () => {
@@ -177,13 +176,5 @@ describe('stdout filter wiring', () => {
     expect(spy.mock.calls[1][2].stdoutFilter).toBeInstanceOf(
       ListRepositoriesStdoutFilter,
     );
-  });
-
-  test('SNYK_MVN_DISABLE_OUTPUT_FILTER turns the filters off', async () => {
-    process.env.SNYK_MVN_DISABLE_OUTPUT_FILTER = 'true';
-    await executeMavenDependencyResolve(context, true, []);
-    await fetchRepositoryUrlMap(context, true);
-    expect(spy.mock.calls[0][2].stdoutFilter).toBeUndefined();
-    expect(spy.mock.calls[1][2].stdoutFilter).toBeUndefined();
   });
 });

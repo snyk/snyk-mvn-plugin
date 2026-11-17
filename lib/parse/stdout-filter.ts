@@ -37,11 +37,6 @@ const jvmUnifiedLogLine =
 const mavenLabelledJvmLine =
   /^\[\w+\]\s*(?:\[[^\]\n]*\])*\[(?:trace|debug|info|warning|error)\s*\]\[[\w,+-]+\s*\]/;
 
-/** SNYK_MVN_DISABLE_OUTPUT_FILTER restores always holding the full output. */
-export function isOutputFilterDisabled(): boolean {
-  return !!process.env.SNYK_MVN_DISABLE_OUTPUT_FILTER;
-}
-
 // Half of V8's maximum string length, leaving room for the copies the
 // parsers make.
 export const DEFAULT_FILTER_THRESHOLD_CHARS = 256 * 1024 * 1024;

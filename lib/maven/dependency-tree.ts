@@ -1,9 +1,6 @@
 import * as path from 'path';
 import * as subProcess from '../sub-process';
-import {
-  DependencyTreeStdoutFilter,
-  isOutputFilterDisabled,
-} from '../parse/stdout-filter';
+import { DependencyTreeStdoutFilter } from '../parse/stdout-filter';
 import { debug } from '../index';
 import { parsePluginVersionFromStdout } from '../parse/dependency-tree-parser';
 import { MavenContext } from './context';
@@ -101,9 +98,7 @@ export async function executeMavenDependencyTree(
   debug(`Maven working directory: ${context.workingDirectory}`);
   debug(`Verbose enabled: ${verboseEnabled}`);
 
-  const stdoutFilter = isOutputFilterDisabled()
-    ? undefined
-    : new DependencyTreeStdoutFilter();
+  const stdoutFilter = new DependencyTreeStdoutFilter();
   try {
     const dependencyTreeResult = await subProcess.execute(
       context.command,
@@ -119,7 +114,7 @@ export async function executeMavenDependencyTree(
 
     return {
       dependencyTreeResult,
-      rawOutputTail: stdoutFilter?.isFiltering()
+      rawOutputTail: stdoutFilter.isFiltering()
         ? stdoutFilter.rawTail()
         : undefined,
       mavenPluginVersion,

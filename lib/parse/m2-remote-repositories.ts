@@ -5,7 +5,7 @@ import type { MavenContext } from '../maven/context';
 import { MAVEN_DEPENDENCY_PLUGIN_VERSION } from '../maven/version';
 import { mapNodes, type M2Node } from './m2-batch';
 import { debug } from '../index';
-import { isOutputFilterDisabled, MavenStdoutFilter } from './stdout-filter';
+import { MavenStdoutFilter } from './stdout-filter';
 
 // A repository line from `dependency:list-repositories` (see
 // fetchRepositoryUrlMap). Group 1: repository/mirror id. Group 2: URL up to
@@ -115,9 +115,7 @@ export async function fetchRepositoryUrlMap(
 
     const stdout = await subProcess.execute(context.command, args, {
       cwd: context.workingDirectory,
-      stdoutFilter: isOutputFilterDisabled()
-        ? undefined
-        : new ListRepositoriesStdoutFilter(),
+      stdoutFilter: new ListRepositoriesStdoutFilter(),
     });
 
     // Parse repository entries from Maven output. A repo line looks like:
