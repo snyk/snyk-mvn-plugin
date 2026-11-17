@@ -91,7 +91,7 @@ describe('dependency:resolve stdout filter', () => {
 
   test('parses identically when filtering, for any chunking', () => {
     for (let seed = 1; seed <= 25; seed++) {
-      const raw = randomOutput(resolveLines, 400, seed);
+      const raw = randomOutput(resolveLines, 3000, seed);
       const expected = parseResolveResult(raw);
       for (const [threshold, size] of [
         [0, 1],
@@ -131,7 +131,7 @@ describe('dependency:list-repositories stdout filter', () => {
     const spy = jest.spyOn(subProcess, 'execute');
     try {
       for (let seed = 1; seed <= 25; seed++) {
-        const raw = randomOutput(listRepositoriesLines, 400, seed);
+        const raw = randomOutput(listRepositoriesLines, 3000, seed);
         spy.mockResolvedValueOnce(raw);
         const expected = await fetchRepositoryUrlMap(context, false);
         for (const size of [1, 7, 4096]) {

@@ -285,7 +285,8 @@ ${debugNoise}
     for (let run = 0; run < 300; run++) {
       const eol = rand(4) === 0 ? '\r\n' : '\n';
       const lines: string[] = [];
-      const count = 5 + rand(60);
+      // Some runs are long enough to cross the filter's 256-line block size.
+      const count = rand(10) === 0 ? 600 + rand(600) : 5 + rand(60);
       for (let i = 0; i < count; i++) {
         if (rand(5) === 0) {
           const name = `"g:m${i}:jar:1"`;

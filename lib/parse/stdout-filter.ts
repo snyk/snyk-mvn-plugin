@@ -45,6 +45,43 @@ export const DEFAULT_TAIL_CHARS = 1024 * 1024;
 // errors for every module can't grow the message without bound.
 const MAX_ERROR_CHARS = 1024 * 1024;
 
+// Lines are slices of the decoded chunk, and V8 sliced strings keep their
+// parent alive, so a short kept line can pin a whole 64KB chunk (or the full
+// buffered output at the switch-over). Kept lines are therefore copied into a
+// flat string every LINES_PER_BLOCK lines, which releases the parents.
+const LINES_PER_BLOCK = 256;
+
+// Returns a flat copy of `parts` joined. Joining a single element returns it
+// unchanged, so a one-character sentinel guarantees a real copy.
+function flatJoin(parts: string[]): string {
+  return [...parts, '\n'].join('').slice(0, -1);
+}
+
+class RetainedLines {
+  private readonly blocks: string[] = [];
+  private pending: string[] = [];
+  chars = 0;
+
+  push(line: string): void {
+    this.pending.push(line);
+    this.chars += line.length;
+    if (this.pending.length >= LINES_PER_BLOCK) {
+      this.flush();
+    }
+  }
+
+  flush(): void {
+    if (this.pending.length) {
+      this.blocks.push(flatJoin(this.pending));
+      this.pending = [];
+    }
+  }
+
+  join(): string {
+    return this.blocks.join('') + this.pending.join('');
+  }
+}
+
 export interface StdoutFilterOptions {
   thresholdChars?: number;
   tailChars?: number;
@@ -56,11 +93,10 @@ export abstract class MavenStdoutFilter {
   private readonly decoder = new StringDecoder('utf8');
   // The full output, until it passes the threshold; null once filtering.
   private raw: string | null = '';
-  private readonly kept: string[] = [];
+  private readonly kept = new RetainedLines();
   private partial = '';
   private tail = '';
-  private readonly errorLines: string[] = [];
-  private errorChars = 0;
+  private readonly errorLines = new RetainedLines();
   private totalChars = 0;
 
   constructor(options: StdoutFilterOptions = {}) {
@@ -80,6 +116,10 @@ export abstract class MavenStdoutFilter {
       const buffered = this.raw;
       this.raw = null;
       this.consume(buffered);
+      // Release the buffered output, which kept lines may still reference.
+      this.kept.flush();
+      this.errorLines.flush();
+      this.partial = flatJoin([this.partial]);
     }
     const text =
       typeof chunk === 'string' ? chunk : this.decoder.write(chunk as Buffer);
@@ -129,7 +169,7 @@ export abstract class MavenStdoutFilter {
       return this.raw;
     }
     const tail = this.rawTail();
-    const errors = this.errorLines.join('');
+    const errors = this.errorLines.join();
     if (!errors || this.totalChars <= this.tailChars) {
       return tail;
     }
@@ -138,7 +178,7 @@ export abstract class MavenStdoutFilter {
 
   /** The retained lines, in their original order. Empty until filtering. */
   result(): string {
-    return this.kept.join('');
+    return this.kept.join();
   }
 
   /**
@@ -187,7 +227,7 @@ export abstract class MavenStdoutFilter {
       return;
     }
     if (text.length >= this.tailChars) {
-      this.tail = text.slice(text.length - this.tailChars);
+      this.tail = flatJoin([text.slice(text.length - this.tailChars)]);
       return;
     }
     const combined = this.tail + text;
@@ -201,9 +241,8 @@ export abstract class MavenStdoutFilter {
   private processLine(line: string): void {
     const content = line.replace(/\r?\n$/, '');
 
-    if (failureLine.test(content) && this.errorChars < MAX_ERROR_CHARS) {
+    if (failureLine.test(content) && this.errorLines.chars < MAX_ERROR_CHARS) {
       this.errorLines.push(line.endsWith('\n') ? line : `${line}\n`);
-      this.errorChars += line.length;
     }
 
     if (this.keepLine(content)) {
