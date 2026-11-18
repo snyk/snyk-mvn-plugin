@@ -2,7 +2,6 @@
 __pycache__/
 *.pyc
 /dist
-package-lock.json
 npm-debug.log
 .eslintcache
 .idea
