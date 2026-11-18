@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { findArchives, isArchive } from '../../../lib/archive';
 
@@ -39,4 +41,51 @@ test('findArchives', async () => {
   ].forEach(({ dir, expectedNumOfJars }) =>
     expect(findArchives(dir).length).toEqual(expectedNumOfJars),
   );
+});
+
+describe('findArchives in a project tree', () => {
+  let tmp: string;
+  let root: string;
+
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'snyk-mvn-find-archives-'));
+    root = path.join(tmp, 'app [v1] (copy)');
+    [
+      ['top.jar'],
+      ['web', 'site.war'],
+      ['android', 'lib', 'library.aar'],
+      ['dist', 'deep', 'er', 'bundle.zip'],
+      ['notes.txt'],
+      ['web', 'site.war.bak'],
+      ['web', 'SITE.JAR'],
+      ['.hidden.jar'],
+      ['.mvn', 'wrapper', 'maven-wrapper.jar'],
+      ['dist', '.cache', 'cached.zip'],
+    ].forEach((segments) => {
+      fs.mkdirSync(path.join(root, ...segments.slice(0, -1)), {
+        recursive: true,
+      });
+      fs.writeFileSync(path.join(root, ...segments), '');
+    });
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  const expected = () =>
+    [
+      ['android', 'lib', 'library.aar'],
+      ['dist', 'deep', 'er', 'bundle.zip'],
+      ['top.jar'],
+      ['web', 'site.war'],
+    ].map((segments) => path.join(root, ...segments));
+
+  test('returns every visible jar, war, aar and zip at any depth, sorted', () => {
+    expect(findArchives(root)).toEqual(expected());
+  });
+
+  test('searches the containing directory when given a file', () => {
+    expect(findArchives(path.join(root, 'notes.txt'))).toEqual(expected());
+  });
 });

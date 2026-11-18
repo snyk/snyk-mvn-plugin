@@ -2,7 +2,6 @@ import { DepGraph, DepGraphBuilder } from '@snyk/dep-graph';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
-import * as glob from 'glob';
 import * as debugLib from 'debug';
 import {
   MavenPackage,
@@ -171,7 +170,15 @@ export function isArchive(file: string): boolean {
 export function findArchives(targetPath: string): string[] {
   const stats = fs.statSync(targetPath);
   const dir = stats.isFile() ? path.dirname(targetPath) : targetPath;
-  return glob.sync(`${dir}/**/*.@(jar|war|aar|zip)`);
+  return fs
+    .readdirSync(dir, { recursive: true, encoding: 'utf8' })
+    .filter((entry) => isArchive(entry) && !isHidden(entry))
+    .map((entry) => path.join(dir, entry))
+    .sort((a, b) => a.localeCompare(b, 'en'));
+}
+
+function isHidden(relativePath: string): boolean {
+  return relativePath.split(path.sep).some((part) => part.startsWith('.'));
 }
 
 function getRootDependency(root: string, targetFile?: string): MavenPackage {
