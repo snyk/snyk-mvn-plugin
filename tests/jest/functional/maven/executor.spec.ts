@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { executeMavenPipeline } from '../../../../lib/maven/executor';
 import * as dependencyTree from '../../../../lib/maven/dependency-tree';
 import * as dependencyResolve from '../../../../lib/maven/dependency-resolve';
@@ -70,6 +71,7 @@ describe('executeMavenPipeline conditional logic', () => {
       false,
       [],
       '3.9.0',
+      false,
     );
 
     // Verify dependency:resolve was NOT called (optimization working)
@@ -181,6 +183,7 @@ describe('executeMavenPipeline conditional logic', () => {
       false,
       ['-Pprofile'],
       '3.9.0',
+      false, // aggregate scans never pin the non-verbose tree goal
     );
 
     expect(mockExecuteMavenDependencyResolve).toHaveBeenCalledWith(
@@ -191,5 +194,60 @@ describe('executeMavenPipeline conditional logic', () => {
     );
 
     expect(result.versionResolver).not.toBe(NO_OP_VERSION_RESOLVER);
+  });
+
+  describe('pinning dependency:tree in non-verbose mode', () => {
+    const fixtures = path.resolve(
+      __dirname,
+      '../../../fixtures/plugin-pinning',
+    );
+
+    test('pins when the project does not declare the plugin', async () => {
+      const ctx = createMavenContext(
+        path.join(fixtures, 'no-declaration'),
+        'pom.xml',
+      );
+      await executeMavenPipeline(ctx, false, false, []);
+      expect(mockExecuteMavenDependencyTree).toHaveBeenCalledWith(
+        ctx,
+        false,
+        false,
+        [],
+        '3.9.0',
+        true,
+      );
+    });
+
+    test('does not pin when the project declares the plugin', async () => {
+      const ctx = createMavenContext(
+        path.join(fixtures, 'declares-in-plugin-management'),
+        'pom.xml',
+      );
+      await executeMavenPipeline(ctx, false, false, []);
+      expect(mockExecuteMavenDependencyTree).toHaveBeenCalledWith(
+        ctx,
+        false,
+        false,
+        [],
+        '3.9.0',
+        false,
+      );
+    });
+
+    test('does not pin when the POM is unparseable', async () => {
+      const ctx = createMavenContext(
+        path.join(fixtures, 'unparseable'),
+        'pom.xml',
+      );
+      await executeMavenPipeline(ctx, false, false, []);
+      expect(mockExecuteMavenDependencyTree).toHaveBeenCalledWith(
+        ctx,
+        false,
+        false,
+        [],
+        '3.9.0',
+        false,
+      );
+    });
   });
 });
