@@ -201,6 +201,52 @@ test('inspect with --scan-all-unmanaged finds nested jars under a project path c
   }
 });
 
+// Skipped on Windows: creating symlinks there needs Developer Mode or admin rights.
+(process.platform === 'win32' ? test.skip : test)(
+  'inspect with --scan-all-unmanaged reports jars directly inside a symlinked folder but not jars nested deeper behind it',
+  async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'snyk-mvn-symlinked-'));
+    const root = path.join(tmp, 'project');
+    const outside = path.join(tmp, 'outside');
+    try {
+      fs.mkdirSync(path.join(outside, 'sub'), { recursive: true });
+      fs.mkdirSync(root);
+      fs.copyFileSync(
+        path.join(fixturesPath, 'jars', 'keycloak-core-5.0.0.jar'),
+        path.join(outside, 'keycloak-core-5.0.0.jar'),
+      );
+      fs.copyFileSync(
+        path.join(fixturesPath, 'good-and-bad', 'commons-io-2.6.jar'),
+        path.join(outside, 'sub', 'commons-io-2.6.jar'),
+      );
+      fs.copyFileSync(
+        path.join(fixturesPath, 'jars', 'tomcat-http11-4.1.34.jar'),
+        path.join(root, 'tomcat-http11-4.1.34.jar'),
+      );
+      fs.symlinkSync(outside, path.join(root, 'linked'), 'dir');
+
+      const result = await plugin.inspect(
+        root,
+        undefined,
+        { scanAllUnmanaged: true },
+        mockSnykSearchClient,
+      );
+
+      const pkgs =
+        (result as legacyPlugin.SinglePackageResult).dependencyGraph
+          ?.getDepPkgs()
+          .map((pkg) => `${pkg.name}@${pkg.version}`)
+          .sort() || [];
+      expect(pkgs).toEqual([
+        'org.keycloak:keycloak-core@5.0.0',
+        'tomcat:tomcat-http11@4.1.34',
+      ]);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  },
+);
+
 async function assertFixture({
   fixtureDirectory,
   targetFile,

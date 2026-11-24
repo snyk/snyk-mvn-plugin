@@ -89,3 +89,90 @@ describe('findArchives in a project tree', () => {
     expect(findArchives(path.join(root, 'notes.txt'))).toEqual(expected());
   });
 });
+
+const posixOnly = process.platform === 'win32' ? describe.skip : describe;
+
+// Skipped on Windows: creating symlinks there needs Developer Mode or admin rights.
+posixOnly('findArchives with symlinks', () => {
+  let tmp: string;
+  let project: string;
+  let outside: string;
+
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'snyk-mvn-symlinks-'));
+    project = path.join(tmp, 'project');
+    outside = path.join(tmp, 'outside');
+    fs.mkdirSync(path.join(outside, 'sub'), { recursive: true });
+    fs.writeFileSync(path.join(outside, 'outside.jar'), '');
+    fs.writeFileSync(path.join(outside, 'sub', 'deeper.jar'), '');
+    fs.mkdirSync(path.join(project, 'libs'), { recursive: true });
+    fs.writeFileSync(path.join(project, 'libs', 'inside.jar'), '');
+    fs.symlinkSync(outside, path.join(project, 'libs', 'linked-dir'), 'dir');
+    fs.symlinkSync(
+      path.join(outside, 'outside.jar'),
+      path.join(project, 'libs', 'linked.jar'),
+      'file',
+    );
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test('lists archives directly inside a symlinked directory without recursing through it', () => {
+    expect(findArchives(project)).toEqual(
+      [
+        ['libs', 'inside.jar'],
+        ['libs', 'linked-dir', 'outside.jar'],
+        ['libs', 'linked.jar'],
+      ].map((segments) => path.join(project, ...segments)),
+    );
+  });
+
+  test('skips symlink loops and still returns the other archives', () => {
+    const libs = path.join(project, 'libs');
+    fs.symlinkSync(path.join(libs, 'self'), path.join(libs, 'self'));
+    fs.symlinkSync(path.join(libs, 'ping'), path.join(libs, 'pong'));
+    fs.symlinkSync(path.join(libs, 'pong'), path.join(libs, 'ping'));
+
+    expect(findArchives(project)).toEqual(
+      [
+        ['libs', 'inside.jar'],
+        ['libs', 'linked-dir', 'outside.jar'],
+        ['libs', 'linked.jar'],
+      ].map((segments) => path.join(project, ...segments)),
+    );
+  });
+});
+
+const posixNonRoot =
+  process.platform === 'win32' || process.getuid?.() === 0
+    ? describe.skip
+    : describe;
+
+// Skipped on Windows (chmod does not remove read access) and as root (root can read anything).
+posixNonRoot('findArchives with an unreadable directory', () => {
+  let tmp: string;
+  let locked: string;
+
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'snyk-mvn-unreadable-'));
+    locked = path.join(tmp, 'locked');
+    fs.mkdirSync(path.join(tmp, 'libs'), { recursive: true });
+    fs.mkdirSync(locked);
+    fs.writeFileSync(path.join(tmp, 'libs', 'readable.jar'), '');
+    fs.writeFileSync(path.join(locked, 'hidden-from-us.jar'), '');
+    fs.chmodSync(locked, 0o000);
+  });
+
+  afterEach(() => {
+    fs.chmodSync(locked, 0o700);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test('fails when a subdirectory cannot be read', () => {
+    expect(() => findArchives(tmp)).toThrow(
+      expect.objectContaining({ code: 'EACCES' }),
+    );
+  });
+});

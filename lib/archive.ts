@@ -170,15 +170,39 @@ export function isArchive(file: string): boolean {
 export function findArchives(targetPath: string): string[] {
   const stats = fs.statSync(targetPath);
   const dir = stats.isFile() ? path.dirname(targetPath) : targetPath;
-  return fs
-    .readdirSync(dir, { recursive: true, encoding: 'utf8' })
-    .filter((entry) => isArchive(entry) && !isHidden(entry))
-    .map((entry) => path.join(dir, entry))
-    .sort((a, b) => a.localeCompare(b, 'en'));
+  return listArchives(dir, true).sort((a, b) => a.localeCompare(b, 'en'));
 }
 
-function isHidden(relativePath: string): boolean {
-  return relativePath.split(path.sep).some((part) => part.startsWith('.'));
+function listArchives(dir: string, recurse: boolean): string[] {
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => !entry.name.startsWith('.'))
+    .flatMap((entry) => {
+      const entryPath = path.join(dir, entry.name);
+      const found = isArchive(entry.name) ? [entryPath] : [];
+      if (!recurse) {
+        return found;
+      }
+      if (entry.isDirectory()) {
+        return found.concat(listArchives(entryPath, true));
+      }
+      // glob 7 listed a symlinked directory's own entries but never recursed through it.
+      if (entry.isSymbolicLink() && isDirectoryTarget(entryPath)) {
+        return found.concat(listArchives(entryPath, false));
+      }
+      return found;
+    });
+}
+
+function isDirectoryTarget(linkPath: string): boolean {
+  try {
+    return !!fs.statSync(linkPath, { throwIfNoEntry: false })?.isDirectory();
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ELOOP') {
+      return false;
+    }
+    throw err;
+  }
 }
 
 function getRootDependency(root: string, targetFile?: string): MavenPackage {
