@@ -1,6 +1,7 @@
 import { executeMavenDependencyResolve } from './dependency-resolve';
 import { executeMavenDependencyTree } from './dependency-tree';
 import { MavenContext } from './context';
+import { shouldPinDependencyPlugin } from './plugin-declaration';
 import { getMavenVersion, selectPluginVersion } from './version';
 import {
   createVersionResolver,
@@ -59,12 +60,26 @@ export async function executeMavenPipeline(
     `Maven version: ${mavenVersion}, explicit plugin version: ${explicitPluginVersion}`,
   );
 
+  // Only override Maven's default dependency plugin version for dependency:tree
+  // when the project demonstrably does not declare its own (verbose mode always
+  // pins, as before).
+  const pinNonVerbose =
+    !verboseEnabled &&
+    shouldPinDependencyPlugin(
+      context,
+      mavenAggregateProject,
+      args,
+      mavenVersion,
+    );
+  debug(`Pin maven-dependency-plugin for non-verbose tree: ${pinNonVerbose}`);
+
   const treeResult = await executeMavenDependencyTree(
     context,
     mavenAggregateProject,
     verboseEnabled,
     args,
     explicitPluginVersion,
+    pinNonVerbose,
   );
 
   const hasMetaversions = detectMetaversions(treeResult.dependencyTreeResult);
