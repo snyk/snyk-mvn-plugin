@@ -14,8 +14,8 @@
 
     <!-- Example dependency using RELEASE metaversion -->
     <dependency>
-      <groupId>org.jboss.resteasy</groupId>
-      <artifactId>resteasy-core</artifactId>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
       <version>RELEASE</version>
       <scope>compile</scope>
     </dependency>
