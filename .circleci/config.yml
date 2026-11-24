@@ -22,6 +22,7 @@ defaults: &defaults
 windows_defaults: &windows_defaults
   environment:
     npm_config_loglevel: silent
+    JAVA_HOME: C:\jdk
   executor:
     # win/default moved to Windows Server 2022 in orb v5, where the invalid-XML system test fails with Maven 3.6.3/3.9.11
     name: win/server-2019
@@ -139,8 +140,24 @@ commands:
         default: ''
     steps:
       - run:
-          name: Installing JDK
-          command: choco install openjdk
+          name: Installing JDK << parameters.jdk_version >>
+          command: |
+            $ErrorActionPreference = 'Stop'
+            switch ('<< parameters.jdk_version >>') {
+              '8'  { $url = 'https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u512-b09/OpenJDK8U-jdk_x64_windows_hotspot_8u512b09.zip'; $sha256 = '20f248ddd600f900cd9b235d50d54cdb27e7b750f140d381176a7612c53663cd' }
+              '17' { $url = 'https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21.1%2B2/OpenJDK17U-jdk_x64_windows_hotspot_17.0.21.1_2.zip'; $sha256 = 'eafba0944f777abdc74d5aad16049c9b5a1275b6ce99e2939ba9f7f3e6f08c87' }
+              '21' { $url = 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13.1%2B2/OpenJDK21U-jdk_x64_windows_hotspot_21.0.13.1_2.zip'; $sha256 = 'bbebea1469996b276683c9299c227b294f85c847039c82633218186a4ad4fbf2' }
+              default { throw "No pinned Temurin JDK for jdk_version '<< parameters.jdk_version >>'" }
+            }
+            $zip = "$env:TEMP\jdk.zip"
+            curl.exe -fSL --retry 3 --connect-timeout 30 --max-time 600 -o $zip $url
+            if ($LASTEXITCODE -ne 0) { throw "curl.exe exited with $LASTEXITCODE" }
+            if ((Get-FileHash -Algorithm SHA256 $zip).Hash -ne $sha256) { throw "SHA-256 mismatch for $url" }
+            New-Item -ItemType Directory -Path C:\jdk | Out-Null
+            tar.exe -xf $zip -C C:\jdk --strip-components 1
+            if ($LASTEXITCODE -ne 0) { throw "tar.exe exited with $LASTEXITCODE" }
+            C:\jdk\bin\java.exe -version
+            if ($LASTEXITCODE -ne 0) { throw "java.exe -version exited with $LASTEXITCODE" }
 
   install_maven_unix:
     description: Install maven
@@ -230,14 +247,29 @@ jobs:
       - checkout
       - install_node_npm:
           node_version: << parameters.node_version >>
-      - install_jdk_windows
+      - install_jdk_windows:
+          jdk_version: << parameters.jdk_version >>
       - install_maven_windows:
           maven_version: << parameters.maven_version >>
       - install_deps
       - show_node_version
       - run:
           name: Run tests
-          command: npm run test:maven3
+          command: |
+            $ErrorActionPreference = 'Stop'
+            # choco exposes each Maven package differently (a shim for 3.3.9.2, a machine PATH edit for others), so pin the installed one explicitly
+            $mavenBin = (Resolve-Path "$env:ChocolateyInstall\lib\maven\apache-maven-*\bin").Path
+            $env:Path = "$env:JAVA_HOME\bin;$mavenBin;$env:Path"
+            java -version
+            if ($LASTEXITCODE -ne 0) { throw "java -version exited with $LASTEXITCODE" }
+            $mvnVersion = mvn -v | Out-String
+            if ($LASTEXITCODE -ne 0) { throw "mvn -v exited with $LASTEXITCODE" }
+            Write-Output $mvnVersion
+            # choco package versions such as 3.3.9.2 carry a fourth, package-only segment
+            $expectedMaven = ('<< parameters.maven_version >>' -split '\.')[0..2] -join '.'
+            if ($mvnVersion -notmatch "Apache Maven $([regex]::Escape($expectedMaven)) ") { throw "mvn is not Maven $expectedMaven" }
+            if ($mvnVersion -notmatch "(Java home|runtime): $([regex]::Escape($env:JAVA_HOME))") { throw "mvn is not using the JDK in $env:JAVA_HOME" }
+            npm run test:maven3
 
   test-unix:
     <<: *defaults
