@@ -22,7 +22,6 @@ defaults: &defaults
 windows_defaults: &windows_defaults
   environment:
     npm_config_loglevel: silent
-    JAVA_HOME: C:\jdk
   executor:
     # win/default moved to Windows Server 2022 in orb v5, where the invalid-XML system test fails with Maven 3.6.3/3.9.11
     name: win/server-2019
@@ -38,7 +37,7 @@ test_matrix_unix: &test_matrix_unix
 
 test_matrix_win: &test_matrix_win
   jdk_version: ['8', '17', '21']
-  maven_version: ['3.3.9.2', '3.6.3', '3.9.11']
+  maven_version: ['3.3.9', '3.6.3', '3.9.11']
   node_version: ['22', '24', '26']
 
 test_matrix_os: &test_matrix_osx
@@ -150,7 +149,8 @@ commands:
               default { throw "No pinned Temurin JDK for jdk_version '<< parameters.jdk_version >>'" }
             }
             $zip = "$env:TEMP\jdk.zip"
-            curl.exe -fSL --retry 3 --connect-timeout 30 --max-time 600 -o $zip $url
+            # schannel fails the TLS handshake (exit 35, not retried) when a revocation server is unreachable; the pinned hash still guards integrity
+            curl.exe -fSL --ssl-revoke-best-effort --retry 3 --connect-timeout 30 --max-time 600 -o $zip $url
             if ($LASTEXITCODE -ne 0) { throw "curl.exe exited with $LASTEXITCODE" }
             if ((Get-FileHash -Algorithm SHA256 $zip).Hash -ne $sha256) { throw "SHA-256 mismatch for $url" }
             New-Item -ItemType Directory -Path C:\jdk | Out-Null
@@ -209,7 +209,25 @@ commands:
         type: string
         default: ''
     steps:
-      - run: choco install maven -y --version=<< parameters.maven_version >>
+      - run:
+          name: Installing Maven << parameters.maven_version >>
+          command: |
+            $ErrorActionPreference = 'Stop'
+            switch ('<< parameters.maven_version >>') {
+              '3.3.9'  { $sha512 = '6e3aeed4c3c2beb736b2796a3a15f5395e68286d078868636644b6d80b7f20b9b084ec9965d2a56d2e289a8abafb11f415aceb011cd1cb12e7a1611becd8114c' }
+              '3.6.3'  { $sha512 = '1c095ed556eda06c6d82fdf52200bc4f3437a1bab42387e801d6f4c56e833fb82b16e8bf0aab95c9708de7bfb55ec27f653a7cf0f491acebc541af234eded94d' }
+              '3.9.11' { $sha512 = '03e2d65d4483a3396980629f260e25cac0d8b6f7f2791e4dc20bc83f9514db8d0f05b0479e699a5f34679250c49c8e52e961262ded468a20de0be254d8207076' }
+              default  { throw "No pinned Maven for maven_version '<< parameters.maven_version >>'" }
+            }
+            $url = 'https://archive.apache.org/dist/maven/maven-3/<< parameters.maven_version >>/binaries/apache-maven-<< parameters.maven_version >>-bin.zip'
+            $zip = "$env:TEMP\maven.zip"
+            # schannel fails the TLS handshake (exit 35, not retried) when a revocation server is unreachable; the pinned hash still guards integrity
+            curl.exe -fSL --ssl-revoke-best-effort --retry 3 --connect-timeout 30 --max-time 600 -o $zip $url
+            if ($LASTEXITCODE -ne 0) { throw "curl.exe exited with $LASTEXITCODE" }
+            if ((Get-FileHash -Algorithm SHA512 $zip).Hash -ne $sha512) { throw "SHA-512 mismatch for $url" }
+            New-Item -ItemType Directory -Path C:\maven | Out-Null
+            tar.exe -xf $zip -C C:\maven --strip-components 1
+            if ($LASTEXITCODE -ne 0) { throw "tar.exe exited with $LASTEXITCODE" }
 
 jobs:
   security-scans:
@@ -257,18 +275,20 @@ jobs:
           name: Run tests
           command: |
             $ErrorActionPreference = 'Stop'
-            # choco exposes each Maven package differently (a shim for 3.3.9.2, a machine PATH edit for others), so pin the installed one explicitly
-            $mavenBin = (Resolve-Path "$env:ChocolateyInstall\lib\maven\apache-maven-*\bin").Path
-            $env:Path = "$env:JAVA_HOME\bin;$mavenBin;$env:Path"
+            # a machine-level JAVA_HOME (as choco's jdk8 set) overrides job environment, so the checks compare against literal install directories
+            $jdk = 'C:\jdk'
+            $maven = 'C:\maven'
+            $env:JAVA_HOME = $jdk
+            $env:Path = "$jdk\bin;$maven\bin;$env:Path"
+            if ((Get-Command java).Source -ne "$jdk\bin\java.exe") { throw "java resolves to $((Get-Command java).Source), not $jdk" }
             java -version
             if ($LASTEXITCODE -ne 0) { throw "java -version exited with $LASTEXITCODE" }
             $mvnVersion = mvn -v | Out-String
             if ($LASTEXITCODE -ne 0) { throw "mvn -v exited with $LASTEXITCODE" }
             Write-Output $mvnVersion
-            # choco package versions such as 3.3.9.2 carry a fourth, package-only segment
-            $expectedMaven = ('<< parameters.maven_version >>' -split '\.')[0..2] -join '.'
-            if ($mvnVersion -notmatch "Apache Maven $([regex]::Escape($expectedMaven)) ") { throw "mvn is not Maven $expectedMaven" }
-            if ($mvnVersion -notmatch "(Java home|runtime): $([regex]::Escape($env:JAVA_HOME))") { throw "mvn is not using the JDK in $env:JAVA_HOME" }
+            if ($mvnVersion -notmatch "Apache Maven $([regex]::Escape('<< parameters.maven_version >>')) ") { throw "mvn is not Maven << parameters.maven_version >>" }
+            if ($mvnVersion -notmatch "Maven home: $([regex]::Escape($maven))\r?\n") { throw "mvn is not running from $maven" }
+            if ($mvnVersion -notmatch "(Java home|runtime): $([regex]::Escape($jdk))(\\jre)?\r?\n") { throw "mvn is not running on the JDK in $jdk" }
             npm run test:maven3
 
   test-unix:
