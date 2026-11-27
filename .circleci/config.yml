@@ -37,7 +37,7 @@ test_matrix_unix: &test_matrix_unix
 
 test_matrix_win: &test_matrix_win
   jdk_version: ['8', '17', '21']
-  maven_version: ['3.3.9.2', '3.6.3', '3.9.11']
+  maven_version: ['3.3.9', '3.6.3', '3.9.11']
   node_version: ['22', '24', '26']
 
 test_matrix_os: &test_matrix_osx
@@ -139,8 +139,25 @@ commands:
         default: ''
     steps:
       - run:
-          name: Installing JDK
-          command: choco install openjdk
+          name: Installing JDK << parameters.jdk_version >>
+          command: |
+            $ErrorActionPreference = 'Stop'
+            switch ('<< parameters.jdk_version >>') {
+              '8'  { $url = 'https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u512-b09/OpenJDK8U-jdk_x64_windows_hotspot_8u512b09.zip'; $sha256 = '20f248ddd600f900cd9b235d50d54cdb27e7b750f140d381176a7612c53663cd' }
+              '17' { $url = 'https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21.1%2B2/OpenJDK17U-jdk_x64_windows_hotspot_17.0.21.1_2.zip'; $sha256 = 'eafba0944f777abdc74d5aad16049c9b5a1275b6ce99e2939ba9f7f3e6f08c87' }
+              '21' { $url = 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13.1%2B2/OpenJDK21U-jdk_x64_windows_hotspot_21.0.13.1_2.zip'; $sha256 = 'bbebea1469996b276683c9299c227b294f85c847039c82633218186a4ad4fbf2' }
+              default { throw "No pinned Temurin JDK for jdk_version '<< parameters.jdk_version >>'" }
+            }
+            $zip = "$env:TEMP\jdk.zip"
+            # schannel fails the TLS handshake (exit 35, not retried) when a revocation server is unreachable; the pinned hash still guards integrity
+            curl.exe -fSL --ssl-revoke-best-effort --retry 3 --connect-timeout 30 --max-time 600 -o $zip $url
+            if ($LASTEXITCODE -ne 0) { throw "curl.exe exited with $LASTEXITCODE" }
+            if ((Get-FileHash -Algorithm SHA256 $zip).Hash -ne $sha256) { throw "SHA-256 mismatch for $url" }
+            New-Item -ItemType Directory -Path C:\jdk | Out-Null
+            tar.exe -xf $zip -C C:\jdk --strip-components 1
+            if ($LASTEXITCODE -ne 0) { throw "tar.exe exited with $LASTEXITCODE" }
+            C:\jdk\bin\java.exe -version
+            if ($LASTEXITCODE -ne 0) { throw "java.exe -version exited with $LASTEXITCODE" }
 
   install_maven_unix:
     description: Install maven
@@ -192,7 +209,25 @@ commands:
         type: string
         default: ''
     steps:
-      - run: choco install maven -y --version=<< parameters.maven_version >>
+      - run:
+          name: Installing Maven << parameters.maven_version >>
+          command: |
+            $ErrorActionPreference = 'Stop'
+            switch ('<< parameters.maven_version >>') {
+              '3.3.9'  { $sha512 = '6e3aeed4c3c2beb736b2796a3a15f5395e68286d078868636644b6d80b7f20b9b084ec9965d2a56d2e289a8abafb11f415aceb011cd1cb12e7a1611becd8114c' }
+              '3.6.3'  { $sha512 = '1c095ed556eda06c6d82fdf52200bc4f3437a1bab42387e801d6f4c56e833fb82b16e8bf0aab95c9708de7bfb55ec27f653a7cf0f491acebc541af234eded94d' }
+              '3.9.11' { $sha512 = '03e2d65d4483a3396980629f260e25cac0d8b6f7f2791e4dc20bc83f9514db8d0f05b0479e699a5f34679250c49c8e52e961262ded468a20de0be254d8207076' }
+              default  { throw "No pinned Maven for maven_version '<< parameters.maven_version >>'" }
+            }
+            $url = 'https://archive.apache.org/dist/maven/maven-3/<< parameters.maven_version >>/binaries/apache-maven-<< parameters.maven_version >>-bin.zip'
+            $zip = "$env:TEMP\maven.zip"
+            # schannel fails the TLS handshake (exit 35, not retried) when a revocation server is unreachable; the pinned hash still guards integrity
+            curl.exe -fSL --ssl-revoke-best-effort --retry 3 --connect-timeout 30 --max-time 600 -o $zip $url
+            if ($LASTEXITCODE -ne 0) { throw "curl.exe exited with $LASTEXITCODE" }
+            if ((Get-FileHash -Algorithm SHA512 $zip).Hash -ne $sha512) { throw "SHA-512 mismatch for $url" }
+            New-Item -ItemType Directory -Path C:\maven | Out-Null
+            tar.exe -xf $zip -C C:\maven --strip-components 1
+            if ($LASTEXITCODE -ne 0) { throw "tar.exe exited with $LASTEXITCODE" }
 
 jobs:
   security-scans:
@@ -230,14 +265,31 @@ jobs:
       - checkout
       - install_node_npm:
           node_version: << parameters.node_version >>
-      - install_jdk_windows
+      - install_jdk_windows:
+          jdk_version: << parameters.jdk_version >>
       - install_maven_windows:
           maven_version: << parameters.maven_version >>
       - install_deps
       - show_node_version
       - run:
           name: Run tests
-          command: npm run test:maven3
+          command: |
+            $ErrorActionPreference = 'Stop'
+            # a machine-level JAVA_HOME (as choco's jdk8 set) overrides job environment, so the checks compare against literal install directories
+            $jdk = 'C:\jdk'
+            $maven = 'C:\maven'
+            $env:JAVA_HOME = $jdk
+            $env:Path = "$jdk\bin;$maven\bin;$env:Path"
+            if ((Get-Command java).Source -ne "$jdk\bin\java.exe") { throw "java resolves to $((Get-Command java).Source), not $jdk" }
+            java -version
+            if ($LASTEXITCODE -ne 0) { throw "java -version exited with $LASTEXITCODE" }
+            $mvnVersion = mvn -v | Out-String
+            if ($LASTEXITCODE -ne 0) { throw "mvn -v exited with $LASTEXITCODE" }
+            Write-Output $mvnVersion
+            if ($mvnVersion -notmatch "Apache Maven $([regex]::Escape('<< parameters.maven_version >>')) ") { throw "mvn is not Maven << parameters.maven_version >>" }
+            if ($mvnVersion -notmatch "Maven home: $([regex]::Escape($maven))\r?\n") { throw "mvn is not running from $maven" }
+            if ($mvnVersion -notmatch "(Java home|runtime): $([regex]::Escape($jdk))(\\jre)?\r?\n") { throw "mvn is not running on the JDK in $jdk" }
+            npm run test:maven3
 
   test-unix:
     <<: *defaults
