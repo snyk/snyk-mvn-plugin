@@ -266,15 +266,31 @@ describe('plugin.inspect', () => {
       'pom.xml',
     );
 
-    await expect(
-      plugin.inspect('.', targetFile, {
+    try {
+      const result = await plugin.inspect('.', targetFile, {
         dev: true,
-      }),
-    ).rejects.toThrow(
-      expect.objectContaining({
-        message: expect.stringMatching('Cannot build Maven dependency tree'),
-      }),
-    );
+      });
+
+      // Standalone POMs without a declared plugin version are pinned to a
+      // recent maven-dependency-plugin. From 3.3.0 that plugin reports
+      // unresolvable artifacts in the tree instead of failing the build, so
+      // skip when that newer behaviour is in effect (same pattern as the
+      // mvn-error cases above).
+      const pluginVersion = getPluginVersionFromInspectResult(result);
+      if (isPluginVersionAtLeast(pluginVersion, '3.3.0')) {
+        return;
+      }
+
+      throw new Error(
+        `expected inspect using dependency plugin '${pluginVersion}' to throw error`,
+      );
+    } catch (err) {
+      if (err instanceof Error) {
+        expect(err.message).toMatch('Cannot build Maven dependency tree');
+      } else {
+        throw new Error('error is not instance of Error');
+      }
+    }
   });
 
   test('should successfully inspect mvnw project', async () => {

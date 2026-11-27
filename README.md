@@ -170,3 +170,18 @@ Slowest: 156.78ms
 ## Supported Maven versions
 
 This plugin supports Maven versions 3.\*
+
+### maven-dependency-plugin version
+
+For `dependency:tree` without `--verbose`, the plugin normally leaves the `maven-dependency-plugin` version to Maven, which can mean a very old default (for example 2.8 with Maven 3.6.x). To avoid that, it pins `org.apache.maven.plugins:maven-dependency-plugin` explicitly (`3.9.0` for Maven 3.6.3 and later, `3.6.1` for older Maven versions), but only when it can show that your project does not choose a version itself. It does not pin, and Maven keeps resolving the version exactly as before, when any of these apply:
+
+- the scan is an aggregate scan (`--maven-aggregate-project`)
+- the Maven version cannot be detected
+- the POM being scanned cannot be read, or does not look like a complete POM
+- the POM mentions the dependency plugin anywhere (`build/plugins`, `pluginManagement`, profiles, or a version property)
+- the POM has a `<parent>` (the parent is not read, and it could manage the plugin version)
+- the Maven arguments you pass mention the dependency plugin
+
+A version you declare in your POM or `pluginManagement` is therefore never overridden in non-verbose mode. If your POM inherits from a parent, or you scan with `--maven-aggregate-project`, declare the plugin version where Maven can see it, or run in an environment where Maven's default version works. With `--verbose` the plugin is always pinned, because the `dot` output used for verbose mode requires plugin version 3.
+
+Environments without access to Maven Central (air-gapped or mirror-only setups) need the pinned version (and its dependencies) available in their repository manager or local repository (`~/.m2`) whenever the plugin is pinned.
