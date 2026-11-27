@@ -2,7 +2,6 @@ import { DepGraph, DepGraphBuilder } from '@snyk/dep-graph';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
-import * as glob from 'glob';
 import * as debugLib from 'debug';
 import {
   MavenPackage,
@@ -171,7 +170,39 @@ export function isArchive(file: string): boolean {
 export function findArchives(targetPath: string): string[] {
   const stats = fs.statSync(targetPath);
   const dir = stats.isFile() ? path.dirname(targetPath) : targetPath;
-  return glob.sync(`${dir}/**/*.@(jar|war|aar|zip)`);
+  return listArchives(dir, true).sort((a, b) => a.localeCompare(b, 'en'));
+}
+
+function listArchives(dir: string, recurse: boolean): string[] {
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => !entry.name.startsWith('.'))
+    .flatMap((entry) => {
+      const entryPath = path.join(dir, entry.name);
+      const found = isArchive(entry.name) ? [entryPath] : [];
+      if (!recurse) {
+        return found;
+      }
+      if (entry.isDirectory()) {
+        return found.concat(listArchives(entryPath, true));
+      }
+      // glob 7 listed a symlinked directory's own entries but never recursed through it.
+      if (entry.isSymbolicLink() && isDirectoryTarget(entryPath)) {
+        return found.concat(listArchives(entryPath, false));
+      }
+      return found;
+    });
+}
+
+function isDirectoryTarget(linkPath: string): boolean {
+  try {
+    return !!fs.statSync(linkPath, { throwIfNoEntry: false })?.isDirectory();
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ELOOP') {
+      return false;
+    }
+    throw err;
+  }
 }
 
 function getRootDependency(root: string, targetFile?: string): MavenPackage {
