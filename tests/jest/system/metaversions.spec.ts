@@ -36,24 +36,22 @@ describe('metaversion resolution', () => {
     expect(depPkgs).toBeDefined();
 
     // Verify the specific dependencies are present
-    const resteasyCore = depPkgs?.find(
-      (pkg) => pkg.name === 'org.jboss.resteasy:resteasy-core',
-    );
+    const jodaTime = depPkgs?.find((pkg) => pkg.name === 'joda-time:joda-time');
     const commonsLang = depPkgs?.find(
       (pkg) => pkg.name === 'commons-lang:commons-lang',
     );
     const junit = depPkgs?.find((pkg) => pkg.name === 'junit:junit');
 
-    expect(resteasyCore).toBeDefined();
+    expect(jodaTime).toBeDefined();
     expect(commonsLang).toBeDefined();
 
     // Metaversions should be resolved to concrete versions
-    expect(resteasyCore?.version).not.toBe('RELEASE');
+    expect(jodaTime?.version).not.toBe('RELEASE');
     expect(commonsLang?.version).not.toBe('LATEST');
     expect(junit?.version).toBe('4.13.2');
 
     // Check that resolved versions follow expected patterns
-    expect(resteasyCore?.version).toMatch(/^\d+\.\d+\.\d+/);
+    expect(jodaTime?.version).toMatch(/^\d+\.\d+\.\d+/);
     expect(commonsLang?.version).toMatch(/^\d+\.\d+/);
   }, 180000);
 
